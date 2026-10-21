@@ -1,3 +1,4 @@
+import { Paperclip } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/app/category-icon";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,13 @@ export function TransactionRow({ view, href }: { view: TransactionView; href?: s
         <CategoryIcon name={isTransfer ? "arrow-left-right" : view.categoryIcon} className="size-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{title}</p>
+        <p className="flex items-center gap-1.5 font-medium">
+          <span className="truncate">{title}</span>
+          {view.attachments.length > 0 && <Paperclip className="size-3.5 shrink-0" aria-label={`${view.attachments.length} bon`} />}
+          {view.type === "expense" && view.attachments.length === 0 && (
+            <span className="shrink-0 border px-1 text-[10px] leading-4 font-normal text-muted-foreground">tanpa bon</span>
+          )}
+        </p>
         <p className="truncate text-xs text-muted-foreground">{detail}</p>
       </div>
       <div className="shrink-0 text-right">

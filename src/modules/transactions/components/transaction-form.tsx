@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CategoryIcon } from "@/components/app/category-icon";
 import { MoneyInput } from "@/components/app/money-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,8 @@ import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ApiError } from "@/lib/api-client";
 import { useResetAfterSave } from "@/lib/use-reset-after-save";
+import { ReceiptPicker, type ReceiptItem } from "@/modules/receipts/components/receipt-picker";
+import type { ScanResult } from "@/modules/receipts/types/receipt";
 import { formatDateLong } from "@/modules/shared/lib/date";
 import type { TransactionType } from "@/modules/shared/types/enums";
 import { ledgerKeys } from "../hooks/keys";
@@ -25,6 +28,23 @@ import type { TransactionView } from "../types/transaction";
 
 const TYPE_LABELS: Record<TransactionType, string> = { expense: "Pengeluaran", income: "Pemasukan", transfer: "Transfer" };
 const ADMIN_FEE_PRESETS = [0, 2_500, 6_500];
+
+type OcrField = "amount" | "date" | "categoryId" | "merchant";
+const SCAN_FAILED: Record<Exclude<ScanResult, { ok: true }>["reason"], string> = {
+  quota: "Kuota scan habis, isi manual.",
+  timeout: "Scan terlalu lama, isi manual.",
+  failed: "Scan gagal, isi manual.",
+  unconfigured: "Scan belum diaktifkan, isi manual.",
+};
+
+/** Badge "cek lagi" untuk field yang diisi hasil scan, sampai pengguna menyentuhnya (spec §5). */
+function CheckAgain({ show }: { show: boolean }) {
+  return show ? (
+    <Badge variant="outline" className="ml-2 bg-yellow-200">
+      cek lagi
+    </Badge>
+  ) : null;
+}
 
 interface TransactionFormProps {
   reference: TransactionReference;
@@ -58,6 +78,9 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
   const [vehicleId, setVehicleId] = useState<string | null>(initial?.vehicleId ?? null);
   const [merchant, setMerchant] = useState(initial?.merchant ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
+  const [receipts, setReceipts] = useState<ReceiptItem[]>(() => (initial?.attachments ?? []).map((a) => ({ ...a, ocr: null, previewUrl: a.url })));
+  const [ocrFields, setOcrFields] = useState<ReadonlySet<OcrField>>(new Set());
+  const touched = (field: OcrField) => setOcrFields((current) => (current.has(field) ? new Set([...current].filter((f) => f !== field)) : current));
 
   const categories = reference.categories.filter((c) => c.kind === type);
   const category = reference.categories.find((c) => c.id === categoryId);
@@ -72,6 +95,35 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
     setType(next);
     if (category && category.kind !== next) setCategoryId(null);
     if (next === "transfer") setVehicleId(null);
+  }
+
+  function applyScan(result: ScanResult) {
+    if (!result.ok) {
+      toast.error(SCAN_FAILED[result.reason]);
+      return;
+    }
+    const { scan } = result;
+    const filled = new Set<OcrField>();
+    if (scan.amount !== null && amount === null) {
+      setAmount(scan.amount);
+      filled.add("amount");
+    }
+    if (scan.date && !initial && date === defaultDate) {
+      setDate(scan.date);
+      filled.add("date");
+    }
+    if (scan.merchant && !merchant.trim()) {
+      setMerchant(scan.merchant);
+      filled.add("merchant");
+    }
+    const hinted = type === "expense" && !categoryId ? reference.categories.find((c) => c.kind === "expense" && c.name === scan.categoryHint) : undefined;
+    if (hinted) {
+      chooseCategory(hinted.id);
+      filled.add("categoryId");
+    }
+    setOcrFields((current) => new Set([...current, ...filled]));
+    if (!scan.confident) toast("Bon kurang jelas terbaca. Cek lagi isiannya.");
+    else if (filled.size) toast.success("Bon terbaca. Cek lagi isian bertanda.");
   }
 
   function chooseCategory(id: string) {
@@ -100,6 +152,7 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
         vehicleId: showVehicle ? vehicleId : null,
         merchant,
         note,
+        attachments: receipts.map(({ pathname, blobUrl, mimeType, sizeBytes, ocr }) => ({ pathname, blobUrl, mimeType, sizeBytes, ocr })),
       },
       {
         onSuccess: () => {
@@ -151,6 +204,8 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
         </Alert>
       )}
 
+      <ReceiptPicker projectId={projectId} items={receipts} onChange={setReceipts} onScanned={applyScan} disabled={locked} />
+
       <ToggleGroup
         aria-label="Jenis transaksi"
         className="w-full"
@@ -167,14 +222,37 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
 
       <FieldGroup>
         <Field data-invalid={errorOf("amount") ? true : undefined}>
-          <FieldLabel htmlFor="amount">Nominal</FieldLabel>
-          <MoneyInput id="amount" autoFocus={!initial} className="h-14 font-head text-2xl" value={amount} onChange={setAmount} placeholder="0" />
+          <FieldLabel htmlFor="amount">
+            Nominal <CheckAgain show={ocrFields.has("amount")} />
+          </FieldLabel>
+          <MoneyInput
+            id="amount"
+            autoFocus={!initial}
+            className="h-14 font-head text-2xl"
+            value={amount}
+            onChange={(value) => {
+              setAmount(value);
+              touched("amount");
+            }}
+            placeholder="0"
+          />
           {errorOf("amount") && <FieldError>{errorOf("amount")}</FieldError>}
         </Field>
 
         <Field data-invalid={errorOf("date") ? true : undefined}>
-          <FieldLabel htmlFor="date">Tanggal</FieldLabel>
-          <Input id="date" type="date" className="h-11" value={date} onChange={(e) => setDate(e.target.value)} />
+          <FieldLabel htmlFor="date">
+            Tanggal <CheckAgain show={ocrFields.has("date")} />
+          </FieldLabel>
+          <Input
+            id="date"
+            type="date"
+            className="h-11"
+            value={date}
+            onChange={(e) => {
+              setDate(e.target.value);
+              touched("date");
+            }}
+          />
           {outsidePeriod && (
             <p className="text-sm text-muted-foreground">
               Di luar periode proyek ({formatDateLong(reference.project.startDate)} – {formatDateLong(reference.project.endDate)}).
@@ -185,10 +263,15 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
 
         {type !== "transfer" && (
           <Field data-invalid={errorOf("categoryId") ? true : undefined}>
-            <FieldLabel>Kategori</FieldLabel>
+            <FieldLabel>
+              Kategori <CheckAgain show={ocrFields.has("categoryId")} />
+            </FieldLabel>
             <div className="grid grid-cols-3 gap-2">
               {categories.map((c) => (
-                <Toggle key={c.id} pressed={categoryId === c.id} onPressedChange={() => chooseCategory(c.id)} className="h-auto min-h-16 flex-col gap-1 py-2 text-xs whitespace-normal">
+                <Toggle key={c.id} pressed={categoryId === c.id} onPressedChange={() => {
+                    chooseCategory(c.id);
+                    touched("categoryId");
+                  }} className="h-auto min-h-16 flex-col gap-1 py-2 text-xs whitespace-normal">
                   <CategoryIcon name={c.icon} className="size-5" />
                   {c.name}
                 </Toggle>
@@ -241,8 +324,19 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
         )}
 
         <Field data-invalid={errorOf("merchant") ? true : undefined}>
-          <FieldLabel htmlFor="merchant">{type === "transfer" ? "Keterangan" : "Toko / keterangan"}</FieldLabel>
-          <Input id="merchant" className="h-11" value={merchant} onChange={(e) => setMerchant(e.target.value)} placeholder="Opsional" />
+          <FieldLabel htmlFor="merchant">
+            {type === "transfer" ? "Keterangan" : "Toko / keterangan"} <CheckAgain show={ocrFields.has("merchant")} />
+          </FieldLabel>
+          <Input
+            id="merchant"
+            className="h-11"
+            value={merchant}
+            onChange={(e) => {
+              setMerchant(e.target.value);
+              touched("merchant");
+            }}
+            placeholder="Opsional"
+          />
           {errorOf("merchant") && <FieldError>{errorOf("merchant")}</FieldError>}
         </Field>
 
