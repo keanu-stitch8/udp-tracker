@@ -28,7 +28,8 @@ export interface TransactionValues {
 
 /** Validasi input + aturan bisnis spec §3.4 terhadap referensi proyek; hasil siap disimpan. */
 export function planTransaction(input: unknown, refs: TransactionRefs): TransactionValues {
-  const v = parseOrThrow(transactionInputSchema, input);
+  // Lampiran diproses terpisah (planAttachments), bukan kolom transaksi.
+  const { attachments: _attachments, ...v } = parseOrThrow(transactionInputSchema, input);
   const errors: FieldErrors = {};
   if (!refs.wallets.some((w) => w.id === v.walletId)) errors.walletId = ["Dompet tidak ditemukan di proyek ini."];
 
