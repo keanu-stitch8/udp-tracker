@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AppHeader } from "@/components/app/app-header";
 import { AppShell } from "@/components/app/app-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectHeaderSection } from "@/modules/projects";
@@ -8,7 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <AppShell
       header={
         <Suspense fallback={<Skeleton className="h-10 w-2/3" />}>
-          <ProjectHeaderSection />
+          <AppHeader projectHeader={<ProjectHeaderSection />} />
         </Suspense>
       }
     >
