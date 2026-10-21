@@ -10,15 +10,14 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 2a Buku kas (`…/2026-10-21-02a-buku-kas.md`) | ✅ merged ke `main` (PR #2) |
 | Rencana 2b-1 Pagu (`…/2026-10-21-02b1-pagu.md`) | ✅ merged (PR #2). Bagian "surat penawaran" sudah dibuang di PR #3 |
 | Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ merged (PR #3; migrasi 0003 sudah di Neon) |
-| Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ branch `feat/dompet` (juga: form proyek baru tanpa pax bawaan, 1 mobil). Menunggu PR/merge |
-| Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Belum: sinkronisasi spec §3.2/§3.4/§4.4/§5 (Task 5 Step 3) |
+| Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ merged (PR #4; juga: form proyek baru tanpa pax bawaan, 1 mobil) |
+| Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Spec sudah disinkronkan (branch `docs/sync-spec`) |
 | Rencana 3 Scan bon | ⏳ berikutnya. `GEMINI_API_KEY` & `BLOB_READ_WRITE_TOKEN` sudah ada di `.env.local`. Pengguna pilih Gemini + Blob. Sambungkan hapus foto Blob ke `deleteProject` |
-| Rencana 3 Bon | ⏳ upload Vercel Blob + scan Gemini free tier (spec §6.1) |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
 
-1. Sinkronkan spec dengan 2b-2/2b-3 (endpoint categories/vehicles/settings/DELETE project, aturan kategori sistem & mobil).
+1. ✅ Spec disinkronkan dengan 2b-2/2b-3, PR #6–#8 (trip, Lebih pagu, Total pagu).
 2. Tulis & eksekusi inline **Rencana 3: Scan bon** (spec §6.1) — hemat kuota: rencana ringkas, E2E via curl (bukan browser), verifikasi penuh sekali per task.
 3. ✅ (PR #6) **Jumlah trip untuk basis `per_vehicle`** (permintaan pengguna): BBM + Tol = tarif × mobil × trip (pergi + pulang = 2). Pakai ulang kolom `budgets.days` sebagai "Jumlah trip" untuk `per_vehicle` (default 1; label form & `limitFormula` "× 2 trip"; `planBudget` tidak lagi menolkan `days` untuk `per_vehicle`). Sementara pengguna bisa isi tarif 2.600.000.
 4. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).

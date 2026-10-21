@@ -58,7 +58,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `startDate`/`endDate` (inklusif) menentukan jumlah hari untuk pagu.
 
 **vehicles**
-- `projectId`, `name` (mis. "Mobil 1 – Innova"), `plate?`
+- `projectId`, `name` (mis. "Mobil 1 – Innova"; unik per proyek), `plate?`, `sortOrder`. Maksimal 5 mobil per proyek.
 
 **wallets** (dompet)
 - `projectId`, `kind` (`bank` | `cash` | `flazz` | `ewallet`), `name`, `holder?` (teks bebas), `vehicleId?` (untuk Flazz), `openingBalance` (int, default 0), `sortOrder`, `archived` (bool)
@@ -67,9 +67,9 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `projectId`, `kind` (`expense` | `income`), `name`, `icon` (nama ikon lucide), `isVehicleRelated` (bool; jika true, form menampilkan pilihan mobil), `isAdminFee` (bool; tepat satu per proyek), `isOfficeFunding` (bool; pemasukan dari kantor, default: UDP Kantor), `sortOrder`, `archived`
 
 **budgets** (pagu)
-- `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_vehicle` (per mobil per trip, tidak dikali hari) | `per_day` | `lump_sum`), `days?` (jumlah hari khusus pagu, mis. 6 hari kerja; kosong = periode proyek; hanya untuk basis harian), `note?`. Nama pagu unik per proyek.
+- `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_vehicle` (per mobil per trip, tidak dikali hari) | `per_day` | `lump_sum`), `days?` (basis harian: jumlah hari khusus pagu, mis. 6 hari kerja, kosong = periode proyek; `per_vehicle`: jumlah trip, mis. 2 = pergi + pulang, kosong = 1), `note?`. Nama pagu unik per proyek.
 - **budget_categories**: relasi many-to-many `budgetId` ↔ `categoryId`. Satu pagu bisa mencakup beberapa kategori.
-- Nilai pagu: `rate × multiplier`, dengan multiplier `pax × hari`, `jumlahMobil × hari`, `hari`, `jumlahMobil` (per_vehicle), atau `1`. `hari` = `days` pagu bila diisi, selain itu jumlah hari periode proyek.
+- Nilai pagu: `rate × multiplier`, dengan multiplier `pax × hari`, `jumlahMobil × hari`, `hari`, `jumlahMobil × trip` (per_vehicle), atau `1`. `hari` = `days` pagu bila diisi, selain itu jumlah hari periode proyek.
 
 **transactions**
 - `projectId`, `type` (`expense` | `income` | `transfer`), `date`, `amount` (int > 0)
@@ -98,7 +98,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - **Dompet:** Rekening (bank), Cash (cash), Flazz {Mobil n} (flazz, satu per mobil yang dibuat).
 - **Kategori pengeluaran:** Makan Siang, Makan Malam, Sarapan, Snack & Air Minum, BBM Perjalanan, Bensin Harian, Tol, Parkir (empat terakhir `isVehicleRelated`), Biaya Admin (`isAdminFee`), Lain-lain.
 - **Kategori pemasukan:** UDP Kantor, Lainnya.
-- **Pagu:** tidak ada pagu bawaan. Pengguna menambah pagu sendiri per proyek (Lainnya → Pagu). Jika realisasi melebihi pagu, kelebihannya **ditanggung kantor**.
+- **Pagu:** tidak ada pagu bawaan. Pengguna menambah pagu sendiri per proyek (Lainnya → Pagu). Kelebihan satu pagu ditampilkan netral "Lebih pagu Rp X", karena bisa tertutup sisa pagu lain (lihat kartu Total pagu di beranda).
 
 ### 3.3 Aturan perhitungan (pure, di `lib/`)
 
@@ -107,7 +107,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - **Total pengeluaran** = `Σexpense.amount + Σtransfer.adminFee`.
 - **UDP diterima** = Σincome pada kategori ber-flag `isOfficeFunding` (default "UDP Kantor"; tidak bergantung pada nama). **Total pemasukan** = Σ semua income.
 - **Sisa** = `Σ openingBalance + total pemasukan − total pengeluaran`. Positif berarti dikembalikan ke kantor, negatif berarti kurang dan perlu di-reimburse.
-- **Realisasi pagu** = Σ pengeluaran pada kategori yang tercakup. **Selisih** = pagu − realisasi. Jika negatif, ditampilkan sebagai "Ditanggung kantor: Rp |selisih|".
+- **Realisasi pagu** = Σ pengeluaran pada kategori yang tercakup. **Selisih** = pagu − realisasi. Jika negatif, ditampilkan sebagai "Lebih pagu Rp |selisih|". **Total pagu** = Σ batas semua pagu dibandingkan dengan Σ realisasinya (tiap pengeluaran dihitung sekali walau kategorinya tercakup di beberapa pagu).
 - **Pagu makan harian** (kalender) = `rate × pax` dibandingkan dengan realisasi kategori tercakup di tanggal itu.
 - **Cek saldo:** `selisih = actualBalance − computedBalance(wallet, s/d date)`. Aksi "Catat selisih" membuat transaksi penyesuaian:
   - selisih < 0 → expense sebesar |selisih|, kategori dipilih pengguna (default: Tol untuk Flazz, Lain-lain untuk lainnya), catatan "Penyesuaian cek saldo";
@@ -121,6 +121,9 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `vehicleId` hanya boleh diisi jika kategori `isVehicleRelated`.
 - Semua entitas yang direferensikan harus milik `projectId` yang sama.
 - `date` harus valid. Tanggal di luar rentang proyek diizinkan dengan peringatan (bukan error).
+- **Kategori:** nama unik per proyek (tidak peka huruf besar/kecil), jenis (`expense`/`income`) tidak bisa diubah, `isVehicleRelated` hanya untuk pengeluaran. Kategori sistem (`isAdminFee`, `isOfficeFunding`) tidak bisa diarsipkan. Kategori tidak dihapus, hanya diarsipkan.
+- **Mobil:** menambah mobil ikut membuat dompet "Flazz {mobil}"; ganti nama mobil ikut mengganti nama dompet Flazz yang masih bernama bawaan. Mobil boleh dihapus (dengan konfirmasi) hanya jika tidak dipakai transaksi aktif dan dompet Flazz-nya kosong (saldo awal 0, tanpa transaksi termasuk yang terhapus); dompet itu ikut dihapus. Selain itu 409.
+- **Hapus proyek** = hapus permanen beserta seluruh datanya, wajib password aplikasi (diverifikasi lewat `login()`, jadi ikut rate limit §7). Proyek `done` pun boleh dihapus. Transaksi dihapus dulu (FK transaksi → dompet/kategori `RESTRICT`), lalu proyek (cascade sisanya). Rencana 3: foto bon di Blob ikut dihapus.
 - Hapus transaksi = soft delete. Urungkan = set `deletedAt` null. Pembersihan Blob hanya saat hapus permanen (v1: tidak ada UI hapus permanen. Blob yatim dibersihkan oleh script manual `scripts/cleanup-blobs.ts`).
 
 ## 4. Arsitektur & folder
@@ -194,7 +197,8 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | --- | --- | --- |
 | `/api/projects` *(global)* | GET, POST | daftar proyek, buat proyek (+ seed) |
 | `…/activate` | POST | set cookie proyek aktif |
-| `…/` | GET, PATCH | detail, ubah pengaturan/status |
+| `…/` | GET, PATCH, DELETE | detail, ubah pengaturan/status / hapus permanen (body `{ password }`) |
+| `…/settings` | GET | data halaman pengaturan: proyek + mobil (`removable`, nama dompet Flazz) |
 | `…/summary` | GET | kartu beranda: UDP masuk, pengeluaran, sisa, saldo per dompet, pagu |
 | `…/calendar?month=YYYY-MM` | GET | total per tanggal untuk bulan itu |
 | `…/days/[date]` | GET | transaksi + subtotal kategori + pagu makan hari itu |
@@ -208,7 +212,10 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | `…/balance-checks/[checkId]/adjust` | POST | catat selisih sebagai transaksi (`balanceCheckId`; 409 bila cocok/sudah dicatat) |
 | `…/budgets` | GET, POST | pengaturan pagu (rumus, batas, pemakaian, kategori pengeluaran) / tambah |
 | `…/budgets/[budgetId]` | PATCH, DELETE | ubah / hapus pagu |
-| `…/categories`, `…/vehicles` | GET, POST, PATCH | master data (Rencana 2b) |
+| `…/categories` | GET, POST | daftar (termasuk arsip) / tambah kategori |
+| `…/categories/[categoryId]` | PATCH | ubah & arsip |
+| `…/vehicles` | GET, POST | daftar / tambah mobil (+ dompet Flazz) |
+| `…/vehicles/[vehicleId]` | PATCH, DELETE | ubah / hapus (409 bila sudah dipakai) |
 | `…/export` | POST | ekspor ke Google Sheets + Drive |
 | `/api/receipts/upload-token` *(global)* | POST | token client upload Vercel Blob |
 | `/api/receipts/scan` *(global)* | POST | gambar/PDF → hasil OCR kanonik |
@@ -224,7 +231,7 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 **Beranda**
 - Kartu ringkasan: UDP diterima, total pengeluaran, sisa (dengan label "dikembalikan"/"kurang").
 - Kartu saldo per dompet, dengan Flazz menampilkan nama mobil. Tap → detail dompet & cek saldo.
-- Progress pagu (hijau < 80%, kuning 80–100%, merah > 100% + "Ditanggung kantor: Rp X").
+- Kartu Total pagu (Σ batas vs Σ realisasi) dan progress per pagu (hijau < 80%, kuning 80–100%, merah > 100% + "Lebih pagu Rp X").
 - 5 transaksi terakhir + "Lihat semua".
 
 **Kalender**
@@ -251,10 +258,10 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 
 **Lainnya**
 - Dompet (`/lainnya/dompet`): daftar dengan saldo, tambah/ubah/arsip (arsip bisa dibalik; dompet tidak dihapus). Detail (`/lainnya/dompet/[id]`, juga dari tap saldo di beranda): saldo, **Cek Saldo** (tanggal + saldo asli → pratinjau saldo aplikasi s/d tanggal & selisih → simpan), riwayat cek saldo, "Catat selisih" (pilih kategori, default Tol untuk Flazz / Lain-lain / Lainnya) hanya pada cek terbaru.
-- **Pagu** (`/lainnya/pagu`): kartu per pagu (tarif, rumus → batas, bar pemakaian, kategori), ubah inline dengan pratinjau rumus, tambah pagu, isian jumlah hari per pagu (kosong = periode proyek), hapus dengan konfirmasi dua langkah, empty state saat belum ada pagu.
-- Kategori: kelola kategori (Rencana 2b).
-- Mobil, Pengaturan proyek (nama, lokasi, tanggal, pax, status Selesai/Buka lagi).
-- Proyek: daftar & buat proyek baru.
+- **Pagu** (`/lainnya/pagu`): kartu per pagu (tarif, rumus → batas, bar pemakaian, kategori), ubah inline dengan pratinjau rumus, tambah pagu, isian jumlah hari per pagu (kosong = periode proyek) atau jumlah trip untuk basis per mobil, hapus dengan konfirmasi dua langkah, empty state saat belum ada pagu.
+- Kategori (`/lainnya/kategori`): daftar per jenis, tambah/ubah (nama, ikon, terkait mobil), arsip/buka arsip.
+- Pengaturan proyek (`/lainnya/proyek`): nama, lokasi, tanggal, pax, status Selesai/Buka lagi; kelola mobil (tambah/ubah/hapus dengan konfirmasi); zona bahaya "Hapus proyek" (ketik password).
+- Ganti / buat proyek (`/proyek`): daftar & buat proyek baru.
 - Google: status koneksi (email), Hubungkan/Putuskan.
 - Ekspor: tombol "Ekspor ke Google Sheets", status, link Sheet & folder terakhir.
 - Keluar.
