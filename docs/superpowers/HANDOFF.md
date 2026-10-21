@@ -12,13 +12,13 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ merged (PR #3; migrasi 0003 sudah di Neon) |
 | Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ merged (PR #4; juga: form proyek baru tanpa pax bawaan, 1 mobil) |
 | Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Spec sudah disinkronkan (branch `docs/sync-spec`) |
-| Rencana 3 Scan bon | ⏳ berikutnya. `GEMINI_API_KEY` & `BLOB_READ_WRITE_TOKEN` sudah ada di `.env.local`. Pengguna pilih Gemini + Blob. Sambungkan hapus foto Blob ke `deleteProject` |
+| Rencana 3 Scan bon (`…/2026-10-21-03-scan-bon.md`) | ✅ branch `feat/scan-bon` (termasuk sinkronisasi spec). E2E curl lulus. Menunggu PR/merge |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
 
 1. ✅ Spec disinkronkan dengan 2b-2/2b-3, PR #6–#8 (trip, Lebih pagu, Total pagu).
-2. Tulis & eksekusi inline **Rencana 3: Scan bon** (spec §6.1) — hemat kuota: rencana ringkas, E2E via curl (bukan browser), verifikasi penuh sekali per task.
+2. ✅ Rencana 3: Scan bon. Berikutnya: **Rencana 4 Ekspor** (spec §6.2) — lampiran punya kolom `driveFileId`/`driveUrl`; file dibaca lewat `readReceipt()`.
 3. ✅ (PR #6) **Jumlah trip untuk basis `per_vehicle`** (permintaan pengguna): BBM + Tol = tarif × mobil × trip (pergi + pulang = 2). Pakai ulang kolom `budgets.days` sebagai "Jumlah trip" untuk `per_vehicle` (default 1; label form & `limitFormula` "× 2 trip"; `planBudget` tidak lagi menolkan `days` untuk `per_vehicle`). Sementara pengguna bisa isi tarif 2.600.000.
 4. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
@@ -43,6 +43,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Next 16 menyimpan state halaman** (Cache Components menyembunyikan route dengan `<Activity>`, maks 3 route, per URL termasuk query): tutup drawer sebelum navigasi (lihat `DayDetailPanel onNavigate`); form "buat baru" pakai `useResetAfterSave` (`src/lib/use-reset-after-save.ts`) sebagai `key` agar kosong lagi setelah simpan, draf belum disimpan tetap ada. Dokumen: `node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`.
 - Test komponen/hook React: file `*.test.tsx` dengan `// @vitest-environment happy-dom` (happy-dom dipin 20.14.5).
 - **Chrome**: Enter setelah mengetik password kadang dimakan popup saran password bawaan. Ini bukan bug app.
+- **Blob store private** (`put` public ditolak). Baca file lewat `readReceipt()`/route `attachments/[id]`, jangan pakai `blobUrl` langsung di browser. Skrip di luar app yang memakai drizzle wajib `casing: "snake_case"`.
+- **Gemini**: `gemini-flash-latest` (→ 3.8-flash) ±8–13 detik per scan. Struk uji sintetis bisa dibuat tanpa PIL: `cupsfilter struk.txt > struk.pdf` lalu `sips -s format jpeg struk.pdf --out struk.jpg`.
 - **Seluruh angka** (saldo, total, pagu) dihitung di `lib/` dari `getLedger()`, bukan dengan SUM di SQL.
 
 ## Cara kerja yang dipakai (ikuti lagi)

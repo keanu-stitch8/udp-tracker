@@ -123,8 +123,8 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `date` harus valid. Tanggal di luar rentang proyek diizinkan dengan peringatan (bukan error).
 - **Kategori:** nama unik per proyek (tidak peka huruf besar/kecil), jenis (`expense`/`income`) tidak bisa diubah, `isVehicleRelated` hanya untuk pengeluaran. Kategori sistem (`isAdminFee`, `isOfficeFunding`) tidak bisa diarsipkan. Kategori tidak dihapus, hanya diarsipkan.
 - **Mobil:** menambah mobil ikut membuat dompet "Flazz {mobil}"; ganti nama mobil ikut mengganti nama dompet Flazz yang masih bernama bawaan. Mobil boleh dihapus (dengan konfirmasi) hanya jika tidak dipakai transaksi aktif dan dompet Flazz-nya kosong (saldo awal 0, tanpa transaksi termasuk yang terhapus); dompet itu ikut dihapus. Selain itu 409.
-- **Hapus proyek** = hapus permanen beserta seluruh datanya, wajib password aplikasi (diverifikasi lewat `login()`, jadi ikut rate limit §7). Proyek `done` pun boleh dihapus. Transaksi dihapus dulu (FK transaksi → dompet/kategori `RESTRICT`), lalu proyek (cascade sisanya). Rencana 3: foto bon di Blob ikut dihapus.
-- Hapus transaksi = soft delete. Urungkan = set `deletedAt` null. Pembersihan Blob hanya saat hapus permanen (v1: tidak ada UI hapus permanen. Blob yatim dibersihkan oleh script manual `scripts/cleanup-blobs.ts`).
+- **Hapus proyek** = hapus permanen beserta seluruh datanya, wajib password aplikasi (diverifikasi lewat `login()`, jadi ikut rate limit §7). Proyek `done` pun boleh dihapus. Transaksi dihapus dulu (FK transaksi → dompet/kategori `RESTRICT`), lalu proyek (cascade sisanya). Foto bon di Blob ikut dihapus setelah commit.
+- Hapus transaksi = soft delete. Urungkan = set `deletedAt` null. File Blob lampiran ikut dihapus (setelah commit, best effort) saat lampiran dilepas dari transaksi atau proyek dihapus; transaksi yang di-soft delete tetap menyimpan bonnya. Blob yatim (upload yang transaksinya batal disimpan) dibersihkan `npm run blob:cleanup` (`scripts/cleanup-blobs.mts`; dry run, `-- --hapus` untuk menghapus, hanya file > 24 jam).
 
 ## 4. Arsitektur & folder
 
@@ -217,8 +217,8 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | `…/vehicles` | GET, POST | daftar / tambah mobil (+ dompet Flazz) |
 | `…/vehicles/[vehicleId]` | PATCH, DELETE | ubah / hapus (409 bila sudah dipakai) |
 | `…/export` | POST | ekspor ke Google Sheets + Drive |
-| `/api/receipts/upload-token` *(global)* | POST | token client upload Vercel Blob |
-| `/api/receipts/scan` *(global)* | POST | gambar/PDF → hasil OCR kanonik |
+| `…/receipts` | POST | multipart `file` → simpan ke Blob private + scan Gemini (§6.1) |
+| `…/attachments/[attachmentId]` | GET | stream file lampiran dari Blob private |
 | `/api/auth/login`, `/api/auth/logout` | POST | sesi aplikasi |
 | `/api/auth/google/start`, `/api/auth/google/callback` | GET | OAuth Google |
 
@@ -280,19 +280,24 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 ### 6.1 Upload & scan bon
 
 ```text
-pilih file → kompres di browser (gambar: sisi terpanjang ≤ 1600px, JPEG q≈0.8; PDF: apa adanya, ≤ 10MB)
-  ├─ upload ke Vercel Blob (client upload; token dari /api/receipts/upload-token,
-  │   batas content-type image/jpeg|png|webp, application/pdf; path receipts/{projectId}/{uuid}.{ext})
-  └─ POST /api/receipts/scan (multipart) → services/scan-receipt → api/gemini
-       → mappers/receipt-scan (zod) → { date: string|null, amount: number|null,
-                                        merchant: string|null, categoryHint: string|null,
-                                        confident: boolean }
+pilih file → kompres di browser (gambar: sisi terpanjang ≤ 1600px, JPEG q≈0.8; PDF: apa adanya)
+  → POST /api/projects/{projectId}/receipts (multipart `file`, ≤ 4 MB; image/jpeg|png|webp, application/pdf)
+       → services/upload-receipt
+            ├─ api/blob: put private → receipts/{projectId}/{uuid}.{ext}
+            └─ api/gemini (byte yang sama, inline base64) → mappers/receipt-scan (null bila tidak masuk akal)
+  ← { attachment: { pathname, blobUrl, mimeType, sizeBytes },
+      scan: { ok: true, scan: { date, amount, merchant, categoryHint, confident } } | { ok: false, reason } }
+simpan transaksi → input `attachments: [{ ...attachment, ocr }]` → baris `attachments`
 ```
 
-- `api/gemini` memakai REST `generateContent` dengan `responseMimeType: application/json` + `responseSchema`. Model dibaca dari `GEMINI_MODEL` (default: model Flash terbaru yang tersedia di free tier, ditetapkan saat implementasi).
-- Isi prompt (Bahasa Indonesia) mencakup: format rupiah Indonesia (`.` pemisah ribuan, `,` desimal), ambil **total yang dibayar** (bukan subtotal/pajak/kembalian/tunai), format tanggal `dd/mm/yy`, nama bulan Indonesia, struk SPBU/tol/parkir, kwitansi tulisan tangan, dan `null` jika tidak yakin. `categoryHint` dipilih dari daftar nama kategori proyek yang dikirim dalam prompt.
-- Mapper menolak nominal ≤ 0 atau > 100.000.000, tanggal tidak valid, atau tahun di luar ±1 dari tahun proyek (diubah jadi `null`).
-- Gagal/kuota habis/timeout (15 detik) → respons `{ ok: false, reason }`, UI menampilkan toast "Scan gagal, isi manual". Lampiran tetap tersimpan.
+- **Store Blob private** (keputusan implementasi 2026-10-21: store pengguna dikonfigurasi private). File dibaca lewat `GET /api/projects/{projectId}/attachments/{id}`, yang mengecek sesi lalu men-stream dari Blob. Pratinjau sebelum disimpan memakai object URL di browser.
+- **Upload dan scan dalam satu request lewat server** (bukan client upload + token): HP cukup mengunggah sekali. Konsekuensinya batas **4 MB** per file (batas body fungsi Vercel 4,5 MB). Foto yang sudah dikompres hanya ±300 KB; PDF > 4 MB ditolak dengan pesan jelas.
+- `api/gemini` memakai REST `generateContent` dengan `responseMimeType: application/json` + `responseSchema` (`categoryHint` berupa enum nama kategori pengeluaran aktif) + `thinkingLevel: "low"`. Model dari `GEMINI_MODEL`, default `gemini-flash-latest` (per 2026-10-21 → `gemini-3.8-flash`, free tier). Scan memakan ±8–13 detik (E2E), jadi **timeout 30 detik** dan route `maxDuration = 60`.
+- Isi prompt (Bahasa Indonesia) mencakup: format rupiah Indonesia (`.` pemisah ribuan, `,` desimal), ambil **total yang dibayar** (bukan subtotal/pajak/kembalian/tunai), format tanggal `dd/mm/yy`, nama bulan Indonesia, struk SPBU/tol/parkir, kwitansi tulisan tangan, dan `null` jika tidak yakin.
+- Mapper mengubah jadi `null`: nominal ≤ 0, > 100.000.000, atau bukan bilangan bulat; tanggal tidak valid atau tahunnya di luar ±1 dari tahun proyek; `categoryHint` di luar kategori proyek. `confident` hanya true bila Gemini yakin dan nominal terbaca.
+- Gagal/kuota habis/timeout/key kosong → `{ ok: false, reason: "failed" | "quota" | "timeout" | "unconfigured" }`; UI menampilkan toast "… isi manual". Lampiran tetap tersimpan.
+- Form hanya mengisi field yang masih kosong (nominal, tanggal bila masih default, toko, kategori untuk pengeluaran). Field itu diberi badge "cek lagi" sampai disentuh. Maksimal 5 lampiran per transaksi; hapus thumbnail dengan konfirmasi dua langkah.
+- Lampiran divalidasi server: pathname harus `receipts/{projectId ini}/{uuid}.{ext}` dan `blobUrl` harus di host `*.private.blob.vercel-storage.com` dengan path yang sama.
 
 ### 6.2 Ekspor Google Sheets + Drive
 
@@ -345,7 +350,7 @@ Ekspor bersifat idempoten untuk foto (tidak diunggah dua kali) dan aman diulang.
 DATABASE_URL=
 BLOB_READ_WRITE_TOKEN=
 GEMINI_API_KEY=
-GEMINI_MODEL=
+GEMINI_MODEL=                 # default gemini-flash-latest
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
 # GOOGLE_OAUTH_REDIRECT_URI=   # default {origin}/api/auth/google/callback
