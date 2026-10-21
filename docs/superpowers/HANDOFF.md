@@ -12,7 +12,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ merged (PR #3; migrasi 0003 sudah di Neon) |
 | Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ merged (PR #4; juga: form proyek baru tanpa pax bawaan, 1 mobil) |
 | Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Spec sudah disinkronkan (branch `docs/sync-spec`) |
-| Rencana 3 Scan bon (`…/2026-10-21-03-scan-bon.md`) | ✅ branch `feat/scan-bon` (termasuk sinkronisasi spec). E2E curl lulus. Menunggu PR/merge |
+| Rencana 3 Scan bon (`…/2026-10-21-03-scan-bon.md`) | ✅ merged (PR #9; juga: fallback model Gemini, DatePicker kalender NeoBrutalism, dialog foto bon, `allowedDevOrigins` rentang IP privat) |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
