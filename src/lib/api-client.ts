@@ -20,6 +20,8 @@ export async function apiFetch<T>(url: string, init: Omit<RequestInit, "body"> &
     body: json !== undefined ? JSON.stringify(json) : undefined,
   });
   if (response.status === 401 && typeof window !== "undefined") {
+    // Sesi habis: reload penuh (bukan router.push) supaya cache TanStack Query ikut terbuang.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = `/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   }
   if (!response.ok) {
