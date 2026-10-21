@@ -12,6 +12,8 @@ export interface Transaction {
   vehicleId: string | null;
   merchant: string | null;
   note: string | null;
+  /** Diisi jika transaksi ini penyesuaian dari cek saldo (spec §3.3). */
+  balanceCheckId: string | null;
   createdAt: string;
 }
 

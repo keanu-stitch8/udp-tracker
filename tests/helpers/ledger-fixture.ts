@@ -37,6 +37,7 @@ export const tx = (t: Partial<Transaction> & Pick<Transaction, "type" | "date" |
     vehicleId: null,
     merchant: null,
     note: null,
+    balanceCheckId: null,
     createdAt: `2026-10-21T00:00:${String(n).padStart(2, "0")}.000Z`,
     ...t,
   };

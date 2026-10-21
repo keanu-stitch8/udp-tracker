@@ -14,6 +14,7 @@ export function toTransaction(row: TransactionRow): Transaction {
     vehicleId: row.vehicleId,
     merchant: row.merchant,
     note: row.note,
+    balanceCheckId: row.balanceCheckId,
     createdAt: row.createdAt.toISOString(),
   };
 }
