@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { NATIVE_SELECT_CLASS } from "@/components/app/form-classes";
 import { LABEL } from "@/components/app/typography";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatDateShort } from "@/modules/shared/lib/date";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { useTransactionList } from "../hooks/use-transactions";
@@ -52,20 +52,13 @@ export function TransactionList({ reference }: { reference: TransactionReference
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <ButtonGroup aria-label="Jenis" className="w-full">
+        <ToggleGroup aria-label="Jenis" className="w-full" spacing={0} value={[filters.type]} onValueChange={(v) => v[0] && set({ type: v[0] as TransactionFilters["type"] })}>
           {TYPES.map((t) => (
-            <Button
-              key={t.value}
-              type="button"
-              variant={filters.type === t.value ? "default" : "outline"}
-              aria-pressed={filters.type === t.value}
-              className="h-10 flex-1 px-0"
-              onClick={() => set({ type: t.value })}
-            >
+            <ToggleGroupItem key={t.value} value={t.value} className="h-10 flex-1">
               {t.label}
-            </Button>
+            </ToggleGroupItem>
           ))}
-        </ButtonGroup>
+        </ToggleGroup>
         <div className="grid grid-cols-2 gap-2">
           <NativeSelect aria-label="Kategori" className={NATIVE_SELECT_CLASS} value={filters.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
             <NativeSelectOption value="">Semua kategori</NativeSelectOption>
