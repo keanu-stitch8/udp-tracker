@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ApiError } from "@/lib/api-client";
+import { useResetAfterSave } from "@/lib/use-reset-after-save";
 import { formatDateLong } from "@/modules/shared/lib/date";
 import type { TransactionType } from "@/modules/shared/types/enums";
 import { ledgerKeys } from "../hooks/keys";
@@ -32,7 +33,13 @@ interface TransactionFormProps {
   initial?: TransactionView;
 }
 
-export function TransactionForm({ reference, defaultDate, returnTo, initial }: TransactionFormProps) {
+/** Form baru mulai kosong lagi setelah tersimpan. Form ubah tidak di-reset: nilainya sudah sama dengan data tersimpan. */
+export function TransactionForm(props: TransactionFormProps) {
+  const { resetKey, resetWhenHidden } = useResetAfterSave();
+  return <TransactionFormFields key={resetKey} {...props} onSaved={props.initial ? undefined : resetWhenHidden} />;
+}
+
+function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSaved }: TransactionFormProps & { onSaved?: () => void }) {
   const router = useRouter();
   const projectId = reference.project.id;
   const save = useSaveTransaction(projectId, initial?.id);
@@ -97,6 +104,7 @@ export function TransactionForm({ reference, defaultDate, returnTo, initial }: T
       {
         onSuccess: () => {
           toast.success(initial ? "Perubahan disimpan." : "Transaksi tersimpan.");
+          onSaved?.();
           router.push(returnTo);
           router.refresh();
         },

@@ -7,10 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api-client";
+import { useResetAfterSave } from "@/lib/use-reset-after-save";
 import { addDays } from "@/modules/shared/lib/date";
 import { useCreateProject } from "../hooks/use-projects";
 
+/** Setelah proyek dibuat, kunjungan berikutnya ke /proyek/baru mulai kosong lagi. */
 export function ProjectForm({ today }: { today: string }) {
+  const { resetKey, resetWhenHidden } = useResetAfterSave();
+  return <ProjectFormFields key={resetKey} today={today} onSaved={resetWhenHidden} />;
+}
+
+function ProjectFormFields({ today, onSaved }: { today: string; onSaved: () => void }) {
   const router = useRouter();
   const create = useCreateProject();
   const [name, setName] = useState("");
@@ -34,6 +41,7 @@ export function ProjectForm({ today }: { today: string }) {
           { name, location, startDate, endDate, pax: Number(pax), vehicles: vehicles.filter((v) => v.trim()) },
           {
             onSuccess: () => {
+              onSaved();
               router.push("/");
               router.refresh();
             },
