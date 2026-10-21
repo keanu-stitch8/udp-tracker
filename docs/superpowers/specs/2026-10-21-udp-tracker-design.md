@@ -65,7 +65,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `projectId`, `kind` (`expense` | `income`), `name`, `icon` (nama ikon lucide), `isVehicleRelated` (bool; jika true, form menampilkan pilihan mobil), `isAdminFee` (bool; tepat satu per proyek), `isOfficeFunding` (bool; pemasukan dari kantor, default: UDP Kantor), `sortOrder`, `archived`
 
 **budgets** (pagu)
-- `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_day` | `lump_sum`), `note?`
+- `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_vehicle` (per mobil per trip, tidak dikali hari) | `per_day` | `lump_sum`), `note?`. Nama pagu unik per proyek.
 - **budget_categories**: relasi many-to-many `budgetId` ↔ `categoryId`. Satu pagu bisa mencakup beberapa kategori.
 - Nilai pagu: `rate × multiplier`, dengan multiplier `pax × hari`, `jumlahMobil × hari`, `hari`, atau `1`.
 
@@ -94,10 +94,14 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 ### 3.2 Seed default saat membuat proyek
 
 - **Dompet:** Rekening (bank), Cash (cash), Flazz {Mobil n} (flazz, satu per mobil yang dibuat).
-- **Kategori pengeluaran:** Makan Siang, Makan Malam, Sarapan, Snack & Air Minum, BBM (`isVehicleRelated`), Tol (`isVehicleRelated`), Parkir (`isVehicleRelated`), Biaya Admin (`isAdminFee`), Lain-lain.
+- **Kategori pengeluaran:** Makan Siang, Makan Malam, Sarapan, Snack & Air Minum, BBM Perjalanan, Bensin Harian, Tol, Parkir (empat terakhir `isVehicleRelated`), Biaya Admin (`isAdminFee`), Lain-lain.
 - **Kategori pemasukan:** UDP Kantor, Lainnya.
-- **Pagu:** "Pagu Makan", `rate = 150000`, `basis = per_pax_per_day`, mencakup Makan Siang + Makan Malam. Ini catatan internal. Jika realisasi melebihi pagu, kelebihannya **ditanggung kantor**.
-- Kategori lain tanpa pagu (bisa ditambah oleh pengguna).
+- **Pagu (surat penawaran, 2026-10):** catatan internal; jika realisasi melebihi pagu, kelebihannya **ditanggung kantor**.
+  - Pagu Makan: Rp150.000 per orang per hari → Makan Siang + Makan Malam
+  - Pagu Sarapan: Rp25.000 per orang per hari → Sarapan
+  - BBM + Tol: Rp1.300.000 per mobil per trip (`per_vehicle`) → BBM Perjalanan + Tol
+  - Operasional Harian: Rp100.000 per mobil per hari → Bensin Harian + Parkir + Lain-lain
+- Proyek lama dilengkapi lewat tombol "Terapkan pagu surat penawaran" (`applyDefaultBudgets`): menambah kategori/pagu default yang belum ada berdasarkan nama, mengganti nama "BBM" → "BBM Perjalanan", tanpa mengubah pagu yang sudah ada.
 
 ### 3.3 Aturan perhitungan (pure, di `lib/`)
 
@@ -204,7 +208,10 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | `…/wallets`, `…/wallets/[id]` | GET, POST, PATCH | dompet |
 | `…/wallets/[id]/balance-checks` | GET, POST | riwayat & buat cek saldo |
 | `…/balance-checks/[id]/adjust` | POST | catat selisih sebagai transaksi |
-| `…/categories`, `…/budgets`, `…/vehicles` | GET, POST, PATCH | master data |
+| `…/budgets` | GET, POST | pengaturan pagu (rumus, batas, pemakaian, kategori pengeluaran) / tambah |
+| `…/budgets/[budgetId]` | PATCH, DELETE | ubah / hapus pagu |
+| `…/budgets/defaults` | POST | terapkan pagu surat penawaran yang belum ada |
+| `…/categories`, `…/vehicles` | GET, POST, PATCH | master data (Rencana 2b) |
 | `…/export` | POST | ekspor ke Google Sheets + Drive |
 | `/api/receipts/upload-token` *(global)* | POST | token client upload Vercel Blob |
 | `/api/receipts/scan` *(global)* | POST | gambar/PDF → hasil OCR kanonik |
@@ -247,7 +254,8 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 
 **Lainnya**
 - Dompet: daftar, tambah/ubah/arsip, **Cek Saldo** (input saldo asli → tampil selisih → "Catat selisih").
-- Kategori & Pagu: kelola kategori, kelola pagu (rate, basis, kategori tercakup).
+- **Pagu** (`/lainnya/pagu`): kartu per pagu (tarif, rumus → batas, bar pemakaian, kategori), ubah inline dengan pratinjau rumus, tambah pagu, hapus dengan konfirmasi dua langkah, tombol "Terapkan pagu surat penawaran".
+- Kategori: kelola kategori (Rencana 2b).
 - Mobil, Pengaturan proyek (nama, lokasi, tanggal, pax, status Selesai/Buka lagi).
 - Proyek: daftar & buat proyek baru.
 - Google: status koneksi (email), Hubungkan/Putuskan.
