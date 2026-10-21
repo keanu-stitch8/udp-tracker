@@ -4,6 +4,7 @@ import type { Db } from "@/db/types";
 import { NotFoundError, ValidationError, type FieldErrors } from "@/lib/errors";
 import { parseOrThrow } from "@/lib/validation";
 import { selectBudget, type BudgetRow } from "../api/budgets-repo";
+import { usesDays } from "../lib/budget";
 import type { Category } from "../types/category";
 import { budgetInputSchema } from "../types/budget-input";
 
@@ -11,6 +12,7 @@ export interface BudgetValues {
   name: string;
   rate: number;
   basis: BudgetRow["basis"];
+  days: number | null;
   note: string | null;
   categoryIds: string[];
 }
@@ -25,7 +27,8 @@ export function planBudget(input: unknown, refs: { categories: Category[]; other
   if (picked.some((c) => !c)) errors.categoryIds = ["Kategori tidak ditemukan di proyek ini."];
   else if (picked.some((c) => c!.kind !== "expense")) errors.categoryIds = ["Pagu hanya untuk kategori pengeluaran."];
   if (Object.keys(errors).length) throw new ValidationError(errors);
-  return { ...v, categoryIds: [...new Set(v.categoryIds)] };
+  // Jumlah hari hanya bermakna untuk basis yang dikali hari.
+  return { ...v, days: usesDays(v.basis) ? v.days : null, categoryIds: [...new Set(v.categoryIds)] };
 }
 
 export async function findBudgetOrThrow(db: Db, projectId: string, id: string): Promise<BudgetRow> {

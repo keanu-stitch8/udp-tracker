@@ -14,7 +14,7 @@ export function ProjectForm({ today }: { today: string }) {
   const router = useRouter();
   const create = useCreateProject();
   const [name, setName] = useState("");
-  const [location, setLocation] = useState("Kudus");
+  const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(addDays(today, 4));
   const [pax, setPax] = useState("9");
@@ -43,7 +43,7 @@ export function ProjectForm({ today }: { today: string }) {
       <FieldGroup>
         <Field data-invalid={errorOf("name") ? true : undefined}>
           <FieldLabel htmlFor="name">Nama proyek</FieldLabel>
-          <Input id="name" placeholder="Hero Kudus Okt 2026" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input id="name" placeholder="Produksi Okt 2026" value={name} onChange={(e) => setName(e.target.value)} />
           {errorOf("name") && <FieldError>{errorOf("name")}</FieldError>}
         </Field>
         <Field data-invalid={errorOf("location") ? true : undefined}>

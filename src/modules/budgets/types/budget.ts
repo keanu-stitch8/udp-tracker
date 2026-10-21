@@ -5,6 +5,8 @@ export interface Budget {
   name: string;
   rate: number;
   basis: BudgetBasis;
+  /** Jumlah hari khusus pagu ini (mis. 6 hari kerja); null = ikut periode proyek. Hanya untuk basis harian. */
+  days: number | null;
   note: string | null;
   categoryIds: string[];
 }

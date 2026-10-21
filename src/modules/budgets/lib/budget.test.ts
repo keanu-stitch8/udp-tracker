@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { categories, mealBudget, transactions } from "@tests/helpers/ledger-fixture";
 import { expenseEntries } from "@/modules/transactions/lib/ledger";
-import { budgetContextOf, budgetLimit, budgetUsage, dailyBudgetUsage, dailyLimit } from "./budget";
+import { budgetContextOf, budgetLimit, budgetUsage, dailyBudgetUsage, dailyLimit, usesDays } from "./budget";
 
 const ctx = { pax: 9, vehicleCount: 2, days: 6 };
 const entries = expenseEntries(transactions, categories);
@@ -19,6 +19,14 @@ describe("pagu", () => {
     expect(budgetLimit({ rate: 2_000_000, basis: "lump_sum" }, ctx)).toBe(2_000_000);
     expect(dailyLimit({ rate: 1_300_000, basis: "per_vehicle" }, ctx)).toBeNull();
     expect(budgetLimit({ rate: 1_300_000, basis: "per_vehicle" }, ctx)).toBe(2_600_000);
+  });
+  it("jumlah hari per pagu menggantikan periode proyek (hanya basis harian)", () => {
+    expect(budgetLimit({ rate: 100_000, basis: "per_vehicle_per_day", days: 4 }, ctx)).toBe(800_000);
+    expect(budgetLimit({ rate: 150_000, basis: "per_pax_per_day", days: null }, ctx)).toBe(8_100_000);
+    expect(budgetLimit({ rate: 1_300_000, basis: "per_vehicle", days: 4 }, ctx)).toBe(2_600_000);
+    expect(budgetLimit({ rate: 2_000_000, basis: "lump_sum", days: 4 }, ctx)).toBe(2_000_000);
+    expect(usesDays("per_day")).toBe(true);
+    expect(usesDays("per_vehicle")).toBe(false);
   });
   it("pemakaian hanya dari kategori tercakup", () => {
     expect(budgetUsage(mealBudget, ctx, entries)).toEqual({

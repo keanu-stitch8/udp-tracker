@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRupiah } from "@/modules/shared/lib/money";
-import { useApplyDefaultBudgets, useBudgetSettings, useDeleteBudget } from "../hooks/use-budgets";
+import { useBudgetSettings, useDeleteBudget } from "../hooks/use-budgets";
 import { BASIS_LABELS } from "../lib/basis";
 import { BudgetForm } from "./budget-form";
 
@@ -17,7 +17,6 @@ type Editing = { kind: "new" } | { kind: "edit"; id: string } | null;
 export function BudgetSettingsList({ projectId }: { projectId: string }) {
   const { data } = useBudgetSettings(projectId);
   const remove = useDeleteBudget(projectId);
-  const applyDefaults = useApplyDefaultBudgets(projectId);
   const [editing, setEditing] = useState<Editing>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   if (!data) return null;
@@ -32,7 +31,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         </Alert>
       )}
       <p className="text-sm text-muted-foreground">
-        Pagu dari surat penawaran ({data.context.pax} orang, {data.context.vehicleCount} mobil, {data.context.days} hari). Kelebihan pemakaian ditanggung kantor.
+        Batas biaya per pos ({data.context.pax} orang, {data.context.vehicleCount} mobil, periode {data.context.days} hari). Jumlah hari bisa diatur per pagu. Kelebihan pemakaian ditanggung kantor.
       </p>
 
       {editing?.kind === "new" ? (
@@ -48,6 +47,10 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         <Button variant="outline" disabled={data.locked} onClick={() => setEditing({ kind: "new" })}>
           + Tambah pagu
         </Button>
+      )}
+
+      {!data.budgets.length && editing?.kind !== "new" && (
+        <p className="border-2 border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada pagu. Tambahkan pagu sesuai anggaran proyek, mis. makan per orang per hari.</p>
       )}
 
       {data.budgets.map((budget) =>
@@ -121,30 +124,6 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         ),
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Pagu surat penawaran</CardTitle>
-          <CardDescription>Tambahkan kategori & pagu default yang belum ada (Makan, Sarapan, BBM + Tol, Operasional Harian). Pagu yang sudah ada tidak diubah.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={applyDefaults.isPending || data.locked}
-            onClick={() =>
-              applyDefaults.mutate(undefined, {
-                onSuccess: (result) => {
-                  const changes = [...result.renamed, ...result.addedCategories.map((n) => `+ kategori ${n}`), ...result.addedBudgets.map((n) => `+ ${n}`)];
-                  toast.success(changes.length ? `Diterapkan: ${changes.join(", ")}` : "Semua pagu default sudah ada.");
-                },
-                onError: (error) => toast.error(error.message),
-              })
-            }
-          >
-            Terapkan pagu surat penawaran
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }

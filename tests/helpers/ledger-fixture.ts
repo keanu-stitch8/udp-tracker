@@ -67,6 +67,7 @@ export const mealBudget: Budget = {
   name: "Pagu Makan",
   rate: 150_000,
   basis: "per_pax_per_day",
+  days: null,
   note: null,
   categoryIds: ["makan-siang", "makan-malam"],
 };

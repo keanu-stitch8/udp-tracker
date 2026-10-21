@@ -7,7 +7,7 @@ export function CreateProjectView() {
     <div className="flex flex-col gap-4">
       <h1 className="font-head text-2xl">Proyek baru</h1>
       <p className="text-sm text-muted-foreground">
-        Dompet (Rekening, Cash, Flazz per mobil), kategori, dan Pagu Makan Rp150.000/orang/hari dibuat otomatis. Semuanya bisa diubah nanti.
+        Dompet (Rekening, Cash, Flazz per mobil) dan kategori dibuat otomatis. Pagu diatur sendiri di Lainnya → Pagu.
       </p>
       <Suspense fallback={<Skeleton className="h-96 w-full" />}>
         <CreateProjectSection />
