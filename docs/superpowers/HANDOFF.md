@@ -9,16 +9,17 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 1 Fondasi (`docs/superpowers/plans/2026-10-21-01-fondasi.md`) | ✅ merged ke `main` (PR #1) |
 | Rencana 2a Buku kas (`…/2026-10-21-02a-buku-kas.md`) | ✅ merged ke `main` (PR #2) |
 | Rencana 2b-1 Pagu (`…/2026-10-21-02b1-pagu.md`) | ✅ merged (PR #2). Bagian "surat penawaran" sudah dibuang di PR #3 |
-| Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ branch `feat/pagu-hari`, **PR #3** https://github.com/keanu-stitch8/udp-tracker/pull/3 (menunggu merge; migrasi 0003 sudah diterapkan ke Neon) |
-| Rencana 2b sisa | ⏳ belum: kelola dompet + **cek saldo Flazz/cash + catat selisih** (spec §3.3), kelola kategori & mobil, pengaturan proyek (ubah nama/tanggal/pax, Selesai/Buka lagi), hapus proyek |
+| Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ merged (PR #3; migrasi 0003 sudah di Neon) |
+| Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ branch `feat/dompet` (juga: form proyek baru tanpa pax bawaan, 1 mobil). Menunggu PR/merge |
+| Rencana 2b-3 | ⏳ belum: kategori, mobil, pengaturan proyek (nama/lokasi/tanggal/pax, Selesai/Buka lagi), **hapus proyek wajib isi password admin (= password login, `APP_PASSWORD_HASH`)** |
 | Rencana 3 Bon | ⏳ upload Vercel Blob + scan Gemini free tier (spec §6.1) |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
 
-1. Merge **PR #3** (`feat/pagu-hari` → `main`). Setelah merge: `git checkout main && git pull`, hapus branch lokal.
+1. PR + merge `feat/dompet` (Rencana 2b-2) setelah disetujui pengguna.
 2. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
-3. Tulis & eksekusi inline **Rencana 2b-2: Dompet & cek saldo** (kelola dompet tambah/ubah/arsip, detail dompet, cek saldo + catat selisih spec §3.3, link dari saldo beranda). Lalu **Rencana 2b-3**: kategori, mobil, pengaturan proyek, hapus proyek (tanya pengguna dulu: tambah mobil → otomatis dompet Flazz? mobil boleh dihapus? hapus proyek = hapus permanen dengan konfirmasi?).
+3. Tulis & eksekusi inline **Rencana 2b-3**: kategori, mobil, pengaturan proyek, hapus proyek dengan password admin. Tanya pengguna dulu: tambah mobil → otomatis dompet Flazz? mobil boleh dihapus? Kategori "BBM Perjalanan" vs "Bensin Harian" tetap dipisah (pulang-pergi vs harian produksi/event) — keputusan pengguna.
 
 ## Dokumen kunci
 
@@ -49,6 +50,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Gerbang commit pakai exit code** (`npm run build > log; echo $?`), bukan `grep`. Di zsh, variabel berisi beberapa flag tidak dipecah: tulis skrip uji sebagai file bash.
 - **E2E**: buat kredensial sementara (hash argon2 + secret acak di scratchpad, bukan `.env.local`), `next start -p 3100` dengan env proses, uji via curl. Untuk uji browser pakai **`127.0.0.1:3100`**, bukan `localhost`, karena cookie tidak dibedakan per port dan login uji akan menimpa sesi pengguna di localhost:3051. Hapus proyek "E2E %" dan `login_attempts` uji dari Neon setelahnya.
 - Verifikasi penuh: `npm run ui:check && npm run lint && npm run typecheck && npm test && npm run build`.
+- E2E: hapus proyek uji dengan menghapus `transactions` proyek itu dulu (FK transaksi → dompet/kategori `RESTRICT`), baru `projects` (cascade sisanya). Login di browser uji: `form_input` tidak memicu state React; ketik manual.
+- Halaman `notFound()` di dalam section ber-Suspense membalas HTTP 200 (streaming PPR) dengan isi 404 — perilaku Next, sama di `/transaksi/[id]`.
 
 ## Preferensi pengguna
 
