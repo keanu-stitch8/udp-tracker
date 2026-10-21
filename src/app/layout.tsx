@@ -21,7 +21,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" className={`${head.variable} ${sans.variable}`}>
-      <body>
+      {/* Ekstensi browser (mis. ColorZilla: cz-shortcut-listen) menambah atribut ke <body> sebelum hydrate.
+          Hanya berlaku untuk atribut <body> ini sendiri, bukan anak-anaknya. */}
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
