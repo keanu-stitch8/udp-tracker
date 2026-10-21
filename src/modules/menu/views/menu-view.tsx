@@ -1,8 +1,9 @@
-import { ChevronRight, FolderKanban, Gauge } from "lucide-react";
+import { ChevronRight, FolderKanban, Gauge, Wallet } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "@/modules/auth/components/logout-button";
 
 const LINKS = [
+  { href: "/lainnya/dompet", label: "Dompet", icon: Wallet },
   { href: "/lainnya/pagu", label: "Pagu", icon: Gauge },
   { href: "/proyek", label: "Proyek", icon: FolderKanban },
 ] as const;
