@@ -1,0 +1,16 @@
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TransactionFormSection } from "../sections/transaction-form-section";
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export function TransactionFormView({ title, searchParams, transactionId }: { title: string; searchParams: SearchParams; transactionId?: Promise<string> }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="font-head text-2xl">{title}</h1>
+      <Suspense fallback={<Skeleton className="h-[32rem] w-full" />}>
+        <TransactionFormSection searchParams={searchParams} transactionId={transactionId} />
+      </Suspense>
+    </div>
+  );
+}
