@@ -2,7 +2,7 @@
 import { sum } from "@/modules/shared/lib/money";
 import type { BudgetBasis } from "@/modules/shared/types/enums";
 import type { ExpenseEntry } from "@/modules/transactions/types/transaction";
-import type { Budget, BudgetUsage, DailyBudgetUsage } from "../types/budget";
+import type { Budget, BudgetTotal, BudgetUsage, DailyBudgetUsage } from "../types/budget";
 
 export interface BudgetContext {
   pax: number;
@@ -66,6 +66,14 @@ export function budgetUsage(budget: Budget, ctx: BudgetContext, entries: Expense
     overBy: Math.max(used - limit, 0),
     ratio: limit > 0 ? used / limit : 0,
   };
+}
+
+/** Total pagu: Σ batas semua pagu vs pengeluaran berkategori tercakup (tiap pengeluaran dihitung sekali). */
+export function totalBudgetUsage(budgets: Budget[], ctx: BudgetContext, entries: ExpenseEntry[]): BudgetTotal {
+  const limit = sum(budgets.map((b) => budgetLimit(b, ctx)));
+  const covered = new Set(budgets.flatMap((b) => b.categoryIds));
+  const used = sum(entries.filter((e) => e.categoryId !== null && covered.has(e.categoryId)).map((e) => e.amount));
+  return { limit, used, remaining: Math.max(limit - used, 0), overBy: Math.max(used - limit, 0) };
 }
 
 export function dailyBudgetUsage(budget: Budget, ctx: BudgetContext, entries: ExpenseEntry[], date: string): DailyBudgetUsage | null {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { categories, mealBudget, transactions } from "@tests/helpers/ledger-fixture";
 import { expenseEntries } from "@/modules/transactions/lib/ledger";
-import { budgetContextOf, budgetLimit, budgetUsage, dailyBudgetUsage, dailyLimit, usesDays } from "./budget";
+import { budgetContextOf, budgetLimit, budgetUsage, dailyBudgetUsage, dailyLimit, totalBudgetUsage, usesDays } from "./budget";
 
 const ctx = { pax: 9, vehicleCount: 2, days: 6 };
 const entries = expenseEntries(transactions, categories);
@@ -27,6 +27,11 @@ describe("pagu", () => {
     expect(budgetLimit({ rate: 2_000_000, basis: "lump_sum", days: 4 }, ctx)).toBe(2_000_000);
     expect(usesDays("per_day")).toBe(true);
     expect(usesDays("per_vehicle")).toBe(false);
+  });
+  it("total pagu: Σ batas; tiap pengeluaran dihitung sekali walau kategorinya di beberapa pagu", () => {
+    const tolBudget = { ...mealBudget, id: "pagu-tol", name: "Tol", rate: 100_000, basis: "lump_sum" as const, categoryIds: ["tol", "makan-siang"] };
+    expect(totalBudgetUsage([mealBudget, tolBudget], ctx, entries)).toEqual({ limit: 8_200_000, used: 1_550_000, remaining: 6_650_000, overBy: 0 });
+    expect(totalBudgetUsage([], ctx, entries)).toEqual({ limit: 0, used: 0, remaining: 0, overBy: 0 });
   });
   it("pemakaian hanya dari kategori tercakup", () => {
     expect(budgetUsage(mealBudget, ctx, entries)).toEqual({

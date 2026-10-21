@@ -27,6 +27,25 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
         </Card>
       </div>
 
+      {data.budgets.length > 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Total pagu</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 text-sm">
+            <BudgetBar used={data.budgetTotal.used} limit={data.budgetTotal.limit} />
+            <p className="tabular-nums">
+              {formatRupiah(data.budgetTotal.used)} dari {formatRupiah(data.budgetTotal.limit)}
+            </p>
+            {data.budgetTotal.overBy > 0 ? (
+              <p className="font-medium text-destructive">Lebih total pagu {formatRupiah(data.budgetTotal.overBy)}</p>
+            ) : (
+              <p className="text-muted-foreground">Sisa total pagu {formatRupiah(data.budgetTotal.remaining)}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {data.budgets.map((budget) => (
         <Card key={budget.budgetId}>
           <CardHeader>

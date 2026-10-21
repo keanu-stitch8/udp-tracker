@@ -22,6 +22,14 @@ export interface BudgetUsage {
   ratio: number;
 }
 
+/** Semua pagu digabung: kelebihan satu pagu bisa tertutup sisa pagu lain. */
+export interface BudgetTotal {
+  limit: number;
+  used: number;
+  remaining: number;
+  overBy: number;
+}
+
 export interface DailyBudgetUsage {
   budgetId: string;
   name: string;
