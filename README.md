@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UDP Tracker
 
-## Getting Started
+Aplikasi mobile-first untuk mencatat dan mempertanggungjawabkan UDP produksi video (hero & editorial feature). Stack: Next.js 16, Neon + Drizzle, TanStack Query, Tailwind v4, NeoBrutalism (ex-RetroUI).
 
-First, run the development server:
+Spec: `docs/superpowers/specs/2026-10-21-udp-tracker-design.md` · Alur data: `docs/architecture/data-flow.md`
+
+## Setup lokal
 
 ```bash
+npm install
+npm i -g neon@latest && neon login
+neon env pull                  # tulis DATABASE_URL, DATABASE_URL_UNPOOLED, NEON_BRANCH ke .env.local
+npm run hash-password          # tambahkan APP_PASSWORD_HASH + SESSION_SECRET ke .env.local
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka http://localhost:3000. Untuk mencoba di HP pada jaringan yang sama, jalankan `npm run dev -- -H 0.0.0.0` lalu buka `http://<IP-laptop>:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Perintah
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Perintah | Fungsi |
+| --- | --- |
+| `npm test` | Vitest (unit + PGlite) |
+| `npm run typecheck` | `next typegen` + `tsc` |
+| `npm run lint` | ESLint |
+| `npm run db:generate` | buat migrasi dari `src/db/schema.ts` |
+| `npm run db:migrate` | jalankan migrasi ke `DATABASE_URL` |
+| `npm run ui:sync` | salin/perbarui komponen NeoBrutalism ke `src/components/ui` |
+| `npm run ui:check` | pastikan `src/components/ui` sama persis dengan registry |
 
-## Learn More
+## Komponen UI
 
-To learn more about Next.js, take a look at the following resources:
+`src/components/ui/*` disalin dari registry NeoBrutalism (`https://neobrutalism.com/r/{name}.json`, daftar di `ui.config.json`) dan **tidak boleh diedit**. Kustomisasi dilakukan di `src/components/app/*` atau lewat token di `src/app/globals.css`. Untuk menambah komponen, tambahkan namanya di `ui.config.json`, lalu jalankan `npm run ui:sync`. Jangan pakai `shadcn add` untuk komponen ini, karena CLI mengambil dependensi seperti `button` dari registry default shadcn.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> Repo `github.com/Logging-Stuff/RetroUI` (di-link template shadcn.io) sudah diambil alih pihak lain. Jangan di-clone. Sumber sah: `github.com/neobrutalism/neobrutalism`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy (Vercel + Neon)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push ke GitHub, lalu import ke Vercel.
+2. Tambahkan `DATABASE_URL`, `DATABASE_URL_UNPOOLED` (dari `neon env pull`), `APP_PASSWORD_HASH`, dan `SESSION_SECRET` di Environment Variables. Set Function Region ke Singapura (`sin1`), sama dengan region Neon.
+3. Deploy. Script `vercel-build` menjalankan migrasi sebelum `next build`.

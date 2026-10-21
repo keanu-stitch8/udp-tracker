@@ -22,10 +22,17 @@ interface UiConfig {
 const config = JSON.parse(await readFile("ui.config.json", "utf8")) as UiConfig;
 const check = process.argv.includes("--check");
 
-async function fetchItem(name: string): Promise<RegistryItem> {
-  const res = await fetch(config.registry.replace("{name}", name));
-  if (!res.ok) throw new Error(`Registry item "${name}" gagal diambil: HTTP ${res.status}`);
-  return (await res.json()) as RegistryItem;
+async function fetchItem(name: string, attempts = 3): Promise<RegistryItem> {
+  try {
+    const res = await fetch(config.registry.replace("{name}", name));
+    if (!res.ok) throw new Error(`Registry item "${name}" gagal diambil: HTTP ${res.status}`);
+    return (await res.json()) as RegistryItem;
+  } catch (error) {
+    // Jaringan kadang putus sesaat — coba ulang sebelum menyerah.
+    if (attempts <= 1) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return fetchItem(name, attempts - 1);
+  }
 }
 
 const items = new Map<string, RegistryItem>();
