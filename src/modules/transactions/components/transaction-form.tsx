@@ -230,7 +230,7 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
           <MoneyInput
             id="amount"
             autoFocus={!initial}
-            className="h-14 font-head text-2xl"
+            className="h-14 font-head text-2xl font-bold"
             value={amount}
             onChange={(value) => {
               setAmount(value);

@@ -4,6 +4,7 @@ import { FolderPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CARD_TITLE } from "@/components/app/typography";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +44,7 @@ export function ProjectList({ activeProjectId }: { activeProjectId: string | nul
           <li key={project.id}>
             <Card>
               <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
+                <CardTitle className={CARD_TITLE}>{project.name}</CardTitle>
                 <CardDescription>
                   {formatDateLong(project.startDate)} – {formatDateLong(project.endDate)}
                   {project.location ? ` · ${project.location}` : ""}

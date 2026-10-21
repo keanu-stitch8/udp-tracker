@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BudgetBar } from "@/components/app/budget-bar";
 import { CategoryIcon } from "@/components/app/category-icon";
+import { AMOUNT } from "@/components/app/typography";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ export function DayDetailPanel({ projectId, date, onNavigate }: { projectId: str
 
   return (
     <div className="flex flex-col gap-4 overflow-y-auto p-4" onClickCapture={(event) => (event.target as HTMLElement).closest("a") && onNavigate?.()}>
-      <p className="font-head text-2xl tabular-nums">{formatRupiah(data.expenseTotal)}</p>
+      <p className={`${AMOUNT} text-2xl`}>{formatRupiah(data.expenseTotal)}</p>
 
       {data.budgets.map((budget) => (
         <div key={budget.budgetId} className="flex flex-col gap-1 text-sm">

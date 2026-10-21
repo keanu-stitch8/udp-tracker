@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { BudgetBar } from "@/components/app/budget-bar";
+import { AMOUNT, CARD_TITLE } from "@/components/app/typography";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
       {editing?.kind === "new" ? (
         <Card>
           <CardHeader>
-            <CardTitle>Pagu baru</CardTitle>
+            <CardTitle className={CARD_TITLE}>Pagu baru</CardTitle>
           </CardHeader>
           <CardContent>
             <BudgetForm settings={data} onDone={() => setEditing(null)} />
@@ -57,7 +58,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         editing?.kind === "edit" && editing.id === budget.id ? (
           <Card key={budget.id}>
             <CardHeader>
-              <CardTitle>Ubah {budget.name}</CardTitle>
+              <CardTitle className={CARD_TITLE}>Ubah {budget.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <BudgetForm settings={data} initial={budget} onDone={() => setEditing(null)} />
@@ -66,7 +67,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         ) : (
           <Card key={budget.id}>
             <CardHeader>
-              <CardTitle>{budget.name}</CardTitle>
+              <CardTitle className={CARD_TITLE}>{budget.name}</CardTitle>
               <CardDescription>
                 {formatRupiah(budget.rate)} {BASIS_LABELS[budget.basis]}
               </CardDescription>
@@ -78,7 +79,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
             </CardHeader>
             <CardContent className="flex flex-col gap-2 text-sm">
               <p>
-                {budget.formula} = <span className="font-head">{formatRupiah(budget.limit)}</span>
+                {budget.formula} = <span className={AMOUNT}>{formatRupiah(budget.limit)}</span>
               </p>
               <BudgetBar used={budget.used} limit={budget.limit} />
               <p className="text-muted-foreground">

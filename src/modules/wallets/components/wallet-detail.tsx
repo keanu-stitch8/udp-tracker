@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/app/date-picker";
 import { MoneyInput } from "@/components/app/money-input";
+import { AMOUNT, CARD_TITLE, LABEL } from "@/components/app/typography";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
       {editing ? (
         <Card>
           <CardHeader>
-            <CardTitle>Ubah {wallet.name}</CardTitle>
+            <CardTitle className={CARD_TITLE}>Ubah {wallet.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <WalletForm projectId={projectId} vehicles={data.vehicles} initial={wallet} onDone={() => setEditing(false)} />
@@ -60,7 +61,7 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>{wallet.name}</CardTitle>
+            <CardTitle className={CARD_TITLE}>{wallet.name}</CardTitle>
             <CardDescription>{[WALLET_KIND_LABELS[wallet.kind], wallet.vehicleName, wallet.holder].filter(Boolean).join(" · ")}</CardDescription>
             <CardAction>
               <Button size="sm" variant="outline" disabled={data.locked} onClick={() => setEditing(true)}>
@@ -70,8 +71,8 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div>
-              <p className="text-xs text-muted-foreground">Saldo di aplikasi</p>
-              <p className={cn("font-head text-3xl tabular-nums", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</p>
+              <p className={`${LABEL} text-muted-foreground`}>Saldo di aplikasi</p>
+              <p className={cn(AMOUNT, "text-3xl", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</p>
               <p className="text-xs text-muted-foreground">Saldo awal {formatRupiah(wallet.openingBalance)}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -88,7 +89,7 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Riwayat cek saldo</CardTitle>
+          <CardTitle className={CARD_TITLE}>Riwayat cek saldo</CardTitle>
         </CardHeader>
         <CardContent>
           {data.checks.length ? (
@@ -118,7 +119,7 @@ function BalanceCheckForm({ detail, today }: { detail: WalletDetail; today: stri
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Cek saldo</CardTitle>
+        <CardTitle className={CARD_TITLE}>Cek saldo</CardTitle>
         <CardDescription>Masukkan saldo asli (cek kartu Flazz, hitung uang cash, atau lihat saldo rekening) untuk dicocokkan.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -160,9 +161,9 @@ function BalanceCheckForm({ detail, today }: { detail: WalletDetail; today: stri
           </FieldGroup>
           <dl className="grid grid-cols-2 gap-1 text-sm">
             <dt className="text-muted-foreground">Saldo aplikasi s/d tanggal</dt>
-            <dd className="text-right font-head tabular-nums">{formatRupiah(computed)}</dd>
+            <dd className={`text-right ${AMOUNT}`}>{formatRupiah(computed)}</dd>
             <dt className="text-muted-foreground">Selisih</dt>
-            <dd className="text-right font-head tabular-nums">{actual === null ? "—" : describeDifference(actual - computed)}</dd>
+            <dd className={`text-right ${AMOUNT}`}>{actual === null ? "—" : describeDifference(actual - computed)}</dd>
           </dl>
           {create.error && !Object.keys(fieldErrors).length && (
             <p role="alert" className="text-sm text-destructive">

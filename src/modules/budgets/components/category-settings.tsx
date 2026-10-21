@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/components/app/category-icon";
+import { CARD_TITLE } from "@/components/app/typography";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +47,7 @@ export function CategorySettingsList({ projectId }: { projectId: string }) {
       {SECTIONS.map(({ kind, title }) => (
         <Card key={kind}>
           <CardHeader>
-            <CardTitle className="text-base">{title}</CardTitle>
+            <CardTitle className={CARD_TITLE}>{title}</CardTitle>
             <CardAction>
               <Button size="sm" variant="outline" disabled={data.locked} onClick={() => setEditing({ kind: "new", categoryKind: kind })}>
                 + Tambah
