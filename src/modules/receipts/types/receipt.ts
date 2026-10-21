@@ -14,7 +14,7 @@ export interface ReceiptScan {
   confident: boolean;
 }
 
-export type ScanFailure = "quota" | "timeout" | "failed" | "unconfigured";
+export type ScanFailure = "busy" | "quota" | "timeout" | "failed" | "unconfigured";
 export type ScanResult = { ok: true; scan: ReceiptScan } | { ok: false; reason: ScanFailure };
 
 /** Lampiran yang sudah di Blob tapi belum tersimpan sebagai baris `attachments`. */

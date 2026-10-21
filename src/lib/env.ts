@@ -35,11 +35,15 @@ export function env(): Env {
 export interface ReceiptsEnv {
   /** null = scan dimatikan; upload bon tetap jalan. */
   geminiApiKey: string | null;
-  geminiModel: string;
+  /** Dicoba berurutan; model berikutnya dipakai bila model sebelumnya sibuk/kuota habis/timeout. */
+  geminiModels: string[];
 }
+
+const DEFAULT_GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
 
 /** Env Rencana 3 dibaca terpisah agar app tetap jalan tanpa Blob/Gemini. SDK Blob membaca token sendiri dari process.env. */
 export function receiptsEnv(source: Record<string, string | undefined> = process.env): ReceiptsEnv {
   if (!source.BLOB_READ_WRITE_TOKEN) throw new ServiceUnavailableError("Upload bon belum dikonfigurasi (BLOB_READ_WRITE_TOKEN).");
-  return { geminiApiKey: source.GEMINI_API_KEY || null, geminiModel: source.GEMINI_MODEL || "gemini-flash-latest" };
+  const models = (source.GEMINI_MODEL ?? "").split(",").map((m) => m.trim()).filter(Boolean);
+  return { geminiApiKey: source.GEMINI_API_KEY || null, geminiModels: models.length ? models : DEFAULT_GEMINI_MODELS };
 }

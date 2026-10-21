@@ -1,10 +1,11 @@
 /** Prompt scan bon (spec §6.1). `categoryHint` dibatasi ke kategori pengeluaran proyek lewat enum schema. */
-export function receiptPrompt(categoryNames: string[]): string {
+export function receiptPrompt(categoryNames: string[], projectYear: number): string {
   return [
     "Kamu membaca foto/PDF bon, struk, atau kwitansi dari Indonesia. Kembalikan JSON sesuai schema.",
     "- amount: TOTAL YANG DIBAYAR dalam rupiah (bilangan bulat). Bukan subtotal, pajak, diskon, uang tunai yang diserahkan, atau kembalian.",
     "  Format rupiah Indonesia: titik = pemisah ribuan, koma = desimal (\"Rp 125.500,00\" = 125500).",
     "- date: tanggal transaksi format YYYY-MM-DD. Bon biasanya ditulis dd/mm/yy atau dd-mm-yyyy, atau dengan nama bulan Indonesia (Januari … Desember, Agt, Okt, Des).",
+    `  Bila tahun tidak tertulis di bon, pakai tahun ${projectYear}.`,
     "- merchant: nama toko/SPBU/gerbang tol/lokasi parkir, singkat.",
     `- categoryHint: pilih satu dari [${categoryNames.join(", ")}] yang paling cocok, atau null.`,
     "  Struk SPBU → BBM/bensin, struk/e-toll gerbang tol → Tol, karcis parkir → Parkir.",

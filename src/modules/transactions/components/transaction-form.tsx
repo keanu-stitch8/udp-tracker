@@ -31,6 +31,7 @@ const ADMIN_FEE_PRESETS = [0, 2_500, 6_500];
 
 type OcrField = "amount" | "date" | "categoryId" | "merchant";
 const SCAN_FAILED: Record<Exclude<ScanResult, { ok: true }>["reason"], string> = {
+  busy: "Gemini sedang sibuk. Coba scan lagi sebentar, atau isi manual.",
   quota: "Kuota scan habis, isi manual.",
   timeout: "Scan terlalu lama, isi manual.",
   failed: "Scan gagal, isi manual.",

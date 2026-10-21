@@ -15,7 +15,7 @@ vi.mock("./api/blob", () => ({
 }));
 vi.mock("./api/gemini", async (importOriginal) => ({ ...(await importOriginal<typeof import("./api/gemini")>()), generateJson: vi.fn() }));
 
-const config = { geminiApiKey: "kunci-uji", geminiModel: "gemini-uji" };
+const config = { geminiApiKey: "kunci-uji", geminiModels: ["gemini-uji", "gemini-cadangan"] };
 const jpeg = (bytes = 10_000) => new File([new Uint8Array(bytes)], "bon.jpg", { type: "image/jpeg" });
 let db: Db;
 let projectId: string;
@@ -42,13 +42,29 @@ describe("uploadReceipt", () => {
     expect(file.mimeType).toBe("image/jpeg");
     expect(prompt).toContain("Tol");
     expect(prompt).not.toContain("UDP Kantor");
+    expect(prompt).toContain("2026");
   });
 
-  it("scan gagal → alasan dikembalikan, lampiran tetap tersimpan", async () => {
-    vi.mocked(generateJson).mockRejectedValue(new GeminiError("quota", "habis"));
-    const result = await uploadReceipt(db, projectId, jpeg(), config);
-    expect(result.scan).toEqual({ ok: false, reason: "quota" });
-    expect(putReceipt).toHaveBeenCalledOnce();
+  it("model utama sibuk/kuota/timeout → coba model cadangan", async () => {
+    for (const reason of ["busy", "quota", "timeout"] as const) {
+      vi.mocked(generateJson).mockReset();
+      vi.mocked(generateJson).mockRejectedValueOnce(new GeminiError(reason, "x")).mockResolvedValueOnce({ amount: 10_000, confident: true });
+      const result = await uploadReceipt(db, projectId, jpeg(), config);
+      expect(result.scan).toMatchObject({ ok: true, scan: { amount: 10_000 } });
+      expect(vi.mocked(generateJson).mock.calls.map(([input]) => input.model)).toEqual(["gemini-uji", "gemini-cadangan"]);
+    }
+  });
+
+  it("semua model gagal → alasan terakhir dikembalikan, lampiran tetap tersimpan; error lain tidak dicoba ulang", async () => {
+    vi.mocked(generateJson).mockRejectedValue(new GeminiError("busy", "sibuk"));
+    expect((await uploadReceipt(db, projectId, jpeg(), config)).scan).toEqual({ ok: false, reason: "busy" });
+    expect(generateJson).toHaveBeenCalledTimes(2);
+
+    vi.mocked(generateJson).mockReset();
+    vi.mocked(generateJson).mockRejectedValue(new GeminiError("failed", "400"));
+    expect((await uploadReceipt(db, projectId, jpeg(), config)).scan).toEqual({ ok: false, reason: "failed" });
+    expect(generateJson).toHaveBeenCalledOnce();
+    expect(putReceipt).toHaveBeenCalledTimes(2);
   });
 
   it("tanpa GEMINI_API_KEY → unconfigured, upload tetap jalan", async () => {

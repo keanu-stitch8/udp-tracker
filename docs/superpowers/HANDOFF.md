@@ -44,7 +44,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - Test komponen/hook React: file `*.test.tsx` dengan `// @vitest-environment happy-dom` (happy-dom dipin 20.14.5).
 - **Chrome**: Enter setelah mengetik password kadang dimakan popup saran password bawaan. Ini bukan bug app.
 - **Blob store private** (`put` public ditolak). Baca file lewat `readReceipt()`/route `attachments/[id]`, jangan pakai `blobUrl` langsung di browser. Skrip di luar app yang memakai drizzle wajib `casing: "snake_case"`.
-- **Gemini**: `gemini-flash-latest` (→ 3.8-flash) ±8–13 detik per scan. Struk uji sintetis bisa dibuat tanpa PIL: `cupsfilter struk.txt > struk.pdf` lalu `sips -s format jpeg struk.pdf --out struk.jpg`.
+- **Gemini**: `gemini-flash-latest` (→ 3.8-flash) ±8–13 detik per scan, tapi bisa 503 "high demand" atau 40+ detik saat ramai → app otomatis mencoba cadangan `gemini-flash-lite-latest`. Pesan error asli tercatat di terminal dev (`[gemini] <model> <reason> …`). Struk uji sintetis bisa dibuat tanpa PIL: `cupsfilter struk.txt > struk.pdf` lalu `sips -s format jpeg struk.pdf --out struk.jpg`.
 - **Seluruh angka** (saldo, total, pagu) dihitung di `lib/` dari `getLedger()`, bukan dengan SUM di SQL.
 
 ## Cara kerja yang dipakai (ikuti lagi)

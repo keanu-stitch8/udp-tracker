@@ -5,7 +5,7 @@ import { ValidationError } from "@/lib/errors";
 import { selectCategories } from "@/modules/budgets/api/categories-repo";
 import { assertProjectEditable, findProjectOrThrow } from "@/modules/projects/services/projects";
 import { putReceipt } from "../api/blob";
-import { GeminiError, generateJson } from "../api/gemini";
+import { GeminiError, generateJson, type GeminiFailure } from "../api/gemini";
 import { receiptPrompt, receiptResponseSchema } from "../lib/receipt-prompt";
 import { toReceiptScan } from "../mappers/receipt-scan";
 import { MAX_RECEIPT_BYTES, RECEIPT_EXTENSIONS, RECEIPT_MIMES, type ReceiptMime, type ScanResult, type UploadReceiptResult } from "../types/receipt";
@@ -28,23 +28,37 @@ export async function uploadReceipt(db: Db, projectId: string, file: File, confi
   return { attachment, scan: await scan(db, project, { mimeType, base64: bytes.toString("base64") }, config) };
 }
 
+/** Total waktu scan (route `maxDuration` 60 detik); satu model maksimal 30 detik. */
+const SCAN_BUDGET_MS = 55_000;
+const MODEL_TIMEOUT_MS = 30_000;
+const RETRY_NEXT_MODEL = new Set<GeminiFailure>(["busy", "quota", "timeout"]);
+
 async function scan(db: Db, project: { id: string; startDate: string }, file: { mimeType: string; base64: string }, config: ReceiptsEnv): Promise<ScanResult> {
   if (!config.geminiApiKey) return { ok: false, reason: "unconfigured" };
   const categoryNames = (await selectCategories(db, project.id)).filter((c) => c.kind === "expense" && !c.archived).map((c) => c.name);
-  try {
-    const raw = await generateJson({
-      apiKey: config.geminiApiKey,
-      model: config.geminiModel,
-      prompt: receiptPrompt(categoryNames),
-      file,
-      schema: receiptResponseSchema(categoryNames),
-    });
-    return { ok: true, scan: toReceiptScan(raw, { projectYear: Number(project.startDate.slice(0, 4)), categoryNames }) };
-  } catch (error) {
-    if (error instanceof GeminiError) {
-      console.error("[gemini]", error.reason, error.message);
-      return { ok: false, reason: error.reason };
+  const projectYear = Number(project.startDate.slice(0, 4));
+  const deadline = Date.now() + SCAN_BUDGET_MS;
+  let reason: GeminiFailure = "failed";
+  // Model berikutnya hanya dicoba bila model sebelumnya sibuk/kuota/timeout (mis. 503 "high demand", 2026-10-21).
+  for (const model of config.geminiModels) {
+    const timeoutMs = Math.min(MODEL_TIMEOUT_MS, deadline - Date.now());
+    if (timeoutMs < 5_000) break;
+    try {
+      const raw = await generateJson({
+        apiKey: config.geminiApiKey,
+        model,
+        prompt: receiptPrompt(categoryNames, projectYear),
+        file,
+        schema: receiptResponseSchema(categoryNames),
+        timeoutMs,
+      });
+      return { ok: true, scan: toReceiptScan(raw, { projectYear, categoryNames }) };
+    } catch (error) {
+      if (!(error instanceof GeminiError)) throw error;
+      console.error("[gemini]", model, error.reason, error.message);
+      reason = error.reason;
+      if (!RETRY_NEXT_MODEL.has(reason)) break;
     }
-    throw error;
   }
+  return { ok: false, reason };
 }
