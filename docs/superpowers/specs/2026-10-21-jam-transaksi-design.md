@@ -33,7 +33,12 @@ Setiap transaksi punya jam (`HH:mm`, 24 jam, WIB) selain tanggal. Jam diisi di f
 
 ## Form transaksi
 
-- Field **"Jam"** di samping Tanggal (grid 2 kolom), memakai `<input type="time">` bawaan. CSS iOS di `globals.css` (`min-w-0 appearance-none`, rata kiri) sudah mencakup `type="time"`.
+- Field **"Jam"** di samping Tanggal (grid 2 kolom). **Selalu format 24 jam** (`14:30`, bukan `2:30 PM`), di semua HP.
+- Tidak memakai `<input type="time">` bawaan, karena tampilannya mengikuti setelan HP/browser (bisa AM/PM) dan tidak bisa dipaksa dari kode.
+- Komponen baru `src/components/app/time-input.tsx` (`TimeInput`): `Input` teks dengan `inputMode="numeric"`, placeholder `14:30`, maks 5 karakter.
+  - Saat mengetik, hanya angka yang diterima dan titik dua disisipkan otomatis (`1430` → `14:30`).
+  - Saat blur, nilai dinormalkan (`930` → `09:30`, `9.30` → `09:30`). Nilai yang tidak valid dibiarkan apa adanya, lalu validasi menampilkan "Jam tidak valid.".
+  - Logika format dipisah ke fungsi murni (`formatTimeTyping`, `normalizeTime` di `date.ts`) supaya bisa dites tanpa DOM.
 - Transaksi baru: default jam sekarang di WIB, dihitung di server bersama `defaultDate` (prop `defaultTime`).
 - Ubah transaksi: jam tersimpan dipakai.
 - Badge "cek lagi" berlaku untuk jam yang diisi dari scan, sama seperti field scan lainnya.
@@ -60,7 +65,7 @@ Sheet transaksi nanti menyertakan kolom Jam di sebelah Tanggal.
 
 ## Tes
 
-- `date.ts`: `nowTimeWib` (termasuk saat tanggal UTC berbeda dengan WIB), `isTime`, `timeSchema`.
+- `date.ts`: `nowTimeWib` (termasuk saat tanggal UTC berbeda dengan WIB; hasil selalu 24 jam), `isTime`, `timeSchema`, `formatTimeTyping`, `normalizeTime`.
 - `transactionInputSchema`: jam wajib, format salah ditolak.
 - `receipt-scan` mapper: `14.30` → `14:30`, `9:05` → `09:05`, `25:00`/teks acak → null.
 - `adjustmentInput`: jam `23:59`.
