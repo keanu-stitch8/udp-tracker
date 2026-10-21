@@ -30,3 +30,12 @@ export async function updateTransactionRow(db: Db, id: string, patch: Partial<Ne
   const [row] = await db.update(transactions).set(patch).where(eq(transactions.id, id)).returning();
   return row;
 }
+
+/** Termasuk yang sudah dihapus — untuk cek apakah dompet/mobil pernah dipakai (FK transaksi → dompet RESTRICT). */
+export function selectTransactionRowsIncludingDeleted(db: Db, projectId: string): Promise<TransactionRow[]> {
+  return db.select().from(transactions).where(eq(transactions.projectId, projectId));
+}
+
+export async function deleteProjectTransactions(db: Db, projectId: string): Promise<void> {
+  await db.delete(transactions).where(eq(transactions.projectId, projectId));
+}

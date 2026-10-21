@@ -1,6 +1,7 @@
 // Isi awal proyek baru (spec §3.2). Murni: tanpa DB — command yang menyimpannya.
 // Sengaja generik: tanpa pagu/tarif bawaan — pagu diatur sendiri per proyek.
 import type { CategoryKind, WalletKind } from "@/modules/shared/types/enums";
+import { flazzWalletName } from "./vehicles";
 
 export interface WalletSeed {
   kind: WalletKind;
@@ -45,7 +46,7 @@ export function buildProjectDefaults(vehicles: { id: string; name: string }[]): 
     wallets: [
       { kind: "bank", name: "Rekening", vehicleId: null },
       { kind: "cash", name: "Cash", vehicleId: null },
-      ...vehicles.map((vehicle) => ({ kind: "flazz" as const, name: `Flazz ${vehicle.name}`, vehicleId: vehicle.id })),
+      ...vehicles.map((vehicle) => ({ kind: "flazz" as const, name: flazzWalletName(vehicle.name), vehicleId: vehicle.id })),
     ],
     categories: [
       expense("Makan Siang", "sandwich"),

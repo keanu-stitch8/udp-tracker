@@ -24,3 +24,8 @@ export async function updateProjectRow(db: Db, id: string, patch: Partial<NewPro
   const [row] = await db.update(projects).set(patch).where(eq(projects.id, id)).returning();
   return row;
 }
+
+/** Cascade: mobil, dompet (→ cek saldo), kategori, pagu. Transaksi harus dihapus dulu (FK RESTRICT). */
+export async function deleteProjectRow(db: Db, id: string): Promise<void> {
+  await db.delete(projects).where(eq(projects.id, id));
+}
