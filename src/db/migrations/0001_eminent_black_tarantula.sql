@@ -1,0 +1,1 @@
+ALTER TABLE "categories" ADD COLUMN "is_office_funding" boolean DEFAULT false NOT NULL;

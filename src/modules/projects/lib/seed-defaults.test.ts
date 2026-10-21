@@ -25,6 +25,7 @@ describe("buildProjectDefaults", () => {
     expect(income).toEqual(["UDP Kantor", "Lainnya"]);
     expect(defaults.categories.filter((c) => c.isVehicleRelated).map((c) => c.name)).toEqual(["BBM", "Tol", "Parkir"]);
     expect(defaults.categories.filter((c) => c.isAdminFee).map((c) => c.name)).toEqual(["Biaya Admin"]);
+    expect(defaults.categories.filter((c) => c.isOfficeFunding).map((c) => c.name)).toEqual(["UDP Kantor"]);
   });
 
   it("Pagu Makan 150rb/orang/hari mencakup makan siang + malam", () => {

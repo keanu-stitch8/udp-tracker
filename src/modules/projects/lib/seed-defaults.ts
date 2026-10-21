@@ -15,6 +15,7 @@ export interface CategorySeed {
   icon: string;
   isVehicleRelated: boolean;
   isAdminFee: boolean;
+  isOfficeFunding: boolean;
 }
 
 export interface BudgetSeed {
@@ -37,9 +38,17 @@ const expense = (name: string, icon: string, flags: Partial<Pick<CategorySeed, "
   icon,
   isVehicleRelated: flags.isVehicleRelated ?? false,
   isAdminFee: flags.isAdminFee ?? false,
+  isOfficeFunding: false,
 });
 
-const income = (name: string, icon: string): CategorySeed => ({ kind: "income", name, icon, isVehicleRelated: false, isAdminFee: false });
+const income = (name: string, icon: string, isOfficeFunding = false): CategorySeed => ({
+  kind: "income",
+  name,
+  icon,
+  isVehicleRelated: false,
+  isAdminFee: false,
+  isOfficeFunding,
+});
 
 export function buildProjectDefaults(vehicles: { id: string; name: string }[]): ProjectDefaults {
   return {
@@ -58,7 +67,7 @@ export function buildProjectDefaults(vehicles: { id: string; name: string }[]): 
       expense("Parkir", "square-parking", { isVehicleRelated: true }),
       expense("Biaya Admin", "landmark", { isAdminFee: true }),
       expense("Lain-lain", "ellipsis"),
-      income("UDP Kantor", "building-2"),
+      income("UDP Kantor", "building-2", true),
       income("Lainnya", "circle-plus"),
     ],
     budgets: [

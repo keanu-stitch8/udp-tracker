@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRupiah, formatRupiahCompact, parseRupiah } from "./money";
+import { formatRupiah, formatRupiahCompact, parseRupiah, sum } from "./money";
 
 describe("formatRupiah", () => {
   it("memakai titik pemisah ribuan", () => {
@@ -33,5 +33,12 @@ describe("parseRupiah", () => {
   it("null jika tidak ada angka", () => {
     expect(parseRupiah("")).toBeNull();
     expect(parseRupiah("Rp")).toBeNull();
+  });
+});
+
+describe("sum", () => {
+  it("menjumlah array angka, kosong → 0", () => {
+    expect(sum([1_000, 2_500, 6_500])).toBe(10_000);
+    expect(sum([])).toBe(0);
   });
 });

@@ -24,3 +24,7 @@ export function parseRupiah(input: string): number | null {
   const digits = withoutDecimals.replace(/\D/g, "");
   return digits ? Number(digits) : null;
 }
+
+export function sum(values: number[]): number {
+  return values.reduce((total, value) => total + value, 0);
+}
