@@ -17,7 +17,7 @@ export interface BudgetUsage {
   limit: number;
   used: number;
   remaining: number;
-  /** Kelebihan dari pagu → ditanggung kantor (spec §3.3). */
+  /** Kelebihan dari pagu ini (bisa tertutup sisa pagu lain di total pagu). */
   overBy: number;
   ratio: number;
 }
