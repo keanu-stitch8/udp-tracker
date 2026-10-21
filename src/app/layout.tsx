@@ -10,6 +10,8 @@ const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap
 export const metadata: Metadata = {
   title: "UDP Tracker",
   description: "Catat dan pertanggungjawabkan UDP produksi.",
+  icons: { icon: "/icons/192", apple: "/icons/180" },
+  appleWebApp: { capable: true, title: "UDP", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
