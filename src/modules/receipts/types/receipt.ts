@@ -8,6 +8,8 @@ export const MAX_RECEIPT_AMOUNT = 100_000_000;
 /** Hasil scan kanonik (spec §6.1); field yang tidak yakin = null. */
 export interface ReceiptScan {
   date: string | null;
+  /** "HH:mm" 24 jam. */
+  time: string | null;
   amount: number | null;
   merchant: string | null;
   categoryHint: string | null;

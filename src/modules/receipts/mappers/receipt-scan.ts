@@ -1,5 +1,5 @@
 // Trust boundary: JSON Gemini → ReceiptScan. Field yang tidak masuk akal menjadi null, bukan error (spec §6.1).
-import { isIsoDate } from "@/modules/shared/lib/date";
+import { isIsoDate, isTime, normalizeTime } from "@/modules/shared/lib/date";
 import { MAX_RECEIPT_AMOUNT, type ReceiptScan } from "../types/receipt";
 
 function toAmount(value: unknown): number | null {
@@ -17,6 +17,13 @@ function toDate(value: unknown, projectYear: number): string | null {
   return Math.abs(Number(value.slice(0, 4)) - projectYear) <= 1 ? value : null;
 }
 
+/** Gemini diminta 24 jam; yang ada huruf (AM/PM, teks) ditolak, bukan ditebak. */
+function toTime(value: unknown): string | null {
+  if (typeof value !== "string" || /[a-z]/i.test(value)) return null;
+  const time = normalizeTime(value.trim());
+  return isTime(time) ? time : null;
+}
+
 function toText(value: unknown, max: number): string | null {
   return typeof value === "string" ? value.trim().slice(0, max) || null : null;
 }
@@ -27,6 +34,7 @@ export function toReceiptScan(raw: unknown, refs: { projectYear: number; categor
   const hint = typeof r.categoryHint === "string" ? r.categoryHint.trim().toLowerCase() : null;
   return {
     date: toDate(r.date, refs.projectYear),
+    time: toTime(r.time),
     amount,
     merchant: toText(r.merchant, 100),
     categoryHint: refs.categoryNames.find((name) => name.toLowerCase() === hint) ?? null,

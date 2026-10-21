@@ -23,6 +23,13 @@ describe("toReceiptScan", () => {
     expect(scan({ date: "21/10/26" }).date).toBeNull();
   });
 
+  it("jam dinormalkan ke HH:mm 24 jam; selain itu null", () => {
+    expect(scan({ time: "14:30" }).time).toBe("14:30");
+    expect(scan({ time: "14.30" }).time).toBe("14:30");
+    expect(scan({ time: "9:05" }).time).toBe("09:05");
+    for (const time of ["25:00", "2:30 PM", "jam dua", 1430, null]) expect(scan({ time }).time).toBeNull();
+  });
+
   it("categoryHint harus salah satu kategori proyek (ejaan proyek)", () => {
     expect(scan({ categoryHint: "tol" }).categoryHint).toBe("Tol");
     expect(scan({ categoryHint: "Parkir" }).categoryHint).toBeNull();
@@ -42,7 +49,7 @@ describe("toReceiptScan", () => {
 
   it("input aneh → semua null", () => {
     for (const raw of [null, "teks", [1, 2], 42]) {
-      expect(toReceiptScan(raw, refs)).toEqual({ date: null, amount: null, merchant: null, categoryHint: null, confident: false });
+      expect(toReceiptScan(raw, refs)).toEqual({ date: null, time: null, amount: null, merchant: null, categoryHint: null, confident: false });
     }
   });
 });

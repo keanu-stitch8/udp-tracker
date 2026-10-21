@@ -26,6 +26,11 @@ function isOwnBlobUrl(value: string, pathname: string): boolean {
 
 const scanSchema = z.object({
   date: z.string().nullable(),
+  // Hasil scan lama tersimpan tanpa time.
+  time: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
   amount: z.number().nullable(),
   merchant: z.string().nullable(),
   categoryHint: z.string().nullable(),

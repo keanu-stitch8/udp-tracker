@@ -6,6 +6,7 @@ export function receiptPrompt(categoryNames: string[], projectYear: number): str
     "  Format rupiah Indonesia: titik = pemisah ribuan, koma = desimal (\"Rp 125.500,00\" = 125500).",
     "- date: tanggal transaksi format YYYY-MM-DD. Bon biasanya ditulis dd/mm/yy atau dd-mm-yyyy, atau dengan nama bulan Indonesia (Januari … Desember, Agt, Okt, Des).",
     `  Bila tahun tidak tertulis di bon, pakai tahun ${projectYear}.`,
+    "- time: jam transaksi format 24 jam HH:mm (\"14.30\" atau \"2:30 PM\" → \"14:30\"). Bon/struk/kwitansi sering mencetak jam di dekat tanggal. Isi null bila tidak ada jam.",
     "- merchant: nama toko/SPBU/gerbang tol/lokasi parkir, singkat.",
     `- categoryHint: pilih satu dari [${categoryNames.join(", ")}] yang paling cocok, atau null.`,
     "  Struk SPBU → BBM/bensin, struk/e-toll gerbang tol → Tol, karcis parkir → Parkir.",
@@ -20,6 +21,7 @@ export function receiptResponseSchema(categoryNames: string[]) {
     type: "OBJECT",
     properties: {
       date: { type: "STRING", nullable: true },
+      time: { type: "STRING", nullable: true },
       amount: { type: "INTEGER", nullable: true },
       merchant: { type: "STRING", nullable: true },
       categoryHint: { type: "STRING", enum: categoryNames, nullable: true },
