@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/app/coming-soon";
+import { CalendarModule } from "@/modules/calendar";
 
 export default function CalendarPage() {
-  return <ComingSoon title="Kalender" />;
+  return <CalendarModule />;
 }
