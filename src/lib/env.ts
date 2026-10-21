@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { ServiceUnavailableError } from "./errors";
 
 const schema = z.object({
   DATABASE_URL: z.string().min(1, "wajib diisi"),
@@ -29,4 +30,16 @@ let cached: Env | undefined;
 export function env(): Env {
   cached ??= parseEnv(process.env);
   return cached;
+}
+
+export interface ReceiptsEnv {
+  /** null = scan dimatikan; upload bon tetap jalan. */
+  geminiApiKey: string | null;
+  geminiModel: string;
+}
+
+/** Env Rencana 3 dibaca terpisah agar app tetap jalan tanpa Blob/Gemini. SDK Blob membaca token sendiri dari process.env. */
+export function receiptsEnv(source: Record<string, string | undefined> = process.env): ReceiptsEnv {
+  if (!source.BLOB_READ_WRITE_TOKEN) throw new ServiceUnavailableError("Upload bon belum dikonfigurasi (BLOB_READ_WRITE_TOKEN).");
+  return { geminiApiKey: source.GEMINI_API_KEY || null, geminiModel: source.GEMINI_MODEL || "gemini-flash-latest" };
 }
