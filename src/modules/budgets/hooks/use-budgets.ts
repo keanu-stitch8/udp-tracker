@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { ledgerKeys } from "@/modules/transactions/hooks/keys";
+import { useLedgerMutation } from "@/modules/transactions/hooks/use-ledger-mutation";
 import type { BudgetSettings } from "../queries/budget-settings";
 import type { Budget } from "../types/budget";
 import type { BudgetInput } from "../types/budget-input";
@@ -9,12 +10,6 @@ const base = (projectId: string) => `/api/projects/${projectId}/budgets`;
 
 export function useBudgetSettings(projectId: string) {
   return useQuery({ queryKey: ledgerKeys.budgets(projectId), queryFn: () => apiFetch<BudgetSettings>(base(projectId)) });
-}
-
-/** Pagu memengaruhi beranda & kalender → invalidasi seluruh data buku kas proyek. */
-function useLedgerMutation<TInput, TResult>(projectId: string, fn: (input: TInput) => Promise<TResult>) {
-  const queryClient = useQueryClient();
-  return useMutation({ mutationFn: fn, onSuccess: () => queryClient.invalidateQueries({ queryKey: ledgerKeys.all(projectId) }) });
 }
 
 export function useSaveBudget(projectId: string, budgetId?: string) {
