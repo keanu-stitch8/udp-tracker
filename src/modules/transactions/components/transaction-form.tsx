@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CategoryIcon } from "@/components/app/category-icon";
 import { DatePicker } from "@/components/app/date-picker";
 import { MoneyInput } from "@/components/app/money-input";
+import { TimeInput } from "@/components/app/time-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import type { TransactionView } from "../types/transaction";
 const TYPE_LABELS: Record<TransactionType, string> = { expense: "Pengeluaran", income: "Pemasukan", transfer: "Transfer" };
 const ADMIN_FEE_PRESETS = [0, 2_500, 6_500];
 
-type OcrField = "amount" | "date" | "categoryId" | "merchant";
+type OcrField = "amount" | "date" | "time" | "categoryId" | "merchant";
 const SCAN_FAILED: Record<Exclude<ScanResult, { ok: true }>["reason"], string> = {
   busy: "Gemini sedang sibuk. Coba scan lagi sebentar, atau isi manual.",
   quota: "Kuota scan habis, isi manual.",
@@ -115,6 +116,10 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
     if (scan.date && !initial && date === defaultDate) {
       setDate(scan.date);
       filled.add("date");
+    }
+    if (scan.time && !initial && time === defaultTime) {
+      setTime(scan.time);
+      filled.add("time");
     }
     if (scan.merchant && !merchant.trim()) {
       setMerchant(scan.merchant);
@@ -244,26 +249,44 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
           {errorOf("amount") && <FieldError>{errorOf("amount")}</FieldError>}
         </Field>
 
-        <Field data-invalid={errorOf("date") ? true : undefined}>
-          <FieldLabel htmlFor="date">
-            Tanggal <CheckAgain show={ocrFields.has("date")} />
-          </FieldLabel>
-          <DatePicker
-            id="date"
-            value={date}
-            period={{ from: reference.project.startDate, to: reference.project.endDate }}
-            onChange={(value) => {
-              setDate(value);
-              touched("date");
-            }}
-          />
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-3">
+            <Field data-invalid={errorOf("date") ? true : undefined}>
+              <FieldLabel htmlFor="date">
+                Tanggal <CheckAgain show={ocrFields.has("date")} />
+              </FieldLabel>
+              <DatePicker
+                id="date"
+                value={date}
+                period={{ from: reference.project.startDate, to: reference.project.endDate }}
+                onChange={(value) => {
+                  setDate(value);
+                  touched("date");
+                }}
+              />
+              {errorOf("date") && <FieldError>{errorOf("date")}</FieldError>}
+            </Field>
+            <Field data-invalid={errorOf("time") ? true : undefined}>
+              <FieldLabel htmlFor="time">
+                Jam <CheckAgain show={ocrFields.has("time")} />
+              </FieldLabel>
+              <TimeInput
+                id="time"
+                value={time}
+                onChange={(value) => {
+                  setTime(value);
+                  touched("time");
+                }}
+              />
+              {errorOf("time") && <FieldError>{errorOf("time")}</FieldError>}
+            </Field>
+          </div>
           {outsidePeriod && (
             <p className="text-sm text-muted-foreground">
               Di luar periode proyek ({formatDateLong(reference.project.startDate)} – {formatDateLong(reference.project.endDate)}).
             </p>
           )}
-          {errorOf("date") && <FieldError>{errorOf("date")}</FieldError>}
-        </Field>
+        </div>
 
         {type !== "transfer" && (
           <Field data-invalid={errorOf("categoryId") ? true : undefined}>

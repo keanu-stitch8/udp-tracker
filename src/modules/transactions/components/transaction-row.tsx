@@ -9,7 +9,7 @@ import type { TransactionView } from "../types/transaction";
 export function TransactionRow({ view, href }: { view: TransactionView; href?: string }) {
   const isTransfer = view.type === "transfer";
   const title = isTransfer ? `${view.walletName} → ${view.toWalletName}` : (view.categoryName ?? "—");
-  const detail = [view.merchant, isTransfer ? "Transfer" : view.walletName, view.vehicleName].filter(Boolean).join(" · ");
+  const detail = [view.time, view.merchant, isTransfer ? "Transfer" : view.walletName, view.vehicleName].filter(Boolean).join(" · ");
   const amount = view.type === "income" ? `+${formatRupiah(view.amount)}` : view.type === "expense" ? `-${formatRupiah(view.amount)}` : formatRupiah(view.amount);
 
   const content = (
