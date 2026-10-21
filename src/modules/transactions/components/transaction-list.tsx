@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDateShort } from "@/modules/shared/lib/date";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { useTransactionList } from "../hooks/use-transactions";
@@ -52,13 +52,15 @@ export function TransactionList({ reference }: { reference: TransactionReference
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <ToggleGroup aria-label="Jenis" className="w-full" spacing={0} value={[filters.type]} onValueChange={(v) => v[0] && set({ type: v[0] as TransactionFilters["type"] })}>
-          {TYPES.map((t) => (
-            <ToggleGroupItem key={t.value} value={t.value} className="h-10 flex-1">
-              {t.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <Tabs value={filters.type} onValueChange={(type) => set({ type: type as TransactionFilters["type"] })}>
+          <TabsList aria-label="Jenis" className="w-full">
+            {TYPES.map((t) => (
+              <TabsTrigger key={t.value} value={t.value} className="px-0">
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
         <div className="grid grid-cols-2 gap-2">
           <NativeSelect aria-label="Kategori" className={NATIVE_SELECT_CLASS} value={filters.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
             <NativeSelectOption value="">Semua kategori</NativeSelectOption>
