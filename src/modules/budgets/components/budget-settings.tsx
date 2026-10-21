@@ -32,7 +32,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         </Alert>
       )}
       <p className="text-sm text-muted-foreground">
-        Pagu dari surat penawaran ({data.context.pax} orang, {data.context.vehicleCount} mobil, {data.context.days} hari). Kelebihan pemakaian ditanggung kantor.
+        Pagu dari surat penawaran ({data.context.pax} orang, {data.context.vehicleCount} mobil, periode {data.context.days} hari). Jumlah hari bisa diatur per pagu. Kelebihan pemakaian ditanggung kantor.
       </p>
 
       {editing?.kind === "new" ? (

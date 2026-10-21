@@ -15,7 +15,7 @@ import { formatRupiah } from "@/modules/shared/lib/money";
 import { BUDGET_BASES, type BudgetBasis } from "@/modules/shared/types/enums";
 import { useSaveBudget } from "../hooks/use-budgets";
 import { BASIS_LABELS, limitFormula } from "../lib/basis";
-import { budgetLimit } from "../lib/budget";
+import { budgetLimit, usesDays } from "../lib/budget";
 import type { BudgetSetting, BudgetSettings } from "../queries/budget-settings";
 
 interface BudgetFormProps {
@@ -29,11 +29,15 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [rate, setRate] = useState<number | null>(initial?.rate ?? null);
   const [basis, setBasis] = useState<BudgetBasis>(initial?.basis ?? "per_pax_per_day");
+  // Kosong = ikut periode proyek.
+  const [days, setDays] = useState(initial?.days ? String(initial.days) : "");
   const [categoryIds, setCategoryIds] = useState<string[]>(initial?.categoryIds ?? []);
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fieldErrors : {};
   const errorOf = (field: string) => fieldErrors[field]?.[0];
-  const preview = { rate: rate ?? 0, basis };
+  const dayBased = usesDays(basis);
+  const customDays = dayBased && days ? Number(days) : null;
+  const preview = { rate: rate ?? 0, basis, days: customDays };
   const toggleCategory = (id: string) => setCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
   return (
@@ -42,7 +46,7 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
       onSubmit={(event) => {
         event.preventDefault();
         save.mutate(
-          { name, rate: rate ?? 0, basis, categoryIds, note: initial?.note ?? null },
+          { name, rate: rate ?? 0, basis, days: customDays, categoryIds, note: initial?.note ?? null },
           {
             onSuccess: () => {
               toast.success(initial ? "Pagu diperbarui." : "Pagu ditambahkan.");
@@ -76,6 +80,22 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
             {errorOf("basis") && <FieldError>{errorOf("basis")}</FieldError>}
           </Field>
         </div>
+        {dayBased && (
+          <Field data-invalid={errorOf("days") ? true : undefined}>
+            <FieldLabel htmlFor="budget-days">Jumlah hari</FieldLabel>
+            <Input
+              id="budget-days"
+              className="h-10"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={days}
+              onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))}
+              placeholder={String(settings.context.days)}
+            />
+            <p className="text-xs text-muted-foreground">Kosongkan untuk ikut periode proyek ({settings.context.days} hari). Isi mis. 6 untuk hari kerja.</p>
+            {errorOf("days") && <FieldError>{errorOf("days")}</FieldError>}
+          </Field>
+        )}
         <p className="text-sm">
           {limitFormula(preview, settings.context)} = <span className="font-head">{formatRupiah(budgetLimit(preview, settings.context))}</span>
         </p>

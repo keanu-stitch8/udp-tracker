@@ -5,6 +5,13 @@ export const budgetInputSchema = z.object({
   name: z.string().trim().min(1, "Nama pagu wajib diisi.").max(60, "Maksimal 60 karakter."),
   rate: z.number({ error: "Tarif wajib diisi." }).int("Tarif harus bilangan bulat.").min(0, "Tarif tidak boleh negatif.").max(1_000_000_000, "Tarif terlalu besar."),
   basis: z.enum(BUDGET_BASES, "Pilih cara hitung."),
+  days: z
+    .number({ error: "Jumlah hari harus angka." })
+    .int("Jumlah hari harus bilangan bulat.")
+    .min(1, "Minimal 1 hari.")
+    .max(366, "Maksimal 366 hari.")
+    .nullish()
+    .transform((value) => value ?? null),
   categoryIds: z.array(z.uuid("Kategori tidak valid."), "Pilih minimal satu kategori.").min(1, "Pilih minimal satu kategori.").max(20),
   note: z
     .string()

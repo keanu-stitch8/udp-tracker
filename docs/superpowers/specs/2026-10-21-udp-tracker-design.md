@@ -65,9 +65,9 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `projectId`, `kind` (`expense` | `income`), `name`, `icon` (nama ikon lucide), `isVehicleRelated` (bool; jika true, form menampilkan pilihan mobil), `isAdminFee` (bool; tepat satu per proyek), `isOfficeFunding` (bool; pemasukan dari kantor, default: UDP Kantor), `sortOrder`, `archived`
 
 **budgets** (pagu)
-- `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_vehicle` (per mobil per trip, tidak dikali hari) | `per_day` | `lump_sum`), `note?`. Nama pagu unik per proyek.
+- `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_vehicle` (per mobil per trip, tidak dikali hari) | `per_day` | `lump_sum`), `days?` (jumlah hari khusus pagu, mis. 6 hari kerja; kosong = periode proyek; hanya untuk basis harian), `note?`. Nama pagu unik per proyek.
 - **budget_categories**: relasi many-to-many `budgetId` ↔ `categoryId`. Satu pagu bisa mencakup beberapa kategori.
-- Nilai pagu: `rate × multiplier`, dengan multiplier `pax × hari`, `jumlahMobil × hari`, `hari`, atau `1`.
+- Nilai pagu: `rate × multiplier`, dengan multiplier `pax × hari`, `jumlahMobil × hari`, `hari`, `jumlahMobil` (per_vehicle), atau `1`. `hari` = `days` pagu bila diisi, selain itu jumlah hari periode proyek.
 
 **transactions**
 - `projectId`, `type` (`expense` | `income` | `transfer`), `date`, `amount` (int > 0)

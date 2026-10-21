@@ -1,5 +1,6 @@
 // Pagu (spec §3.3): nilai = tarif × basis × hari; kelebihan pemakaian = ditanggung kantor.
 import { sum } from "@/modules/shared/lib/money";
+import type { BudgetBasis } from "@/modules/shared/types/enums";
 import type { ExpenseEntry } from "@/modules/transactions/types/transaction";
 import type { Budget, BudgetUsage, DailyBudgetUsage } from "../types/budget";
 
@@ -13,8 +14,21 @@ export function budgetContextOf(project: { pax: number; days: number; vehicles: 
   return { pax: project.pax, vehicleCount: project.vehicles.length, days: project.days };
 }
 
+/** Tarif + basis (+ jumlah hari khusus bila ada) — cukup untuk menghitung batas pagu. */
+export type BudgetRule = Pick<Budget, "rate" | "basis"> & Partial<Pick<Budget, "days">>;
+
+/** Basis yang dikali jumlah hari. */
+export function usesDays(basis: BudgetBasis): boolean {
+  return basis === "per_pax_per_day" || basis === "per_vehicle_per_day" || basis === "per_day";
+}
+
+/** Jumlah hari pagu: isian khusus pagu, atau periode proyek. */
+export function budgetDays(budget: BudgetRule, ctx: BudgetContext): number {
+  return budget.days ?? ctx.days;
+}
+
 /** Batas per hari; null untuk basis yang tidak dikali hari (per_vehicle, lump_sum). */
-export function dailyLimit(budget: Pick<Budget, "rate" | "basis">, ctx: BudgetContext): number | null {
+export function dailyLimit(budget: BudgetRule, ctx: BudgetContext): number | null {
   switch (budget.basis) {
     case "per_pax_per_day":
       return budget.rate * ctx.pax;
@@ -28,10 +42,10 @@ export function dailyLimit(budget: Pick<Budget, "rate" | "basis">, ctx: BudgetCo
   }
 }
 
-export function budgetLimit(budget: Pick<Budget, "rate" | "basis">, ctx: BudgetContext): number {
+export function budgetLimit(budget: BudgetRule, ctx: BudgetContext): number {
   if (budget.basis === "per_vehicle") return budget.rate * ctx.vehicleCount;
   const daily = dailyLimit(budget, ctx);
-  return daily === null ? budget.rate : daily * ctx.days;
+  return daily === null ? budget.rate : daily * budgetDays(budget, ctx);
 }
 
 const usedBy = (budget: Budget, entries: ExpenseEntry[]) => {

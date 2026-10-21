@@ -97,10 +97,12 @@ export const budgets = pgTable(
     name: text().notNull(),
     rate: integer().notNull(),
     basis: budgetBasis().notNull(),
+    // Jumlah hari khusus pagu (mis. 6 hari kerja); null = ikut periode proyek.
+    days: integer(),
     note: text(),
     ...timestamps,
   },
-  (t) => [index("budgets_project_idx").on(t.projectId), check("budgets_rate_nonnegative", sql`${t.rate} >= 0`)],
+  (t) => [index("budgets_project_idx").on(t.projectId), check("budgets_rate_nonnegative", sql`${t.rate} >= 0`), check("budgets_days_positive", sql`${t.days} >= 1`)],
 );
 
 export const budgetCategories = pgTable(

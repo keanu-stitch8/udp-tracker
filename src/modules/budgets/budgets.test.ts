@@ -54,6 +54,20 @@ describe("pengaturan pagu", () => {
     expect((error2 as ValidationError).fieldErrors).toEqual({ name: ["Nama pagu sudah dipakai."], categoryIds: ["Pagu hanya untuk kategori pengeluaran."] });
   });
 
+  it("jumlah hari per pagu: dipakai untuk batas, kosong = periode proyek, diabaikan untuk basis non-harian", async () => {
+    const operasional = (await getBudgetSettings(db, projectId)).budgets.find((b) => b.name === "Operasional Harian")!;
+    expect(operasional.days).toBeNull();
+    await updateBudget(db, projectId, operasional.id, { ...operasional, days: 4 });
+    const updated = (await getBudgetSettings(db, projectId)).budgets.find((b) => b.id === operasional.id)!;
+    expect([updated.days, updated.formula, updated.limit]).toEqual([4, "Rp 100.000 × 2 mobil × 4 hari", 800_000]);
+
+    const bbm = (await getBudgetSettings(db, projectId)).budgets.find((b) => b.name === "BBM + Tol")!;
+    expect((await updateBudget(db, projectId, bbm.id, { ...bbm, days: 4 })).days).toBeNull();
+
+    const error = await updateBudget(db, projectId, operasional.id, { ...operasional, days: 0 }).catch((e) => e);
+    expect((error as ValidationError).fieldErrors).toMatchObject({ days: ["Minimal 1 hari."] });
+  });
+
   it("proyek selesai dikunci", async () => {
     await updateProject(db, projectId, { status: "done" });
     await expect(createBudget(db, projectId, { name: "X", rate: 1, basis: "per_day", categoryIds: [await categoryId("Sarapan")] })).rejects.toBeInstanceOf(ConflictError);
