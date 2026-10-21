@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { NATIVE_SELECT_CLASS } from "@/components/app/form-classes";
 import { MoneyInput } from "@/components/app/money-input";
 import { CategoryIcon } from "@/components/app/category-icon";
+import { AMOUNT } from "@/components/app/typography";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -100,7 +101,7 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
           </Field>
         )}
         <p className="text-sm">
-          {limitFormula(preview, settings.context)} = <span className="font-head">{formatRupiah(budgetLimit(preview, settings.context))}</span>
+          {limitFormula(preview, settings.context)} = <span className={AMOUNT}>{formatRupiah(budgetLimit(preview, settings.context))}</span>
         </p>
         <Field data-invalid={errorOf("categoryIds") ? true : undefined}>
           <FieldLabel>Kategori yang dihitung</FieldLabel>

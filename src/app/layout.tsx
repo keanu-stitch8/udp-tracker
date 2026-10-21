@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Black, Space_Grotesk } from "next/font/google";
+import { Geist, Space_Grotesk } from "next/font/google";
 import { Providers } from "@/lib/query-client";
 import "./globals.css";
 
-const head = Archivo_Black({ subsets: ["latin"], weight: "400", variable: "--font-head", display: "swap" });
-const sans = Space_Grotesk({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+// Sama dengan neobrutalism.com: Space Grotesk untuk judul, Geist untuk isi.
+const head = Space_Grotesk({ subsets: ["latin"], variable: "--font-head", display: "swap" });
+const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
   title: "UDP Tracker",

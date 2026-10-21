@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { CARD_TITLE, LABEL, PAGE_TITLE } from "@/components/app/typography";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ export function CalendarMonth({ projectId, initialMonth, today, startDate, endDa
         <Button variant="outline" size="icon" aria-label="Bulan sebelumnya" onClick={() => setMonth(shiftMonth(month, -1))}>
           <ChevronLeft />
         </Button>
-        <h1 className="font-head text-xl">{formatMonthLabel(month)}</h1>
+        <h1 className={PAGE_TITLE}>{formatMonthLabel(month)}</h1>
         <Button variant="outline" size="icon" aria-label="Bulan berikutnya" onClick={() => setMonth(shiftMonth(month, 1))}>
           <ChevronRight />
         </Button>
@@ -41,7 +42,7 @@ export function CalendarMonth({ projectId, initialMonth, today, startDate, endDa
 
       <div aria-label={formatMonthLabel(month)} className="grid grid-cols-7 border-2 bg-card shadow-md">
         {WEEKDAYS.map((day) => (
-          <div key={day} aria-hidden className="border-b-2 py-1 text-center text-xs font-medium">
+          <div key={day} aria-hidden className={`border-b-2 py-1 text-center ${LABEL}`}>
             {day}
           </div>
         ))}
@@ -74,7 +75,7 @@ export function CalendarMonth({ projectId, initialMonth, today, startDate, endDa
       <Drawer open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
         <DrawerContent className="mx-auto max-w-[480px]">
           <DrawerHeader>
-            <DrawerTitle>{selected ? formatDateShort(selected) : ""}</DrawerTitle>
+            <DrawerTitle className={CARD_TITLE}>{selected ? formatDateShort(selected) : ""}</DrawerTitle>
           </DrawerHeader>
           {selected && <DayDetailPanel projectId={projectId} date={selected} onNavigate={() => setSelected(null)} />}
         </DrawerContent>

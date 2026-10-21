@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/components/app/category-icon";
+import { AMOUNT } from "@/components/app/typography";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ export function BalanceCheckItem({ check, detail, canAdjust }: { check: BalanceC
     <li className="flex flex-col gap-2 py-3 text-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium">{formatDateShort(check.date)}</span>
-        <span className={cn("font-head tabular-nums", check.difference < 0 && "text-destructive", check.difference > 0 && "text-green-700")}>
+        <span className={cn(AMOUNT, check.difference < 0 && "text-destructive", check.difference > 0 && "text-green-700")}>
           {describeDifference(check.difference)}
         </span>
       </div>

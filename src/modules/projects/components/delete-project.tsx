@@ -37,7 +37,7 @@ export function DeleteProject({ project }: { project: ProjectDetail }) {
       }}
     >
       <p className="text-sm">
-        Semua transaksi, dompet, kategori, pagu, cek saldo, dan foto bon proyek <span className="font-head">{project.name}</span> akan dihapus permanen dan tidak bisa dikembalikan.
+        Semua transaksi, dompet, kategori, pagu, cek saldo, dan foto bon proyek <span className="font-head font-bold">{project.name}</span> akan dihapus permanen dan tidak bisa dikembalikan.
       </p>
       <Field data-invalid={fieldErrors.password ? true : undefined}>
         <FieldLabel htmlFor="delete-password">Password admin</FieldLabel>

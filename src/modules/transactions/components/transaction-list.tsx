@@ -4,6 +4,7 @@ import { ListPlus, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { NATIVE_SELECT_CLASS } from "@/components/app/form-classes";
+import { LABEL } from "@/components/app/typography";
 import { buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
@@ -98,7 +99,7 @@ export function TransactionList({ reference }: { reference: TransactionReference
         groups.map((group) => (
           <section key={group.date} aria-label={formatDateShort(group.date)}>
             <div className="flex items-baseline justify-between border-b-2 pb-1">
-              <h2 className="font-head text-sm">{formatDateShort(group.date)}</h2>
+              <h2 className={LABEL}>{formatDateShort(group.date)}</h2>
               {group.expenseTotal > 0 && <span className="text-xs text-muted-foreground tabular-nums">Keluar {formatRupiah(group.expenseTotal)}</span>}
             </div>
             <ul className="divide-y">

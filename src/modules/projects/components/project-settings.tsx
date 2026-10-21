@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/app/date-picker";
+import { CARD_TITLE } from "@/components/app/typography";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +31,7 @@ export function ProjectSettingsPanel({ projectId }: { projectId: string }) {
       )}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Detail proyek</CardTitle>
+          <CardTitle className={CARD_TITLE}>Detail proyek</CardTitle>
         </CardHeader>
         <CardContent>
           <ProjectDetailsForm project={project} locked={locked} />
@@ -38,7 +39,7 @@ export function ProjectSettingsPanel({ projectId }: { projectId: string }) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Mobil</CardTitle>
+          <CardTitle className={CARD_TITLE}>Mobil</CardTitle>
         </CardHeader>
         <CardContent>
           <VehicleList settings={data} locked={locked} />
@@ -46,7 +47,7 @@ export function ProjectSettingsPanel({ projectId }: { projectId: string }) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Status</CardTitle>
+          <CardTitle className={CARD_TITLE}>Status</CardTitle>
           <CardDescription>{locked ? "Proyek selesai: semua data dikunci." : "Tandai selesai setelah laporan final. Data dikunci, tapi bisa dibuka lagi."}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -55,7 +56,7 @@ export function ProjectSettingsPanel({ projectId }: { projectId: string }) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base text-destructive">Hapus proyek</CardTitle>
+          <CardTitle className={`${CARD_TITLE} text-destructive`}>Hapus proyek</CardTitle>
         </CardHeader>
         <CardContent>
           <DeleteProject project={project} />

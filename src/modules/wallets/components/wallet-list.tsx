@@ -3,6 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { AMOUNT, CARD_TITLE } from "@/components/app/typography";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +35,7 @@ export function WalletList({ projectId }: { projectId: string }) {
       {adding ? (
         <Card>
           <CardHeader>
-            <CardTitle>Dompet baru</CardTitle>
+            <CardTitle className={CARD_TITLE}>Dompet baru</CardTitle>
           </CardHeader>
           <CardContent>
             <WalletForm projectId={projectId} vehicles={data.vehicles} onDone={() => setAdding(false)} />
@@ -70,7 +71,7 @@ function WalletLinks({ wallets }: { wallets: WalletListItem[] }) {
               <p className="truncate font-medium">{wallet.name}</p>
               <p className="truncate text-xs text-muted-foreground">{[WALLET_KIND_LABELS[wallet.kind], wallet.vehicleName, wallet.holder].filter(Boolean).join(" · ")}</p>
             </div>
-            <span className={cn("font-head tabular-nums", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+            <span className={cn(AMOUNT, wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
             <ChevronRight className="size-4 shrink-0" />
           </Link>
         </li>

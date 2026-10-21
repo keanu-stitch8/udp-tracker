@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BudgetBar } from "@/components/app/budget-bar";
+import { AMOUNT, CARD_TITLE, LABEL } from "@/components/app/typography";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -21,8 +22,8 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
         <Stat label="Pengeluaran" value={totals.totalExpense} />
         <Card className="col-span-2 bg-primary">
           <CardContent className="py-3">
-            <p className="text-xs">{totals.remaining >= 0 ? "Sisa (dikembalikan ke kantor)" : "Kurang (perlu reimburse)"}</p>
-            <p className="font-head text-3xl tabular-nums">{formatRupiah(Math.abs(totals.remaining))}</p>
+            <p className={LABEL}>{totals.remaining >= 0 ? "Sisa (dikembalikan ke kantor)" : "Kurang (perlu reimburse)"}</p>
+            <p className={`${AMOUNT} text-3xl`}>{formatRupiah(Math.abs(totals.remaining))}</p>
           </CardContent>
         </Card>
       </div>
@@ -30,7 +31,7 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
       {data.budgets.length > 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Total pagu</CardTitle>
+            <CardTitle className={CARD_TITLE}>Total pagu</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <BudgetBar used={data.budgetTotal.used} limit={data.budgetTotal.limit} />
@@ -49,7 +50,7 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
       {data.budgets.map((budget) => (
         <Card key={budget.budgetId}>
           <CardHeader>
-            <CardTitle className="text-base">{budget.name}</CardTitle>
+            <CardTitle className={CARD_TITLE}>{budget.name}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <BudgetBar used={budget.used} limit={budget.limit} />
@@ -67,7 +68,7 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Saldo dompet</CardTitle>
+          <CardTitle className={CARD_TITLE}>Saldo dompet</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="divide-y text-sm">
@@ -75,7 +76,7 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
               <li key={wallet.id}>
                 <Link href={`/lainnya/dompet/${wallet.id}`} className="flex min-h-11 items-center justify-between gap-2 py-2">
                   <span>{wallet.name}</span>
-                  <span className={cn("font-head tabular-nums", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+                  <span className={cn(AMOUNT, wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
                 </Link>
               </li>
             ))}
@@ -85,7 +86,7 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Transaksi terakhir</CardTitle>
+          <CardTitle className={CARD_TITLE}>Transaksi terakhir</CardTitle>
         </CardHeader>
         <CardContent>
           {data.recent.length ? (
@@ -112,8 +113,8 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <Card>
       <CardContent className="py-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="font-head text-lg tabular-nums">{formatRupiah(value)}</p>
+        <p className={`${LABEL} text-muted-foreground`}>{label}</p>
+        <p className={`${AMOUNT} text-lg`}>{formatRupiah(value)}</p>
       </CardContent>
     </Card>
   );

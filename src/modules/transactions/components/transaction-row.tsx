@@ -1,6 +1,7 @@
 import { Paperclip } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/app/category-icon";
+import { AMOUNT } from "@/components/app/typography";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import type { TransactionView } from "../types/transaction";
@@ -27,7 +28,7 @@ export function TransactionRow({ view, href }: { view: TransactionView; href?: s
         <p className="truncate text-xs text-muted-foreground">{detail}</p>
       </div>
       <div className="shrink-0 text-right">
-        <p className={cn("font-head text-sm tabular-nums", view.type === "income" && "text-green-700", view.type === "expense" && "text-destructive")}>{amount}</p>
+        <p className={cn(AMOUNT, "text-sm", view.type === "income" && "text-green-700", view.type === "expense" && "text-destructive")}>{amount}</p>
         {isTransfer && view.adminFee > 0 && <p className="text-xs text-muted-foreground">admin {formatRupiah(view.adminFee)}</p>}
       </div>
     </div>

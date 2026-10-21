@@ -1,5 +1,6 @@
 import { ChevronRight, FolderKanban, Gauge, Settings, Tags, Wallet } from "lucide-react";
 import Link from "next/link";
+import { PAGE_TITLE } from "@/components/app/typography";
 import { LogoutButton } from "@/modules/auth/components/logout-button";
 
 const LINKS = [
@@ -13,7 +14,7 @@ const LINKS = [
 export function MenuView() {
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-head text-2xl">Lainnya</h1>
+      <h1 className={PAGE_TITLE}>Lainnya</h1>
       <ul className="flex flex-col divide-y-2 border-2 bg-card shadow-md">
         {LINKS.map(({ href, label, icon: Icon }) => (
           <li key={href}>
