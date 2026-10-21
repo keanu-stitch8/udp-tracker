@@ -93,3 +93,11 @@
     @apply bg-background font-sans text-foreground antialiased;
   }
 }
+
+/* Safari iOS memperbesar halaman saat fokus ke input bila teksnya < 16px. Komponen ui (tidak diedit) memakai text-sm,
+   jadi di layar sentuh naikkan ke 16px; input yang sudah lebih besar (mis. nominal text-2xl) tidak tersentuh. */
+@media (pointer: coarse) {
+  :is(input, textarea, select).text-sm {
+    font-size: 1rem;
+  }
+}

@@ -27,12 +27,6 @@ export function isTime(value: string): boolean {
 
 export const timeSchema = z.string({ error: "Jam wajib diisi." }).min(1, "Jam wajib diisi.").refine(isTime, "Jam tidak valid.");
 
-/** Saat mengetik: buang selain angka, maks 4 digit, sisipkan ":" setelah 2 digit. */
-export function formatTimeTyping(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 4);
-  return digits.length <= 2 ? digits : `${digits.slice(0, 2)}:${digits.slice(2)}`;
-}
-
 /** Saat selesai (blur/scan): "930" / "9.30" → "09:30". Yang tidak bisa dinormalkan dikembalikan apa adanya. */
 export function normalizeTime(value: string): string {
   const digits = value.replace(/\D/g, "");

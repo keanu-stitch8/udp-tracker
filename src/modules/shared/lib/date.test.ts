@@ -4,7 +4,6 @@ import {
   daysInclusive,
   formatDateLong,
   formatDateShort,
-  formatTimeTyping,
   isIsoDate,
   isoDateSchema,
   isoToLocalDate,
@@ -77,13 +76,6 @@ describe("jam", () => {
     expect(timeSchema.safeParse("14:30").success).toBe(true);
     expect(timeSchema.safeParse("").error?.issues[0].message).toBe("Jam wajib diisi.");
     expect(timeSchema.safeParse("25:00").error?.issues[0].message).toBe("Jam tidak valid.");
-  });
-  it("formatTimeTyping: hanya angka, titik dua otomatis", () => {
-    expect(formatTimeTyping("1")).toBe("1");
-    expect(formatTimeTyping("14")).toBe("14");
-    expect(formatTimeTyping("143")).toBe("14:3");
-    expect(formatTimeTyping("14:30")).toBe("14:30");
-    expect(formatTimeTyping("14.305")).toBe("14:30");
   });
   it("normalizeTime: 3–4 digit jadi HH:mm, selain itu apa adanya", () => {
     expect(normalizeTime("930")).toBe("09:30");

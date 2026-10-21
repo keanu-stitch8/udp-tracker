@@ -250,7 +250,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
         </Field>
 
         <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-[1fr_auto] gap-3">
             <Field data-invalid={errorOf("date") ? true : undefined}>
               <FieldLabel htmlFor="date">
                 Tanggal <CheckAgain show={ocrFields.has("date")} />
