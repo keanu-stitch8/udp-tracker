@@ -38,7 +38,7 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
               {formatRupiah(budget.used)} dari {formatRupiah(budget.limit)}
             </p>
             {budget.overBy > 0 ? (
-              <p className="font-medium text-destructive">Ditanggung kantor: {formatRupiah(budget.overBy)}</p>
+              <p className="font-medium text-destructive">Lebih pagu {formatRupiah(budget.overBy)}</p>
             ) : (
               <p className="text-muted-foreground">Sisa pagu {formatRupiah(budget.remaining)}</p>
             )}

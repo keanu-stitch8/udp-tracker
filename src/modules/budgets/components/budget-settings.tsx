@@ -31,7 +31,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         </Alert>
       )}
       <p className="text-sm text-muted-foreground">
-        Batas biaya per pos ({data.context.pax} orang, {data.context.vehicleCount} mobil, periode {data.context.days} hari). Jumlah hari bisa diatur per pagu. Kelebihan pemakaian ditanggung kantor.
+        Batas biaya per pos ({data.context.pax} orang, {data.context.vehicleCount} mobil, periode {data.context.days} hari). Jumlah hari bisa diatur per pagu.
       </p>
 
       {editing?.kind === "new" ? (
@@ -83,7 +83,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
               <BudgetBar used={budget.used} limit={budget.limit} />
               <p className="text-muted-foreground">
                 Terpakai {formatRupiah(budget.used)}
-                {budget.overBy > 0 && <span className="text-destructive"> · ditanggung kantor {formatRupiah(budget.overBy)}</span>}
+                {budget.overBy > 0 && <span className="text-destructive"> · lebih pagu {formatRupiah(budget.overBy)}</span>}
               </p>
               <div className="flex flex-wrap gap-1">
                 {budget.categoryIds.map((id) => (

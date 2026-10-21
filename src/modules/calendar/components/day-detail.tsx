@@ -31,7 +31,7 @@ export function DayDetailPanel({ projectId, date, onNavigate }: { projectId: str
             </span>
           </div>
           <BudgetBar used={budget.used} limit={budget.limit} />
-          {budget.used > budget.limit && <p className="text-destructive">Lebih {formatRupiah(budget.used - budget.limit)} → ditanggung kantor</p>}
+          {budget.used > budget.limit && <p className="text-destructive">Lebih pagu {formatRupiah(budget.used - budget.limit)}</p>}
         </div>
       ))}
 

@@ -1,4 +1,4 @@
-// Pagu (spec §3.3): nilai = tarif × basis × hari; kelebihan pemakaian = ditanggung kantor.
+// Pagu (spec §3.3): nilai = tarif × basis × hari; kelebihan pemakaian = lebih pagu (overBy).
 import { sum } from "@/modules/shared/lib/money";
 import type { BudgetBasis } from "@/modules/shared/types/enums";
 import type { ExpenseEntry } from "@/modules/transactions/types/transaction";

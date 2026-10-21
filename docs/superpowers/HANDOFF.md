@@ -61,4 +61,4 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Aplikasi generik/reusable:** jangan hardcode tarif, seed, atau tombol migrasi khusus satu kontrak. Kebutuhan dari proyek pengguna dibuat versi umum yang bisa diatur di UI (contoh: "operasional 6 hari" → isian jumlah hari per pagu).
 - Bahasa Indonesia santai. Hanya layanan gratis (Gemini free tier, Neon/Vercel free).
 - **Aksi yang menghapus wajib ada konfirmasi** (pengguna pernah kecewa dengan tombol tanpa konfirmasi).
-- Kelebihan pagu = "ditanggung kantor".
+- Kelebihan satu pagu ditampilkan netral "Lebih pagu Rp X" (bukan "ditanggung kantor"), karena bisa tertutup sisa pagu lain di total pagu (keputusan pengguna 2026-10-21).
