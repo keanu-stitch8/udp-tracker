@@ -10,7 +10,7 @@ Setiap transaksi punya jam (`HH:mm`, 24 jam, WIB) selain tanggal. Jam diisi di f
 
 - **Jam wajib.** Tidak ada transaksi tanpa jam.
 - **Disimpan sebagai kolom `time` terpisah**, di sebelah `date`, bukan mengganti `date` dengan `timestamptz`. Ledger, kalender, pagu, dan cek saldo tetap dihitung per tanggal dan tidak berubah.
-- **Semua jam = WIB** (`Asia/Jakarta`), sama dengan aturan tanggal. Jam di form dan di riwayat tidak dikonversi ke zona waktu HP.
+- **Semua jam = WIB** (`Asia/Jakarta`), sama dengan aturan tanggal. Jam di form dan di riwayat tidak dikonversi ke zona waktu HP. Label "WIB" tidak ditampilkan di UI (keputusan pengguna).
 - **Transaksi lama** diisi dari `created_at` yang dikonversi ke WIB (waktu input di aplikasi). Pengguna bisa mengoreksinya lewat ubah transaksi.
 
 ## Data
@@ -33,7 +33,7 @@ Setiap transaksi punya jam (`HH:mm`, 24 jam, WIB) selain tanggal. Jam diisi di f
 
 ## Form transaksi
 
-- Field **"Jam (WIB)"** di samping Tanggal (grid 2 kolom), memakai `<input type="time">` bawaan. CSS iOS di `globals.css` (`min-w-0 appearance-none`, rata kiri) sudah mencakup `type="time"`.
+- Field **"Jam"** di samping Tanggal (grid 2 kolom), memakai `<input type="time">` bawaan. CSS iOS di `globals.css` (`min-w-0 appearance-none`, rata kiri) sudah mencakup `type="time"`.
 - Transaksi baru: default jam sekarang di WIB, dihitung di server bersama `defaultDate` (prop `defaultTime`).
 - Ubah transaksi: jam tersimpan dipakai.
 - Badge "cek lagi" berlaku untuk jam yang diisi dari scan, sama seperti field scan lainnya.
@@ -51,7 +51,7 @@ Setiap transaksi punya jam (`HH:mm`, 24 jam, WIB) selain tanggal. Jam diisi di f
 
 ## Riwayat
 
-- `TransactionRow`: jam tampil di awal baris detail kecil, misalnya `14:30 · Indomaret · Rekening`. "WIB" tidak ditulis di setiap baris; cukup di label form.
+- `TransactionRow`: jam tampil di awal baris detail kecil, misalnya `14:30 · Indomaret · Rekening`.
 - Berlaku di riwayat transaksi, detail hari (kalender), dan riwayat dompet, karena semuanya memakai `TransactionRow`.
 
 ## Ekspor (Rencana 4)
