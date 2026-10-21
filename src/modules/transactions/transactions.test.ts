@@ -48,7 +48,12 @@ describe("ringkasan beranda", () => {
       "Flazz Mobil 1": -50_000,
       "Flazz Mobil 2": 0,
     });
-    expect(summary.budgets).toEqual([expect.objectContaining({ name: "Pagu Makan", limit: 8_100_000, used: 1_500_000, overBy: 0 })]);
+    expect(summary.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([
+      ["Pagu Makan", 8_100_000, 1_500_000],
+      ["Pagu Sarapan", 1_350_000, 0],
+      ["BBM + Tol", 2_600_000, 50_000],
+      ["Operasional Harian", 1_200_000, 0],
+    ]);
     expect(summary.recent.map((t) => t.categoryName ?? "transfer")).toEqual(["Tol", "Makan Malam", "Makan Siang", "transfer", "UDP Kantor"]);
   });
 });
@@ -66,7 +71,11 @@ describe("kalender", () => {
       ["Makan Malam", 900_000],
       ["Makan Siang", 600_000],
     ]);
-    expect(day.budgets).toEqual([{ budgetId: expect.any(String), name: "Pagu Makan", limit: 1_350_000, used: 1_500_000 }]);
+    expect(day.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([
+      ["Pagu Makan", 1_350_000, 1_500_000],
+      ["Pagu Sarapan", 225_000, 0],
+      ["Operasional Harian", 200_000, 0],
+    ]);
     expect(day.transactions).toHaveLength(2);
     await expect(getCalendarMonth(db, projectId, "2026-13")).rejects.toBeInstanceOf(ValidationError);
   });

@@ -21,24 +21,23 @@ describe("buildProjectDefaults", () => {
   it("kategori sesuai spec §3.2", () => {
     const expense = defaults.categories.filter((c) => c.kind === "expense").map((c) => c.name);
     const income = defaults.categories.filter((c) => c.kind === "income").map((c) => c.name);
-    expect(expense).toEqual(["Makan Siang", "Makan Malam", "Sarapan", "Snack & Air Minum", "BBM", "Tol", "Parkir", "Biaya Admin", "Lain-lain"]);
+    expect(expense).toEqual(["Makan Siang", "Makan Malam", "Sarapan", "Snack & Air Minum", "BBM Perjalanan", "Bensin Harian", "Tol", "Parkir", "Biaya Admin", "Lain-lain"]);
     expect(income).toEqual(["UDP Kantor", "Lainnya"]);
-    expect(defaults.categories.filter((c) => c.isVehicleRelated).map((c) => c.name)).toEqual(["BBM", "Tol", "Parkir"]);
+    expect(defaults.categories.filter((c) => c.isVehicleRelated).map((c) => c.name)).toEqual(["BBM Perjalanan", "Bensin Harian", "Tol", "Parkir"]);
     expect(defaults.categories.filter((c) => c.isAdminFee).map((c) => c.name)).toEqual(["Biaya Admin"]);
     expect(defaults.categories.filter((c) => c.isOfficeFunding).map((c) => c.name)).toEqual(["UDP Kantor"]);
   });
 
-  it("Pagu Makan 150rb/orang/hari mencakup makan siang + malam", () => {
+  it("pagu sesuai surat penawaran", () => {
     expect(MEAL_RATE_PER_PAX_PER_DAY).toBe(150_000);
-    expect(defaults.budgets).toEqual([
-      {
-        name: "Pagu Makan",
-        rate: 150_000,
-        basis: "per_pax_per_day",
-        note: "Catatan internal. Kelebihan dari pagu ditanggung kantor.",
-        categoryNames: ["Makan Siang", "Makan Malam"],
-      },
+    expect(defaults.budgets.map((b) => [b.name, b.rate, b.basis, b.categoryNames])).toEqual([
+      ["Pagu Makan", 150_000, "per_pax_per_day", ["Makan Siang", "Makan Malam"]],
+      ["Pagu Sarapan", 25_000, "per_pax_per_day", ["Sarapan"]],
+      ["BBM + Tol", 1_300_000, "per_vehicle", ["BBM Perjalanan", "Tol"]],
+      ["Operasional Harian", 100_000, "per_vehicle_per_day", ["Bensin Harian", "Parkir", "Lain-lain"]],
     ]);
+    const names = new Set(defaults.categories.map((c) => c.name));
+    expect(defaults.budgets.flatMap((b) => b.categoryNames).every((n) => names.has(n))).toBe(true);
   });
 
   it("tanpa mobil → tanpa Flazz", () => {

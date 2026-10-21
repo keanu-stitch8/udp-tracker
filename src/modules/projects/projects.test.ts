@@ -25,9 +25,11 @@ describe("createProject", () => {
     expect(walletRows.filter((w) => w.kind === "flazz").every((w) => w.vehicleId !== null)).toBe(true);
 
     const categoryRows = await db.select().from(categories).where(eq(categories.projectId, project.id));
-    expect(categoryRows).toHaveLength(11);
+    expect(categoryRows).toHaveLength(12);
 
-    const [budget] = await db.select().from(budgets).where(eq(budgets.projectId, project.id));
+    const budgetRows = await db.select().from(budgets).where(eq(budgets.projectId, project.id));
+    expect(budgetRows.map((b) => b.name).sort()).toEqual(["BBM + Tol", "Operasional Harian", "Pagu Makan", "Pagu Sarapan"]);
+    const budget = budgetRows.find((b) => b.name === "Pagu Makan")!;
     expect(budget).toMatchObject({ name: "Pagu Makan", rate: 150_000, basis: "per_pax_per_day" });
     const links = await db.select().from(budgetCategories).where(eq(budgetCategories.budgetId, budget.id));
     const linkedNames = categoryRows.filter((c) => links.some((l) => l.categoryId === c.id)).map((c) => c.name).sort();
