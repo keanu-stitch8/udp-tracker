@@ -7,7 +7,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Bagian | Status |
 | --- | --- |
 | Rencana 1 Fondasi (`docs/superpowers/plans/2026-10-21-01-fondasi.md`) | ✅ merged ke `main` (PR #1) |
-| Rencana 2a Buku kas (`…/2026-10-21-02a-buku-kas.md`) | ✅ selesai di branch `feat/buku-kas` (**belum di-push**) |
+| Rencana 2a Buku kas (`…/2026-10-21-02a-buku-kas.md`) | ✅ di branch `feat/buku-kas`, **PR #2** https://github.com/keanu-stitch8/udp-tracker/pull/2 (menunggu merge) |
 | Rencana 2b-1 Pagu surat penawaran (`…/2026-10-21-02b1-pagu.md`) | ✅ selesai di branch yang sama |
 | Rencana 2b sisa | ⏳ belum: kelola dompet + **cek saldo Flazz/cash + catat selisih** (spec §3.3), kelola kategori & mobil, pengaturan proyek (ubah nama/tanggal/pax, Selesai/Buka lagi), hapus proyek |
 | Rencana 3 Bon | ⏳ upload Vercel Blob + scan Gemini free tier (spec §6.1) |
@@ -15,7 +15,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 **Langkah berikutnya yang menunggu pengguna:**
 
-1. Putuskan nasib `feat/buku-kas`: push + PR (repo `keanu-stitch8/udp-tracker`, private) lalu merge, seperti Rencana 1.
+1. Review & merge **PR #2** (`feat/buku-kas` → `main`). Setelah merge: `git checkout main && git pull`, hapus branch lokal.
 2. Pengguna perlu klik **Lainnya → Pagu → "Terapkan pagu surat penawaran"** di proyek aslinya ("Q4 Hero & Editorial Feature Videos - Part 1"), supaya BBM → BBM Perjalanan, ditambah Bensin Harian, dan 3 pagu baru. Jangan dijalankan tanpa izin, karena ini data asli.
 
 Setelah itu, tulis Rencana 2b sisa (skill `superpowers:writing-plans`) dan eksekusi inline (pilihan pengguna: inline, bukan subagent).
