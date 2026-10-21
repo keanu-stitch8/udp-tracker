@@ -1,7 +1,7 @@
 // Skema input transaksi — dipakai service (validasi) dan form (tipe).
 import { z } from "zod";
 import { attachmentsInputSchema } from "@/modules/receipts/types/attachment";
-import { isoDateSchema } from "@/modules/shared/lib/date";
+import { isoDateSchema, timeSchema } from "@/modules/shared/lib/date";
 import { TRANSACTION_TYPES } from "@/modules/shared/types/enums";
 
 const optionalId = z
@@ -21,6 +21,7 @@ export const transactionInputSchema = z
   .object({
     type: z.enum(TRANSACTION_TYPES, "Pilih jenis transaksi."),
     date: isoDateSchema,
+    time: timeSchema,
     amount: z
       .number({ error: "Nominal wajib diisi." })
       .int("Nominal harus bilangan bulat.")

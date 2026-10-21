@@ -28,7 +28,7 @@ describe("kelola kategori", () => {
     expect([sarapan.usedCount, sarapan.budgetNames]).toEqual([0, []]);
 
     const cash = (await getTransactionReference(db, projectId)).wallets.find((w) => w.name === "Cash")!.id;
-    await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", amount: 50_000, walletId: cash, categoryId: sarapan.id });
+    await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 50_000, walletId: cash, categoryId: sarapan.id });
     await createBudget(db, projectId, { name: "Pagu Sarapan", rate: 25_000, basis: "per_pax_per_day", categoryIds: [sarapan.id] });
     expect(await category("Sarapan")).toMatchObject({ usedCount: 1, budgetNames: ["Pagu Sarapan"] });
   });

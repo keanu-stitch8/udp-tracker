@@ -42,6 +42,7 @@ describe("cek saldo", () => {
     expect(adjustmentInput({ date: "2026-10-21", difference: -80_000 }, { id: "flazz1", vehicleId: "mobil1" }, { id: "tol", isVehicleRelated: true })).toEqual({
       type: "expense",
       date: "2026-10-21",
+      time: "23:59",
       amount: 80_000,
       categoryId: "tol",
       walletId: "flazz1",

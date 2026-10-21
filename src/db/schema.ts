@@ -1,6 +1,6 @@
 // Skema lengkap (spec §3.1). Kolom TS camelCase → kolom DB snake_case (casing: "snake_case").
 import { sql } from "drizzle-orm";
-import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, time, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 // Import relatif (bukan "@/"): drizzle-kit memuat file ini di luar resolver tsconfig paths.
 import { BUDGET_BASES, CATEGORY_KINDS, PROJECT_STATUSES, TRANSACTION_TYPES, WALLET_KINDS } from "../modules/shared/types/enums";
 
@@ -143,6 +143,8 @@ export const transactions = pgTable(
       .references(() => projects.id, { onDelete: "cascade" }),
     type: transactionType().notNull(),
     date: date({ mode: "string" }).notNull(),
+    /** Jam transaksi WIB, 24 jam (spec jam transaksi). Postgres mengembalikan "HH:mm:ss". */
+    time: time({ precision: 0 }).notNull(),
     amount: integer().notNull(),
     categoryId: uuid().references(() => categories.id, { onDelete: "restrict" }),
     walletId: uuid()

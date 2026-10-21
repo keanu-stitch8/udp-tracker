@@ -65,6 +65,7 @@ describe("kelola mobil", () => {
     await createTransaction(db, projectId, {
       type: "expense",
       date: "2026-10-20",
+      time: "09:00",
       amount: 20_000,
       walletId: ref.wallets.find((w) => w.name === "Cash")!.id,
       categoryId: ref.categories.find((c) => c.name === "Parkir")!.id,

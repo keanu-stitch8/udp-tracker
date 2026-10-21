@@ -26,6 +26,8 @@ export function adjustmentInput(
   return {
     type: check.difference < 0 ? "expense" : "income",
     date: check.date,
+    // Penyesuaian mewakili saldo di akhir hari cek saldo.
+    time: "23:59",
     amount: Math.abs(check.difference),
     categoryId: category.id,
     walletId: wallet.id,

@@ -5,6 +5,8 @@ export interface Transaction {
   id: string;
   type: TransactionType;
   date: string;
+  /** "HH:mm" 24 jam, WIB. */
+  time: string;
   amount: number;
   categoryId: string | null;
   walletId: string;

@@ -6,6 +6,7 @@ export function toTransaction(row: TransactionRow): Transaction {
     id: row.id,
     type: row.type,
     date: row.date,
+    time: row.time.slice(0, 5),
     amount: row.amount,
     categoryId: row.categoryId,
     walletId: row.walletId,

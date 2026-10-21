@@ -48,8 +48,8 @@ describe("toTransactionViews", () => {
     expect(views.find((v) => v.id === "tf1")).toMatchObject({ categoryName: null, walletName: "rekening", toWalletName: "cash" });
   });
   it("tanggal sama → createdAt terbaru dulu", () => {
-    const a = tx({ id: "a", type: "income", date: "2026-10-22", amount: 1, walletId: "cash", createdAt: "2026-10-22T01:00:00.000Z" });
-    const b = tx({ id: "b", type: "income", date: "2026-10-22", amount: 1, walletId: "cash", createdAt: "2026-10-22T02:00:00.000Z" });
+    const a = tx({ id: "a", type: "income", date: "2026-10-22", time: "09:00", amount: 1, walletId: "cash", createdAt: "2026-10-22T01:00:00.000Z" });
+    const b = tx({ id: "b", type: "income", date: "2026-10-22", time: "09:00", amount: 1, walletId: "cash", createdAt: "2026-10-22T02:00:00.000Z" });
     expect(toTransactionViews([a, b], { wallets, categories, vehicles: [] }).map((v) => v.id)).toEqual(["b", "a"]);
   });
 });

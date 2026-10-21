@@ -6,13 +6,13 @@ import type { Db } from "@/db/types";
 export type TransactionRow = typeof transactions.$inferSelect;
 export type NewTransactionRow = typeof transactions.$inferInsert;
 
-/** Transaksi aktif (belum dihapus) proyek, terbaru dulu. */
+/** Transaksi aktif (belum dihapus) proyek, terbaru dulu (tanggal, lalu jam). */
 export function selectTransactions(db: Db, projectId: string): Promise<TransactionRow[]> {
   return db
     .select()
     .from(transactions)
     .where(and(eq(transactions.projectId, projectId), isNull(transactions.deletedAt)))
-    .orderBy(desc(transactions.date), desc(transactions.createdAt));
+    .orderBy(desc(transactions.date), desc(transactions.time), desc(transactions.createdAt));
 }
 
 /** Termasuk yang sudah dihapus (dipakai untuk urungkan). */

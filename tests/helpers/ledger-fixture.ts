@@ -31,6 +31,7 @@ export const tx = (t: Partial<Transaction> & Pick<Transaction, "type" | "date" |
   const n = ++seq;
   return {
     id: `t${n}`,
+    time: "09:00",
     categoryId: null,
     toWalletId: null,
     adminFee: 0,

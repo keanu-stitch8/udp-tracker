@@ -36,7 +36,7 @@ export function sumBy<T, K>(items: T[], key: (item: T) => K, value: (item: T) =>
   return totals;
 }
 
-export const compareNewestFirst = (a: Transaction, b: Transaction) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt);
+export const compareNewestFirst = (a: Transaction, b: Transaction) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time) || b.createdAt.localeCompare(a.createdAt);
 
 export function toTransactionViews(
   transactions: Transaction[],

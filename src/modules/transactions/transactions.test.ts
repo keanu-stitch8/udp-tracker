@@ -25,13 +25,14 @@ beforeEach(async () => {
 
 async function seedSample() {
   await createBudget(db, projectId, { name: "Pagu Makan", rate: 150_000, basis: "per_pax_per_day", categoryIds: [ref.category("Makan Siang"), ref.category("Makan Malam")] });
-  await createTransaction(db, projectId, { type: "income", date: "2026-10-19", amount: 5_000_000, walletId: ref.wallet("Rekening"), categoryId: ref.category("UDP Kantor") });
-  await createTransaction(db, projectId, { type: "transfer", date: "2026-10-19", amount: 1_000_000, walletId: ref.wallet("Rekening"), toWalletId: ref.wallet("Cash"), adminFee: 6_500 });
-  await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", amount: 600_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Siang"), merchant: "RM Sederhana" });
-  await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", amount: 900_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Malam") });
+  await createTransaction(db, projectId, { type: "income", date: "2026-10-19", time: "09:00", amount: 5_000_000, walletId: ref.wallet("Rekening"), categoryId: ref.category("UDP Kantor") });
+  await createTransaction(db, projectId, { type: "transfer", date: "2026-10-19", time: "09:00", amount: 1_000_000, walletId: ref.wallet("Rekening"), toWalletId: ref.wallet("Cash"), adminFee: 6_500 });
+  await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 600_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Siang"), merchant: "RM Sederhana" });
+  await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 900_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Malam") });
   return createTransaction(db, projectId, {
     type: "expense",
     date: "2026-10-21",
+    time: "09:00",
     amount: 50_000,
     walletId: ref.wallet("Flazz Mobil 1"),
     categoryId: ref.category("Tol"),
@@ -80,6 +81,7 @@ describe("mutasi transaksi", () => {
     const updated = await updateTransaction(db, projectId, tol.id, {
       type: "expense",
       date: "2026-10-21",
+      time: "09:00",
       amount: 75_000,
       walletId: ref.wallet("Flazz Mobil 1"),
       categoryId: ref.category("Tol"),
@@ -100,12 +102,12 @@ describe("mutasi transaksi", () => {
     const other = await createProject(db, { name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: [] });
     const otherCash = (await getTransactionReference(db, other.id)).wallets.find((w) => w.name === "Cash")!.id;
     await expect(
-      createTransaction(db, projectId, { type: "expense", date: "2026-10-20", amount: 1, walletId: otherCash, categoryId: ref.category("Sarapan") }),
+      createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 1, walletId: otherCash, categoryId: ref.category("Sarapan") }),
     ).rejects.toBeInstanceOf(ValidationError);
 
     await updateProject(db, projectId, { status: "done" });
     await expect(
-      createTransaction(db, projectId, { type: "expense", date: "2026-10-20", amount: 1, walletId: ref.wallet("Cash"), categoryId: ref.category("Sarapan") }),
+      createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 1, walletId: ref.wallet("Cash"), categoryId: ref.category("Sarapan") }),
     ).rejects.toBeInstanceOf(ConflictError);
   });
 
@@ -114,5 +116,26 @@ describe("mutasi transaksi", () => {
     await seedSample();
     expect((await getTransactionReference(db, projectId)).lastWalletId).toBe(ref.wallet("Flazz Mobil 1"));
     expect((await getLedger(db, projectId)).transactions).toHaveLength(5);
+  });
+});
+
+describe("jam transaksi", () => {
+  it("disimpan HH:mm dan mengurutkan transaksi dalam satu tanggal", async () => {
+    const base = { type: "expense" as const, date: "2026-10-20", amount: 10_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Siang") };
+    await createTransaction(db, projectId, { ...base, time: "08:15", merchant: "pagi" });
+    await createTransaction(db, projectId, { ...base, time: "19:40", merchant: "malam" });
+    await createTransaction(db, projectId, { ...base, time: "12:05", merchant: "siang" });
+    const views = await listTransactionViews(db, projectId);
+    expect(views.map((v) => [v.time, v.merchant])).toEqual([
+      ["19:40", "malam"],
+      ["12:05", "siang"],
+      ["08:15", "pagi"],
+    ]);
+  });
+
+  it("jam wajib dan harus valid", async () => {
+    const input = { type: "expense" as const, date: "2026-10-20", amount: 10_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Siang") };
+    await expect(createTransaction(db, projectId, input)).rejects.toBeInstanceOf(ValidationError);
+    await expect(createTransaction(db, projectId, { ...input, time: "25:00" })).rejects.toBeInstanceOf(ValidationError);
   });
 });

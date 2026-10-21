@@ -70,8 +70,8 @@ describe("kelola dompet", () => {
 describe("cek saldo", () => {
   it("snapshot saldo s/d tanggal; kurang → pengeluaran Tol + mobil di Flazz; tidak bisa dicatat dua kali", async () => {
     const flazz = ref.wallet("Flazz Mobil 1");
-    await createTransaction(db, projectId, { type: "transfer", date: "2026-10-20", amount: 500_000, walletId: ref.wallet("Rekening"), toWalletId: flazz });
-    await createTransaction(db, projectId, { type: "expense", date: "2026-10-22", amount: 30_000, walletId: flazz, categoryId: ref.category("Tol"), vehicleId: ref.vehicle("Mobil 1") });
+    await createTransaction(db, projectId, { type: "transfer", date: "2026-10-20", time: "09:00", amount: 500_000, walletId: ref.wallet("Rekening"), toWalletId: flazz });
+    await createTransaction(db, projectId, { type: "expense", date: "2026-10-22", time: "09:00", amount: 30_000, walletId: flazz, categoryId: ref.category("Tol"), vehicleId: ref.vehicle("Mobil 1") });
 
     const check = await createBalanceCheck(db, projectId, flazz, { date: "2026-10-21", actualBalance: 420_000 });
     expect(check).toMatchObject({ walletId: flazz, date: "2026-10-21", computedBalance: 500_000, actualBalance: 420_000, difference: -80_000, adjustmentId: null });
@@ -80,6 +80,7 @@ describe("cek saldo", () => {
     expect(adjustment).toMatchObject({
       type: "expense",
       date: "2026-10-21",
+      time: "23:59",
       amount: 80_000,
       categoryId: ref.category("Tol"),
       walletId: flazz,

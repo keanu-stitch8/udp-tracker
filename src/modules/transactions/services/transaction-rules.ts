@@ -16,6 +16,7 @@ export interface TransactionRefs {
 export interface TransactionValues {
   type: TransactionType;
   date: string;
+  time: string;
   amount: number;
   categoryId: string | null;
   walletId: string;

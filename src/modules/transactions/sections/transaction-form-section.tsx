@@ -4,7 +4,7 @@ import { getDb } from "@/db/client";
 import { NotFoundError } from "@/lib/errors";
 import { safeNextPath } from "@/modules/auth/lib/safe-next";
 import { getActiveProject } from "@/modules/projects/queries/projects";
-import { isIsoDate, todayWib } from "@/modules/shared/lib/date";
+import { isIsoDate, nowTimeWib, todayWib } from "@/modules/shared/lib/date";
 import { TransactionForm } from "../components/transaction-form";
 import { getTransactionReference, getTransactionView } from "../queries/views";
 import type { TransactionView } from "../types/transaction";
@@ -40,6 +40,7 @@ export async function TransactionFormSection({ searchParams, transactionId }: { 
       initial={initial}
       returnTo={returnTo}
       defaultDate={requestedDate && isIsoDate(requestedDate) ? requestedDate : todayWib()}
+      defaultTime={nowTimeWib()}
     />
   );
 }

@@ -51,6 +51,7 @@ function CheckAgain({ show }: { show: boolean }) {
 interface TransactionFormProps {
   reference: TransactionReference;
   defaultDate: string;
+  defaultTime: string;
   returnTo: string;
   initial?: TransactionView;
 }
@@ -61,7 +62,7 @@ export function TransactionForm(props: TransactionFormProps) {
   return <TransactionFormFields key={resetKey} {...props} onSaved={props.initial ? undefined : resetWhenHidden} />;
 }
 
-function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSaved }: TransactionFormProps & { onSaved?: () => void }) {
+function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, initial, onSaved }: TransactionFormProps & { onSaved?: () => void }) {
   const router = useRouter();
   const projectId = reference.project.id;
   const save = useSaveTransaction(projectId, initial?.id);
@@ -73,6 +74,7 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
   const [type, setType] = useState<TransactionType>(initial?.type ?? "expense");
   const [amount, setAmount] = useState<number | null>(initial?.amount ?? null);
   const [date, setDate] = useState(initial?.date ?? defaultDate);
+  const [time, setTime] = useState(initial?.time ?? defaultTime);
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [walletId, setWalletId] = useState(initial?.walletId ?? defaultWalletId);
   const [toWalletId, setToWalletId] = useState<string | null>(initial?.toWalletId ?? null);
@@ -146,6 +148,7 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
       {
         type,
         date,
+        time,
         amount: amount ?? 0,
         categoryId: type === "transfer" ? null : categoryId,
         walletId,

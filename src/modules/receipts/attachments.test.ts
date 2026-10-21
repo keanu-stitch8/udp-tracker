@@ -23,7 +23,7 @@ beforeEach(async () => {
   db = await createTestDb();
   projectId = (await createProject(db, { name: "Uji Lampiran", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
   const ref = await getTransactionReference(db, projectId);
-  base = { type: "expense", date: "2026-10-21", amount: 54_000, walletId: ref.wallets[0].id, categoryId: ref.categories.find((c) => c.name === "Tol")!.id };
+  base = { type: "expense", date: "2026-10-21", time: "09:00", amount: 54_000, walletId: ref.wallets[0].id, categoryId: ref.categories.find((c) => c.name === "Tol")!.id };
 });
 
 describe("lampiran transaksi", () => {
