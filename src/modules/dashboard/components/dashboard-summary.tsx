@@ -19,12 +19,11 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
       <div className="grid grid-cols-2 gap-3">
         <Stat label="UDP diterima" value={totals.udpReceived} />
         <Stat label="Pengeluaran" value={totals.totalExpense} />
-        <Card className="col-span-2 bg-primary">
-          <CardContent className="py-3">
-            <p className="text-xs">{totals.remaining >= 0 ? "Sisa (dikembalikan ke kantor)" : "Kurang (perlu reimburse)"}</p>
-            <p className="font-head text-3xl tabular-nums">{formatRupiah(Math.abs(totals.remaining))}</p>
-          </CardContent>
-        </Card>
+        <Stat
+          label={totals.remaining >= 0 ? "Sisa (dikembalikan ke kantor)" : "Kurang (perlu reimburse)"}
+          value={Math.abs(totals.remaining)}
+          className="col-span-2 bg-primary"
+        />
       </div>
 
       {data.budgets.length > 1 && (
@@ -108,13 +107,14 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+/** Ukuran teks sama dengan kartu pagu di bawahnya: judul `text-base`, isi `text-sm`. */
+function Stat({ label, value, className }: { label: string; value: number; className?: string }) {
   return (
-    <Card>
-      <CardContent className="py-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="font-head text-lg tabular-nums">{formatRupiah(value)}</p>
-      </CardContent>
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="text-base">{label}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm tabular-nums">{formatRupiah(value)}</CardContent>
     </Card>
   );
 }
