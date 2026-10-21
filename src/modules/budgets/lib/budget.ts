@@ -43,7 +43,8 @@ export function dailyLimit(budget: BudgetRule, ctx: BudgetContext): number | nul
 }
 
 export function budgetLimit(budget: BudgetRule, ctx: BudgetContext): number {
-  if (budget.basis === "per_vehicle") return budget.rate * ctx.vehicleCount;
+  // per_vehicle: `days` = jumlah trip (mis. 2 = pergi + pulang), default 1.
+  if (budget.basis === "per_vehicle") return budget.rate * ctx.vehicleCount * (budget.days ?? 1);
   const daily = dailyLimit(budget, ctx);
   return daily === null ? budget.rate : daily * budgetDays(budget, ctx);
 }

@@ -20,7 +20,7 @@ export function limitFormula(budget: BudgetRule, ctx: BudgetContext): string {
     case "per_vehicle_per_day":
       return `${rate} × ${ctx.vehicleCount} mobil × ${days} hari`;
     case "per_vehicle":
-      return `${rate} × ${ctx.vehicleCount} mobil`;
+      return budget.days ? `${rate} × ${ctx.vehicleCount} mobil × ${budget.days} trip` : `${rate} × ${ctx.vehicleCount} mobil`;
     case "per_day":
       return `${rate} × ${days} hari`;
     case "lump_sum":

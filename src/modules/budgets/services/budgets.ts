@@ -27,8 +27,8 @@ export function planBudget(input: unknown, refs: { categories: Category[]; other
   if (picked.some((c) => !c)) errors.categoryIds = ["Kategori tidak ditemukan di proyek ini."];
   else if (picked.some((c) => c!.kind !== "expense")) errors.categoryIds = ["Pagu hanya untuk kategori pengeluaran."];
   if (Object.keys(errors).length) throw new ValidationError(errors);
-  // Jumlah hari hanya bermakna untuk basis yang dikali hari.
-  return { ...v, days: usesDays(v.basis) ? v.days : null, categoryIds: [...new Set(v.categoryIds)] };
+  // `days` = jumlah hari (basis harian) atau jumlah trip (per_vehicle); basis lain tidak memakainya.
+  return { ...v, days: usesDays(v.basis) || v.basis === "per_vehicle" ? v.days : null, categoryIds: [...new Set(v.categoryIds)] };
 }
 
 export async function findBudgetOrThrow(db: Db, projectId: string, id: string): Promise<BudgetRow> {
