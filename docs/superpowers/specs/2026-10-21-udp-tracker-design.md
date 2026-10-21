@@ -62,7 +62,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - `projectId`, `kind` (`bank` | `cash` | `flazz` | `ewallet`), `name`, `holder?` (teks bebas), `vehicleId?` (untuk Flazz), `openingBalance` (int, default 0), `sortOrder`, `archived` (bool)
 
 **categories**
-- `projectId`, `kind` (`expense` | `income`), `name`, `icon` (nama ikon lucide), `isVehicleRelated` (bool; jika true, form menampilkan pilihan mobil), `isAdminFee` (bool; tepat satu per proyek), `sortOrder`, `archived`
+- `projectId`, `kind` (`expense` | `income`), `name`, `icon` (nama ikon lucide), `isVehicleRelated` (bool; jika true, form menampilkan pilihan mobil), `isAdminFee` (bool; tepat satu per proyek), `isOfficeFunding` (bool; pemasukan dari kantor, default: UDP Kantor), `sortOrder`, `archived`
 
 **budgets** (pagu)
 - `projectId`, `name`, `rate` (int), `basis` (`per_pax_per_day` | `per_vehicle_per_day` | `per_day` | `lump_sum`), `note?`
@@ -104,7 +104,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - **Saldo dompet** = `openingBalance + Σincome(wallet) − Σexpense(wallet) + Σtransfer masuk(amount) − Σtransfer keluar(amount + adminFee)`. Hanya baris dengan `deletedAt` null yang dihitung.
 - **Biaya admin transfer** dilaporkan sebagai pengeluaran pada kategori `isAdminFee` (tanggal dan dompet sama dengan transfer). Biaya ini **tidak** disimpan sebagai baris transaksi kedua.
 - **Total pengeluaran** = `Σexpense.amount + Σtransfer.adminFee`.
-- **UDP diterima** = Σincome pada kategori "UDP Kantor". **Total pemasukan** = Σ semua income.
+- **UDP diterima** = Σincome pada kategori ber-flag `isOfficeFunding` (default "UDP Kantor"; tidak bergantung pada nama). **Total pemasukan** = Σ semua income.
 - **Sisa** = `Σ openingBalance + total pemasukan − total pengeluaran`. Positif berarti dikembalikan ke kantor, negatif berarti kurang dan perlu di-reimburse.
 - **Realisasi pagu** = Σ pengeluaran pada kategori yang tercakup. **Selisih** = pagu − realisasi. Jika negatif, ditampilkan sebagai "Ditanggung kantor: Rp |selisih|".
 - **Pagu makan harian** (kalender) = `rate × pax` dibandingkan dengan realisasi kategori tercakup di tanggal itu.
@@ -197,8 +197,9 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | `…/summary` | GET | kartu beranda: UDP masuk, pengeluaran, sisa, saldo per dompet, pagu |
 | `…/calendar?month=YYYY-MM` | GET | total per tanggal untuk bulan itu |
 | `…/days/[date]` | GET | transaksi + subtotal kategori + pagu makan hari itu |
-| `…/transactions` | GET, POST | list (filter: type, category, wallet, vehicle, q, from, to) / buat |
-| `…/transactions/[id]` | PATCH, DELETE | ubah / soft delete |
+| `…/transactions` | GET, POST | list semua transaksi aktif (filter dilakukan di browser: jenis, kategori, dompet, mobil, cari) / buat |
+| `…/transactions/[id]` | GET, PATCH, DELETE | detail / ubah / soft delete |
+| `…/reference` | GET | data form: dompet & kategori aktif, mobil, dompet pengeluaran terakhir |
 | `…/transactions/[id]/restore` | POST | urungkan hapus |
 | `…/wallets`, `…/wallets/[id]` | GET, POST, PATCH | dompet |
 | `…/wallets/[id]/balance-checks` | GET, POST | riwayat & buat cek saldo |
@@ -233,7 +234,7 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 - Tap baris → form edit. Hapus menampilkan toast "Urungkan".
 - Ikon klip ditampilkan pada transaksi yang punya bon. Transaksi pengeluaran tanpa bon diberi badge "tanpa bon".
 
-**Form transaksi** (drawer full-screen, dari [+] atau edit)
+**Form transaksi** (halaman penuh `/transaksi/baru` dan `/transaksi/[id]`, dari [+], kalender, atau daftar; query `tanggal` mengisi tanggal, `dari` menentukan halaman tujuan setelah simpan; halaman agar tombol back HP berfungsi)
 1. Tombol besar **📷 Scan Bon** (kamera/galeri, menerima gambar & PDF). Thumbnail lampiran bisa >1.
 2. Segmented: Pengeluaran / Pemasukan / Transfer.
 3. Nominal (`inputmode="numeric"`, format otomatis).
