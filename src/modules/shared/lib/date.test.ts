@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { addDays, daysInclusive, formatDateLong, formatDateShort, isIsoDate, isoDateSchema, isoToLocalDate, localDateToIso, todayWib } from "./date";
+import {
+  addDays,
+  daysInclusive,
+  formatDateLong,
+  formatDateShort,
+  formatTimeTyping,
+  isIsoDate,
+  isoDateSchema,
+  isoToLocalDate,
+  isTime,
+  localDateToIso,
+  normalizeTime,
+  nowTimeWib,
+  timeSchema,
+  todayWib,
+} from "./date";
 
 describe("todayWib", () => {
   it("memakai zona Asia/Jakarta, bukan UTC", () => {
@@ -46,5 +61,36 @@ describe("kalender (Date lokal browser)", () => {
     expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()]).toEqual([2026, 9, 21, 0]);
     expect(localDateToIso(date)).toBe("2026-10-21");
     expect(localDateToIso(new Date(2026, 0, 5, 23, 59))).toBe("2026-01-05");
+  });
+});
+
+describe("jam", () => {
+  it("nowTimeWib: 24 jam di Asia/Jakarta", () => {
+    expect(nowTimeWib(new Date("2026-10-21T02:15:40Z"))).toBe("09:15");
+    expect(nowTimeWib(new Date("2026-10-21T17:05:00Z"))).toBe("00:05");
+    expect(nowTimeWib(new Date("2026-10-21T07:30:00Z"))).toBe("14:30");
+  });
+  it("isTime / timeSchema: HH:mm 00:00–23:59", () => {
+    expect(isTime("00:00")).toBe(true);
+    expect(isTime("23:59")).toBe(true);
+    for (const bad of ["24:00", "9:30", "12:60", "1230", ""]) expect(isTime(bad)).toBe(false);
+    expect(timeSchema.safeParse("14:30").success).toBe(true);
+    expect(timeSchema.safeParse("").error?.issues[0].message).toBe("Jam wajib diisi.");
+    expect(timeSchema.safeParse("25:00").error?.issues[0].message).toBe("Jam tidak valid.");
+  });
+  it("formatTimeTyping: hanya angka, titik dua otomatis", () => {
+    expect(formatTimeTyping("1")).toBe("1");
+    expect(formatTimeTyping("14")).toBe("14");
+    expect(formatTimeTyping("143")).toBe("14:3");
+    expect(formatTimeTyping("14:30")).toBe("14:30");
+    expect(formatTimeTyping("14.305")).toBe("14:30");
+  });
+  it("normalizeTime: 3–4 digit jadi HH:mm, selain itu apa adanya", () => {
+    expect(normalizeTime("930")).toBe("09:30");
+    expect(normalizeTime("9.30")).toBe("09:30");
+    expect(normalizeTime("93:0")).toBe("09:30");
+    expect(normalizeTime("14:30")).toBe("14:30");
+    expect(normalizeTime("2560")).toBe("2560");
+    expect(normalizeTime("14")).toBe("14");
   });
 });

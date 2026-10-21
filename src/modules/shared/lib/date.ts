@@ -12,6 +12,36 @@ export function todayWib(now: Date = new Date()): string {
   return wibDate.format(now);
 }
 
+// Jam transaksi = string "HH:mm" 24 jam dalam WIB (spec jam transaksi).
+const wibTime = new Intl.DateTimeFormat("en-GB", { timeZone: WIB, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** Jam sekarang di WIB, format HH:mm (24 jam). */
+export function nowTimeWib(now: Date = new Date()): string {
+  return wibTime.format(now);
+}
+
+export function isTime(value: string): boolean {
+  return TIME.test(value);
+}
+
+export const timeSchema = z.string({ error: "Jam wajib diisi." }).min(1, "Jam wajib diisi.").refine(isTime, "Jam tidak valid.");
+
+/** Saat mengetik: buang selain angka, maks 4 digit, sisipkan ":" setelah 2 digit. */
+export function formatTimeTyping(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  return digits.length <= 2 ? digits : `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+/** Saat selesai (blur/scan): "930" / "9.30" → "09:30". Yang tidak bisa dinormalkan dikembalikan apa adanya. */
+export function normalizeTime(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 3 || digits.length > 4) return value;
+  const padded = digits.padStart(4, "0");
+  const time = `${padded.slice(0, 2)}:${padded.slice(2)}`;
+  return isTime(time) ? time : value;
+}
+
 function toUtcMs(iso: string): number {
   const [, y, m, d] = ISO_DATE.exec(iso)!;
   return Date.UTC(Number(y), Number(m) - 1, Number(d));
