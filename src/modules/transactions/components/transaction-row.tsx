@@ -18,7 +18,7 @@ export function TransactionRow({ view, href }: { view: TransactionView; href?: s
         <CategoryIcon name={isTransfer ? "arrow-left-right" : view.categoryIcon} className="size-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 font-medium">
+        <p className="flex items-center gap-1.5 text-sm font-medium">
           <span className="truncate">{title}</span>
           {view.attachments.length > 0 && <Paperclip className="size-3.5 shrink-0" aria-label={`${view.attachments.length} bon`} />}
           {view.type === "expense" && view.attachments.length === 0 && (
