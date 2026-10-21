@@ -15,7 +15,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Buka http://localhost:3000. Untuk mencoba di HP pada jaringan yang sama, jalankan `npm run dev -- -H 0.0.0.0` lalu buka `http://<IP-laptop>:3000`.
+Buka http://localhost:3051. Untuk mencoba di HP pada jaringan yang sama, jalankan `npm run dev -- -H <IP-laptop>` lalu buka `http://<IP-laptop>:3051`.
 
 ## Perintah
 
