@@ -1,4 +1,5 @@
 import "server-only";
+import { asc, eq, inArray } from "drizzle-orm";
 import { budgetCategories, budgets } from "@/db/schema";
 import type { Db } from "@/db/types";
 
@@ -12,4 +13,13 @@ export async function insertBudget(db: Db, values: typeof budgets.$inferInsert):
 export async function insertBudgetCategories(db: Db, budgetId: string, categoryIds: string[]): Promise<void> {
   if (!categoryIds.length) return;
   await db.insert(budgetCategories).values(categoryIds.map((categoryId) => ({ budgetId, categoryId })));
+}
+
+export function selectBudgets(db: Db, projectId: string): Promise<BudgetRow[]> {
+  return db.select().from(budgets).where(eq(budgets.projectId, projectId)).orderBy(asc(budgets.createdAt));
+}
+
+export async function selectBudgetCategoryLinks(db: Db, budgetIds: string[]): Promise<{ budgetId: string; categoryId: string }[]> {
+  if (!budgetIds.length) return [];
+  return db.select().from(budgetCategories).where(inArray(budgetCategories.budgetId, budgetIds));
 }
