@@ -13,3 +13,8 @@ export async function insertCategories(db: Db, values: (typeof categories.$infer
 export function selectCategories(db: Db, projectId: string): Promise<CategoryRow[]> {
   return db.select().from(categories).where(eq(categories.projectId, projectId)).orderBy(asc(categories.sortOrder));
 }
+
+export async function updateCategoryRow(db: Db, id: string, patch: Partial<typeof categories.$inferInsert>): Promise<CategoryRow> {
+  const [row] = await db.update(categories).set(patch).where(eq(categories.id, id)).returning();
+  return row;
+}
