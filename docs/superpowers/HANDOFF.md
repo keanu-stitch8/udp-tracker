@@ -15,7 +15,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 3 Scan bon (`…/2026-10-21-03-scan-bon.md`) | ✅ merged (PR #9; juga: fallback model Gemini, DatePicker kalender NeoBrutalism, dialog foto bon, `allowedDevOrigins` rentang IP privat) |
 | Tipografi & font ikut neobrutalism.com/blocks | ✅ merged (PR #11): Space Grotesk + Geist, kelas di `src/components/app/typography.ts`, filter jenis transaksi pakai `Tabs` |
 | Jam transaksi (`…/2026-10-21-05-jam-transaksi.md`) | ✅ di `main`. Kolom `transactions.time` wajib (`HH:mm` WIB, 24 jam, tanpa label WIB di UI); migrasi 0004 sudah di Neon (jam data lama = `created_at` WIB). Scan membaca jam; penyesuaian cek saldo = 23:59; `TimeInput` teks (bukan `type="time"` yang bisa AM/PM) |
-| Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
+| Rencana 4 Ekspor + PWA (`…/2026-10-22-06-ekspor.md`, addendum spec `2026-10-22-ekspor-design.md`) | ✅ di `main`, uji nyata lulus 2026-10-22 (proyek asli: 6 foto ke Drive, Sheet 4 tab). Lainnya → Ekspor laporan |
+| Deploy Vercel (`sin1`) | ⏳ berikutnya |
 
 **Langkah berikutnya:**
 
@@ -23,6 +24,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 2. ✅ Rencana 3: Scan bon. Berikutnya: **Rencana 4 Ekspor** (spec §6.2) — lampiran punya kolom `driveFileId`/`driveUrl`; file dibaca lewat `readReceipt()`. Sheet transaksi menyertakan kolom Jam di sebelah Tanggal.
 3. ✅ (PR #6) **Jumlah trip untuk basis `per_vehicle`** (permintaan pengguna): BBM + Tol = tarif × mobil × trip (pergi + pulang = 2). Pakai ulang kolom `budgets.days` sebagai "Jumlah trip" untuk `per_vehicle` (default 1; label form & `limitFormula` "× 2 trip"; `planBudget` tidak lagi menolkan `days` untuk `per_vehicle`). Sementara pengguna bisa isi tarif 2.600.000.
 4. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
+
+**Deploy Vercel (langkah terakhir):** env produksi = semua isi `.env.local` (kecuali `NEON_BRANCH`), tambah redirect URI `https://<domain-vercel>/api/auth/google/callback` di OAuth client **milik UDP Tracker** (client baru, bukan client dashboard), lalu hubungkan Google sekali dari domain produksi. Migrasi DB: pengguna menjalankan `npm run db:migrate` (Claude Code menolak menyentuh Neon production).
 
 ## Dokumen kunci
 
@@ -48,6 +51,9 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Blob store private** (`put` public ditolak). Baca file lewat `readReceipt()`/route `attachments/[id]`, jangan pakai `blobUrl` langsung di browser. Skrip di luar app yang memakai drizzle wajib `casing: "snake_case"`.
 - **Gemini**: `gemini-flash-latest` (→ 3.8-flash) ±8–13 detik per scan, tapi bisa 503 "high demand" atau 40+ detik saat ramai → app otomatis mencoba cadangan `gemini-flash-lite-latest`. Pesan error asli tercatat di terminal dev (`[gemini] <model> <reason> …`). Struk uji sintetis bisa dibuat tanpa PIL: `cupsfilter struk.txt > struk.pdf` lalu `sips -s format jpeg struk.pdf --out struk.jpg`.
 - **Seluruh angka** (saldo, total, pagu) dihitung di `lib/` dari `getLedger()`, bukan dengan SUM di SQL.
+- **Google (ekspor):** OAuth client sendiri (dibuat pengguna 2026-10-22; redirect `http://localhost:3051/api/auth/google/callback`). Hubungkan hanya dari `localhost`/https (Google menolak IP LAN). Token terenkripsi (`ENCRYPTION_KEY`, khusus app ini) di `google_credentials`; Putuskan hanya menghapus token di DB. Consent screen mode Testing → token habis tiap 7 hari (ubah ke In production). Gateway googleapis di `src/modules/exports/api/google-gateway.ts`; isi laporan murni di `exports/lib/report.ts`.
+- **Route handler GET tanpa params:** `route()` memanggil `await connection()` sebelum try/catch; tanpa itu build mencatat error prerender `cookies()`.
+- **Uji route dengan sesi tanpa login:** buat token via `createSessionToken(SESSION_SECRET)` (skrip tsx di scratchpad) lalu `curl -H "Cookie: udp_session=…"`.
 
 ## Cara kerja yang dipakai (ikuti lagi)
 
