@@ -39,7 +39,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Dev via IP**: `next.config.ts` mengisi `allowedDevOrigins` dengan IP LAN laptop. Tanpa itu halaman yang dibuka lewat IP tidak hydrate (tombol mati).
 - **DB**: Drizzle + `pg` Pool + `attachDatabasePool` (rekomendasi skill Neon). Migrasi lewat `DATABASE_URL_UNPOOLED`. `withVerifiedSsl()` mengunci `sslmode=verify-full`. Test pakai PGlite (`tests/helpers/test-db.ts`). Fungsi server menerima `db: Db` sebagai parameter pertama.
 - **UI**: komponen NeoBrutalism (ex-RetroUI, berbasis **Base UI**) disalin oleh `npm run ui:sync` ke `src/components/ui`, yang **tidak boleh diedit** (`npm run ui:check`). Jangan pakai `shadcn add`, karena CLI mengambil `button` dari registry default. Repo `Logging-Stuff/RetroUI` sudah di-repo-jack, jangan di-clone. `ToggleGroup` memakai `value` berupa array. `NativeSelect` butuh `NATIVE_SELECT_CLASS` (`src/components/app/form-classes.ts`). `DrawerContent className="mx-auto max-w-[480px]"`.
-- **Next 16 menyimpan state halaman** saat back/push: tutup drawer sebelum navigasi (lihat `DayDetailPanel onNavigate`).
+- **Next 16 menyimpan state halaman** (Cache Components menyembunyikan route dengan `<Activity>`, maks 3 route, per URL termasuk query): tutup drawer sebelum navigasi (lihat `DayDetailPanel onNavigate`); form "buat baru" pakai `useResetAfterSave` (`src/lib/use-reset-after-save.ts`) sebagai `key` agar kosong lagi setelah simpan, draf belum disimpan tetap ada. Dokumen: `node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`.
+- Test komponen/hook React: file `*.test.tsx` dengan `// @vitest-environment happy-dom` (happy-dom dipin 20.14.5).
 - **Chrome**: Enter setelah mengetik password kadang dimakan popup saran password bawaan. Ini bukan bug app.
 - **Seluruh angka** (saldo, total, pagu) dihitung di `lib/` dari `getLedger()`, bukan dengan SUM di SQL.
 
