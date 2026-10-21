@@ -30,7 +30,7 @@ Mode offline/sync, multi-user/role, scan mutasi bank multi-transaksi, migrasi da
 | Framework | Next.js 16 (App Router), TypeScript, `src/` |
 | UI | Tailwind CSS v4, shadcn/ui (Base UI) + **NeoBrutalism** (dulu bernama RetroUI; registry `https://neobrutalism.com/r/{name}.json`), disalin oleh `scripts/ui-sync.mts` |
 | Client data | TanStack Query v5 (`useQuery`/`useMutation`, hydration dari server) |
-| DB | Neon Postgres (free) + **Drizzle ORM** (`drizzle-orm/neon-serverless` + `@neondatabase/serverless`; driver `neon-http` tidak mendukung `db.transaction`), migrasi `drizzle-kit` |
+| DB | Neon Postgres (free, region Singapura `ap-southeast-1`, di-link via Neon CLI `neon.ts`) + **Drizzle ORM** dengan `drizzle-orm/node-postgres` + `pg` Pool + `attachDatabasePool` (`@vercel/functions`) — rekomendasi skill Neon untuk Vercel Fluid compute; app memakai `DATABASE_URL` (pooled), migrasi memakai `DATABASE_URL_UNPOOLED` (direct). Migrasi `drizzle-kit` |
 | File bon | Vercel Blob (free tier) |
 | OCR | Google Gemini API free tier (structured JSON output), model via env |
 | Laporan | Google Sheets + Drive API (`googleapis`), OAuth akun pengguna, scope `drive.file` |
@@ -38,7 +38,7 @@ Mode offline/sync, multi-user/role, scan mutasi bank multi-transaksi, migrasi da
 | Test | Vitest + PGlite (Postgres in-memory) |
 | Hosting | Vercel Hobby (free) |
 
-Selalu memakai versi **latest** (dicek 2026-10-21: next 16.4.2, react 19.3, drizzle-orm 0.45.4, drizzle-kit 0.31.11, @neondatabase/serverless 1.2.0, @electric-sql/pglite 0.5.10, @tanstack/react-query 5.104.5, zod 4.6.7, vitest 5.0.5, shadcn 4.22.1, @types/node 24). Sebelum menulis kode yang bergantung pada API Next.js 16, baca dokumentasi di `node_modules/next/dist/docs/`.
+Selalu memakai versi **latest** (dicek 2026-10-21: next 16.4.2, react 19.3, drizzle-orm 0.45.4, drizzle-kit 0.31.11, pg 8.23.1, @vercel/functions 3.10.2, @electric-sql/pglite 0.5.10, @tanstack/react-query 5.104.5, zod 4.6.7, vitest 5.0.5, shadcn 4.22.1, @types/node 24). Sebelum menulis kode yang bergantung pada API Next.js 16, baca dokumentasi di `node_modules/next/dist/docs/`.
 
 Catatan Next.js 16.4: `create-next-app` mengaktifkan `cacheComponents` dan `partialPrefetching` secara default. Semua pembacaan DB/cookies di halaman wajib berada di dalam `<Suspense>` (sesuai pola `sections/`). GET Route Handler yang membaca cookies/DB otomatis dinamis. `middleware` diganti `proxy.ts`. `params` adalah `Promise`.
 
