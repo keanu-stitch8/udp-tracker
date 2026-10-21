@@ -10,4 +10,6 @@ export const ledgerKeys = {
   budgets: (projectId: string) => [...ledgerKeys.all(projectId), "budgets"] as const,
   wallets: (projectId: string) => [...ledgerKeys.all(projectId), "wallets"] as const,
   wallet: (projectId: string, walletId: string) => [...ledgerKeys.all(projectId), "wallet", walletId] as const,
+  categories: (projectId: string) => [...ledgerKeys.all(projectId), "categories"] as const,
+  settings: (projectId: string) => [...ledgerKeys.all(projectId), "settings"] as const,
 };

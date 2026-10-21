@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { wallets } from "@/db/schema";
 import type { Db } from "@/db/types";
 
@@ -22,4 +22,9 @@ export async function selectWallet(db: Db, projectId: string, id: string): Promi
 export async function updateWalletRow(db: Db, id: string, patch: Partial<typeof wallets.$inferInsert>): Promise<WalletRow> {
   const [row] = await db.update(wallets).set(patch).where(eq(wallets.id, id)).returning();
   return row;
+}
+
+export async function deleteWalletRows(db: Db, ids: string[]): Promise<void> {
+  if (!ids.length) return;
+  await db.delete(wallets).where(inArray(wallets.id, ids));
 }

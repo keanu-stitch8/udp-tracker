@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { categories } from "@/db/schema";
 import type { Db } from "@/db/types";
 
@@ -16,5 +16,10 @@ export function selectCategories(db: Db, projectId: string): Promise<CategoryRow
 
 export async function updateCategoryRow(db: Db, id: string, patch: Partial<typeof categories.$inferInsert>): Promise<CategoryRow> {
   const [row] = await db.update(categories).set(patch).where(eq(categories.id, id)).returning();
+  return row;
+}
+
+export async function selectCategory(db: Db, projectId: string, id: string): Promise<CategoryRow | undefined> {
+  const [row] = await db.select().from(categories).where(and(eq(categories.projectId, projectId), eq(categories.id, id)));
   return row;
 }

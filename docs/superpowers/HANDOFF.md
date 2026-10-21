@@ -11,15 +11,16 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 2b-1 Pagu (`…/2026-10-21-02b1-pagu.md`) | ✅ merged (PR #2). Bagian "surat penawaran" sudah dibuang di PR #3 |
 | Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ merged (PR #3; migrasi 0003 sudah di Neon) |
 | Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ branch `feat/dompet` (juga: form proyek baru tanpa pax bawaan, 1 mobil). Menunggu PR/merge |
-| Rencana 2b-3 | ⏳ belum: kategori, mobil, pengaturan proyek (nama/lokasi/tanggal/pax, Selesai/Buka lagi), **hapus proyek wajib isi password admin (= password login, `APP_PASSWORD_HASH`)** |
+| Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Belum: sinkronisasi spec §3.2/§3.4/§4.4/§5 (Task 5 Step 3) |
+| Rencana 3 Scan bon | ⏳ berikutnya. `GEMINI_API_KEY` & `BLOB_READ_WRITE_TOKEN` sudah ada di `.env.local`. Pengguna pilih Gemini + Blob. Sambungkan hapus foto Blob ke `deleteProject` |
 | Rencana 3 Bon | ⏳ upload Vercel Blob + scan Gemini free tier (spec §6.1) |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
 
-1. PR + merge `feat/dompet` (Rencana 2b-2) setelah disetujui pengguna.
-2. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
-3. Tulis & eksekusi inline **Rencana 2b-3**: kategori, mobil, pengaturan proyek, hapus proyek dengan password admin. Tanya pengguna dulu: tambah mobil → otomatis dompet Flazz? mobil boleh dihapus? Kategori "BBM Perjalanan" vs "Bensin Harian" tetap dipisah (pulang-pergi vs harian produksi/event) — keputusan pengguna.
+1. Sinkronkan spec dengan 2b-2/2b-3 (endpoint categories/vehicles/settings/DELETE project, aturan kategori sistem & mobil).
+2. Tulis & eksekusi inline **Rencana 3: Scan bon** (spec §6.1) — hemat kuota: rencana ringkas, E2E via curl (bukan browser), verifikasi penuh sekali per task.
+3. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
 ## Dokumen kunci
 
