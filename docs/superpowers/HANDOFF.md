@@ -7,18 +7,18 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Bagian | Status |
 | --- | --- |
 | Rencana 1 Fondasi (`docs/superpowers/plans/2026-10-21-01-fondasi.md`) | ✅ merged ke `main` (PR #1) |
-| Rencana 2a Buku kas (`…/2026-10-21-02a-buku-kas.md`) | ✅ di branch `feat/buku-kas`, **PR #2** https://github.com/keanu-stitch8/udp-tracker/pull/2 (menunggu merge) |
-| Rencana 2b-1 Pagu surat penawaran (`…/2026-10-21-02b1-pagu.md`) | ✅ selesai di branch yang sama |
+| Rencana 2a Buku kas (`…/2026-10-21-02a-buku-kas.md`) | ✅ merged ke `main` (PR #2) |
+| Rencana 2b-1 Pagu (`…/2026-10-21-02b1-pagu.md`) | ✅ merged (PR #2). Bagian "surat penawaran" sudah dibuang di PR #3 |
+| Pagu generik: jumlah hari per pagu, tanpa seed pagu | ✅ branch `feat/pagu-hari`, **PR #3** https://github.com/keanu-stitch8/udp-tracker/pull/3 (menunggu merge; migrasi 0003 sudah diterapkan ke Neon) |
 | Rencana 2b sisa | ⏳ belum: kelola dompet + **cek saldo Flazz/cash + catat selisih** (spec §3.3), kelola kategori & mobil, pengaturan proyek (ubah nama/tanggal/pax, Selesai/Buka lagi), hapus proyek |
 | Rencana 3 Bon | ⏳ upload Vercel Blob + scan Gemini free tier (spec §6.1) |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
-**Langkah berikutnya yang menunggu pengguna:**
+**Langkah berikutnya:**
 
-1. Review & merge **PR #2** (`feat/buku-kas` → `main`). Setelah merge: `git checkout main && git pull`, hapus branch lokal.
-2. Pengguna perlu klik **Lainnya → Pagu → "Terapkan pagu surat penawaran"** di proyek aslinya ("Q4 Hero & Editorial Feature Videos - Part 1"), supaya BBM → BBM Perjalanan, ditambah Bensin Harian, dan 3 pagu baru. Jangan dijalankan tanpa izin, karena ini data asli.
-
-Setelah itu, tulis Rencana 2b sisa (skill `superpowers:writing-plans`) dan eksekusi inline (pilihan pengguna: inline, bukan subagent).
+1. Merge **PR #3** (`feat/pagu-hari` → `main`). Setelah merge: `git checkout main && git pull`, hapus branch lokal.
+2. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
+3. Tulis & eksekusi inline **Rencana 2b-2: Dompet & cek saldo** (kelola dompet tambah/ubah/arsip, detail dompet, cek saldo + catat selisih spec §3.3, link dari saldo beranda). Lalu **Rencana 2b-3**: kategori, mobil, pengaturan proyek, hapus proyek (tanya pengguna dulu: tambah mobil → otomatis dompet Flazz? mobil boleh dihapus? hapus proyek = hapus permanen dengan konfirmasi?).
 
 ## Dokumen kunci
 
@@ -52,6 +52,7 @@ Setelah itu, tulis Rencana 2b sisa (skill `superpowers:writing-plans`) dan eksek
 
 ## Preferensi pengguna
 
+- **Aplikasi generik/reusable:** jangan hardcode tarif, seed, atau tombol migrasi khusus satu kontrak. Kebutuhan dari proyek pengguna dibuat versi umum yang bisa diatur di UI (contoh: "operasional 6 hari" → isian jumlah hari per pagu).
 - Bahasa Indonesia santai. Hanya layanan gratis (Gemini free tier, Neon/Vercel free).
 - **Aksi yang menghapus wajib ada konfirmasi** (pengguna pernah kecewa dengan tombol tanpa konfirmasi).
-- Pagu dari surat penawaran: Makan 150rb/orang/hari (siang + malam), Sarapan 25rb/orang/hari, BBM + Tol 1,3jt/mobil/trip, Operasional harian 100rb/hari/mobil. Kelebihan = "ditanggung kantor".
+- Kelebihan pagu = "ditanggung kantor".
