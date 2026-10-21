@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/app/coming-soon";
+import { TransactionListModule } from "@/modules/transactions";
 
 export default function TransactionsPage() {
-  return <ComingSoon title="Transaksi" />;
+  return <TransactionListModule />;
 }

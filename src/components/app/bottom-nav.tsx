@@ -17,8 +17,13 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Membaca path aktif. Di route dinamis wajib di dalam <Suspense> (cacheComponents) — lihat AppShell. */
 export function BottomNav() {
-  const pathname = usePathname();
+  return <BottomNavLinks pathname={usePathname()} />;
+}
+
+/** Tampilan nav murni; `pathname` kosong = tanpa penanda aktif (fallback Suspense). */
+export function BottomNavLinks({ pathname }: { pathname: string }) {
   const [first, second, third, fourth] = ITEMS;
   const link = (item: (typeof ITEMS)[number]) => {
     const active = isActive(pathname, item.href) && !(item.href === "/transaksi" && pathname === "/transaksi/baru");

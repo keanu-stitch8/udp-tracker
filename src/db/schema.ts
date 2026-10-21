@@ -78,6 +78,8 @@ export const categories = pgTable(
     icon: text().notNull(),
     isVehicleRelated: boolean().notNull().default(false),
     isAdminFee: boolean().notNull().default(false),
+    // Pemasukan dari kantor (UDP). "UDP diterima" = Σ pemasukan berkategori ini (spec §3.3).
+    isOfficeFunding: boolean().notNull().default(false),
     sortOrder: integer().notNull().default(0),
     archived: boolean().notNull().default(false),
     ...timestamps,

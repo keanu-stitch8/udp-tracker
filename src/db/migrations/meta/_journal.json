@@ -8,6 +8,20 @@
       "when": 1792569030359,
       "tag": "0000_mysterious_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792571069858,
+      "tag": "0001_eminent_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792576856703,
+      "tag": "0002_chunky_punisher",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/app/coming-soon";
+import { NewTransactionModule } from "@/modules/transactions";
 
-export default function NewTransactionPage() {
-  return <ComingSoon title="Catat transaksi" />;
+export default function NewTransactionPage({ searchParams }: PageProps<"/transaksi/baru">) {
+  return <NewTransactionModule searchParams={searchParams} />;
 }

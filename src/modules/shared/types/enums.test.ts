@@ -6,7 +6,7 @@ describe("enums", () => {
     expect(PROJECT_STATUSES).toEqual(["active", "done"]);
     expect(WALLET_KINDS).toEqual(["bank", "cash", "flazz", "ewallet"]);
     expect(CATEGORY_KINDS).toEqual(["expense", "income"]);
-    expect(BUDGET_BASES).toEqual(["per_pax_per_day", "per_vehicle_per_day", "per_day", "lump_sum"]);
+    expect(BUDGET_BASES).toEqual(["per_pax_per_day", "per_vehicle_per_day", "per_vehicle", "per_day", "lump_sum"]);
     expect(TRANSACTION_TYPES).toEqual(["expense", "income", "transfer"]);
   });
 });
