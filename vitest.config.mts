@@ -8,6 +8,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    // Tiap test PGlite menjalankan semua migrasi; di bawah beban bisa lewat dari default 5 detik.
+    testTimeout: 15_000,
+    include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.ts"],
   },
 });

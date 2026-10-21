@@ -7,18 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api-client";
+import { useResetAfterSave } from "@/lib/use-reset-after-save";
 import { addDays } from "@/modules/shared/lib/date";
 import { useCreateProject } from "../hooks/use-projects";
 
+/** Setelah proyek dibuat, kunjungan berikutnya ke /proyek/baru mulai kosong lagi. */
 export function ProjectForm({ today }: { today: string }) {
+  const { resetKey, resetWhenHidden } = useResetAfterSave();
+  return <ProjectFormFields key={resetKey} today={today} onSaved={resetWhenHidden} />;
+}
+
+function ProjectFormFields({ today, onSaved }: { today: string; onSaved: () => void }) {
   const router = useRouter();
   const create = useCreateProject();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(addDays(today, 4));
-  const [pax, setPax] = useState("9");
-  const [vehicles, setVehicles] = useState(["Mobil 1", "Mobil 2"]);
+  // Tanpa angka bawaan: jumlah kru diisi sendiri per proyek; mulai dari satu mobil.
+  const [pax, setPax] = useState("");
+  const [vehicles, setVehicles] = useState(["Mobil 1"]);
 
   const fieldErrors = create.error instanceof ApiError ? create.error.fieldErrors : {};
   const errorOf = (field: string) => fieldErrors[field]?.[0];
@@ -33,6 +41,7 @@ export function ProjectForm({ today }: { today: string }) {
           { name, location, startDate, endDate, pax: Number(pax), vehicles: vehicles.filter((v) => v.trim()) },
           {
             onSuccess: () => {
+              onSaved();
               router.push("/");
               router.refresh();
             },
@@ -65,7 +74,7 @@ export function ProjectForm({ today }: { today: string }) {
         </div>
         <Field data-invalid={errorOf("pax") ? true : undefined}>
           <FieldLabel htmlFor="pax">Jumlah orang</FieldLabel>
-          <Input id="pax" inputMode="numeric" pattern="[0-9]*" value={pax} onChange={(e) => setPax(e.target.value.replace(/\D/g, ""))} />
+          <Input id="pax" inputMode="numeric" pattern="[0-9]*" placeholder="Jumlah kru" value={pax} onChange={(e) => setPax(e.target.value.replace(/\D/g, ""))} />
           {errorOf("pax") && <FieldError>{errorOf("pax")}</FieldError>}
         </Field>
         <Field data-invalid={vehicleError ? true : undefined}>

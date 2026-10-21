@@ -53,7 +53,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 ### 3.1 Tabel
 
 **projects**
-- `name`, `location`, `startDate`, `endDate`, `pax` (int, default 9), `status` (`active` | `done`)
+- `name`, `location`, `startDate`, `endDate`, `pax` (int, wajib diisi saat membuat proyek; form tanpa angka bawaan, mulai dengan 1 mobil), `status` (`active` | `done`)
 - `driveFolderId?`, `sheetId?`, `sheetUrl?` (diisi saat ekspor)
 - `startDate`/`endDate` (inklusif) menentukan jumlah hari untuk pagu.
 
@@ -202,9 +202,10 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | `…/transactions/[id]` | GET, PATCH, DELETE | detail / ubah / soft delete |
 | `…/reference` | GET | data form: dompet & kategori aktif, mobil, dompet pengeluaran terakhir |
 | `…/transactions/[id]/restore` | POST | urungkan hapus |
-| `…/wallets`, `…/wallets/[id]` | GET, POST, PATCH | dompet |
-| `…/wallets/[id]/balance-checks` | GET, POST | riwayat & buat cek saldo |
-| `…/balance-checks/[id]/adjust` | POST | catat selisih sebagai transaksi |
+| `…/wallets` | GET, POST | daftar dompet (saldo, nama mobil, termasuk arsip) / tambah |
+| `…/wallets/[walletId]` | GET, PATCH | detail (saldo, riwayat saldo harian, cek saldo, kategori) / ubah & arsip |
+| `…/wallets/[walletId]/balance-checks` | GET, POST | riwayat & buat cek saldo (snapshot saldo s/d tanggal) |
+| `…/balance-checks/[checkId]/adjust` | POST | catat selisih sebagai transaksi (`balanceCheckId`; 409 bila cocok/sudah dicatat) |
 | `…/budgets` | GET, POST | pengaturan pagu (rumus, batas, pemakaian, kategori pengeluaran) / tambah |
 | `…/budgets/[budgetId]` | PATCH, DELETE | ubah / hapus pagu |
 | `…/categories`, `…/vehicles` | GET, POST, PATCH | master data (Rencana 2b) |
@@ -249,7 +250,7 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 9. Field yang diisi OCR diberi badge "cek lagi" sampai pengguna menyentuhnya.
 
 **Lainnya**
-- Dompet: daftar, tambah/ubah/arsip, **Cek Saldo** (input saldo asli → tampil selisih → "Catat selisih").
+- Dompet (`/lainnya/dompet`): daftar dengan saldo, tambah/ubah/arsip (arsip bisa dibalik; dompet tidak dihapus). Detail (`/lainnya/dompet/[id]`, juga dari tap saldo di beranda): saldo, **Cek Saldo** (tanggal + saldo asli → pratinjau saldo aplikasi s/d tanggal & selisih → simpan), riwayat cek saldo, "Catat selisih" (pilih kategori, default Tol untuk Flazz / Lain-lain / Lainnya) hanya pada cek terbaru.
 - **Pagu** (`/lainnya/pagu`): kartu per pagu (tarif, rumus → batas, bar pemakaian, kategori), ubah inline dengan pratinjau rumus, tambah pagu, isian jumlah hari per pagu (kosong = periode proyek), hapus dengan konfirmasi dua langkah, empty state saat belum ada pagu.
 - Kategori: kelola kategori (Rencana 2b).
 - Mobil, Pengaturan proyek (nama, lokasi, tanggal, pax, status Selesai/Buka lagi).

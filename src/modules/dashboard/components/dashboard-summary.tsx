@@ -53,9 +53,11 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
         <CardContent>
           <ul className="divide-y text-sm">
             {data.wallets.map((wallet) => (
-              <li key={wallet.id} className="flex items-center justify-between py-2">
-                <span>{wallet.name}</span>
-                <span className={cn("font-head tabular-nums", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+              <li key={wallet.id}>
+                <Link href={`/lainnya/dompet/${wallet.id}`} className="flex min-h-11 items-center justify-between gap-2 py-2">
+                  <span>{wallet.name}</span>
+                  <span className={cn("font-head tabular-nums", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+                </Link>
               </li>
             ))}
           </ul>
