@@ -15,6 +15,9 @@ import { EMPTY_FILTERS, filterTransactions, groupByDate, type TransactionFilters
 import type { TransactionReference } from "../queries/views";
 import { TransactionRow } from "./transaction-row";
 
+// NativeSelect NeoBrutalism: h-8 + py-2 memotong teks → atur <select> di dalamnya dari luar (komponen ui tidak diedit).
+const SELECT_CLASS = "w-full [&_select]:h-10 [&_select]:py-0";
+
 const TYPES: { value: TransactionFilters["type"]; label: string }[] = [
   { value: "all", label: "Semua" },
   { value: "expense", label: "Keluar" },
@@ -58,7 +61,7 @@ export function TransactionList({ reference }: { reference: TransactionReference
           ))}
         </ToggleGroup>
         <div className="grid grid-cols-2 gap-2">
-          <NativeSelect aria-label="Kategori" className="w-full" value={filters.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
+          <NativeSelect aria-label="Kategori" className={SELECT_CLASS} value={filters.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
             <NativeSelectOption value="">Semua kategori</NativeSelectOption>
             {reference.categories.map((c) => (
               <NativeSelectOption key={c.id} value={c.id}>
@@ -66,7 +69,7 @@ export function TransactionList({ reference }: { reference: TransactionReference
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <NativeSelect aria-label="Dompet" className="w-full" value={filters.walletId} onChange={(e) => set({ walletId: e.target.value })}>
+          <NativeSelect aria-label="Dompet" className={SELECT_CLASS} value={filters.walletId} onChange={(e) => set({ walletId: e.target.value })}>
             <NativeSelectOption value="">Semua dompet</NativeSelectOption>
             {reference.wallets.map((w) => (
               <NativeSelectOption key={w.id} value={w.id}>
@@ -75,7 +78,7 @@ export function TransactionList({ reference }: { reference: TransactionReference
             ))}
           </NativeSelect>
           {reference.vehicles.length > 0 && (
-            <NativeSelect aria-label="Mobil" className="w-full" value={filters.vehicleId} onChange={(e) => set({ vehicleId: e.target.value })}>
+            <NativeSelect aria-label="Mobil" className={SELECT_CLASS} value={filters.vehicleId} onChange={(e) => set({ vehicleId: e.target.value })}>
               <NativeSelectOption value="">Semua mobil</NativeSelectOption>
               {reference.vehicles.map((v) => (
                 <NativeSelectOption key={v.id} value={v.id}>
@@ -86,7 +89,7 @@ export function TransactionList({ reference }: { reference: TransactionReference
           )}
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input aria-label="Cari" placeholder="Cari…" className="pl-8" value={filters.q} onChange={(e) => set({ q: e.target.value })} />
+            <Input aria-label="Cari" placeholder="Cari…" className="h-10 pl-8" value={filters.q} onChange={(e) => set({ q: e.target.value })} />
           </div>
         </div>
       </div>

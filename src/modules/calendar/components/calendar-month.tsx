@@ -72,11 +72,11 @@ export function CalendarMonth({ projectId, initialMonth, today, startDate, endDa
       <p className="text-xs text-muted-foreground">Kotak kuning = periode proyek. Angka = total pengeluaran hari itu.</p>
 
       <Drawer open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
-        <DrawerContent>
+        <DrawerContent className="mx-auto max-w-[480px]">
           <DrawerHeader>
             <DrawerTitle>{selected ? formatDateShort(selected) : ""}</DrawerTitle>
           </DrawerHeader>
-          {selected && <DayDetailPanel projectId={projectId} date={selected} />}
+          {selected && <DayDetailPanel projectId={projectId} date={selected} onNavigate={() => setSelected(null)} />}
         </DrawerContent>
       </Drawer>
     </div>

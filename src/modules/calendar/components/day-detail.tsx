@@ -10,7 +10,8 @@ import { formatRupiah } from "@/modules/shared/lib/money";
 import { TransactionRow } from "@/modules/transactions/components/transaction-row";
 import { useDayDetail } from "../hooks/use-calendar";
 
-export function DayDetailPanel({ projectId, date }: { projectId: string; date: string }) {
+/** `onNavigate`: tutup drawer saat membuka link — Next 16 menyimpan state halaman, drawer yang tertinggal terbuka menahan klik toast. */
+export function DayDetailPanel({ projectId, date, onNavigate }: { projectId: string; date: string; onNavigate?: () => void }) {
   const { data, isPending, error } = useDayDetail(projectId, date);
   const addHref = `/transaksi/baru?tanggal=${date}&dari=/kalender`;
 
@@ -18,7 +19,7 @@ export function DayDetailPanel({ projectId, date }: { projectId: string; date: s
   if (error || !data) return <p className="p-4 text-sm text-destructive">{error?.message ?? "Gagal memuat."}</p>;
 
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto p-4">
+    <div className="flex flex-col gap-4 overflow-y-auto p-4" onClickCapture={(event) => (event.target as HTMLElement).closest("a") && onNavigate?.()}>
       <p className="font-head text-2xl tabular-nums">{formatRupiah(data.expenseTotal)}</p>
 
       {data.budgets.map((budget) => (

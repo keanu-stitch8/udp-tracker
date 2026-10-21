@@ -24,6 +24,8 @@ export function LoginForm() {
 
   return (
     <form
+      // POST: bila tersubmit sebelum hydrate, password tidak pernah masuk ke URL.
+      method="post"
       className="flex flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault();
