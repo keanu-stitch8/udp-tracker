@@ -45,7 +45,10 @@ function TimePart({ id, label, value, max, onChange, onFilled, disabled, ref }: 
           onChange(next);
           if (next.length === 2) onFilled?.();
         }}
-        onBlur={() => onChange(pad(value))}
+        onBlur={() => {
+          // Hanya bila berubah ("9" → "09"): fokus lalu keluar tanpa mengetik tidak dihitung sebagai mengubah jam.
+          if (pad(value) !== value) onChange(pad(value));
+        }}
       />
       <div className="flex w-7 flex-col border-l-2">
         <button type="button" tabIndex={-1} aria-label={`Tambah ${label.toLowerCase()}`} disabled={disabled} className={STEP_CLASS} onClick={() => onChange(step(value, 1, max))}>
