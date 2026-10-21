@@ -92,12 +92,4 @@
   body {
     @apply bg-background font-sans text-foreground antialiased;
   }
-  /* Safari iOS: input tanggal native punya lebar minimum sendiri sehingga keluar dari container, dan nilainya
-     rata tengah. Matikan tampilan native (picker tetap muncul) dan izinkan menyusut. */
-  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"]) {
-    @apply min-w-0 appearance-none;
-  }
-  input::-webkit-date-and-time-value {
-    @apply text-left;
-  }
 }

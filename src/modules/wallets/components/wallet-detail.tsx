@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/app/date-picker";
 import { MoneyInput } from "@/components/app/money-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -142,7 +143,7 @@ function BalanceCheckForm({ detail, today }: { detail: WalletDetail; today: stri
             <div className="grid grid-cols-2 gap-3">
               <Field data-invalid={errorOf("date") ? true : undefined}>
                 <FieldLabel htmlFor="check-date">Tanggal</FieldLabel>
-                <Input id="check-date" type="date" className="h-10" value={date} onChange={(e) => setDate(e.target.value)} />
+                <DatePicker id="check-date" className="h-10" value={date} onChange={setDate} />
                 {errorOf("date") && <FieldError>{errorOf("date")}</FieldError>}
               </Field>
               <Field data-invalid={errorOf("actualBalance") ? true : undefined}>

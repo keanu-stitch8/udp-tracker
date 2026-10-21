@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/components/app/category-icon";
+import { DatePicker } from "@/components/app/date-picker";
 import { MoneyInput } from "@/components/app/money-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -244,13 +245,12 @@ function TransactionFormFields({ reference, defaultDate, returnTo, initial, onSa
           <FieldLabel htmlFor="date">
             Tanggal <CheckAgain show={ocrFields.has("date")} />
           </FieldLabel>
-          <Input
+          <DatePicker
             id="date"
-            type="date"
-            className="h-11"
             value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
+            period={{ from: reference.project.startDate, to: reference.project.endDate }}
+            onChange={(value) => {
+              setDate(value);
               touched("date");
             }}
           />
