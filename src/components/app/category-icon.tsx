@@ -66,6 +66,7 @@ export function hasCategoryIcon(name: string): boolean {
 }
 
 export function CategoryIcon({ name, ...props }: { name: string | null } & Omit<LucideProps, "name">) {
+  // Lookup langsung (bukan lewat fungsi) agar React Compiler tidak menganggapnya membuat komponen saat render.
   const Icon = (name && ICONS[name as keyof typeof ICONS]) || Circle;
   return <Icon aria-hidden {...props} />;
 }

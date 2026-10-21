@@ -1,11 +1,13 @@
-import { ChevronRight, FolderKanban, Gauge, Wallet } from "lucide-react";
+import { ChevronRight, FolderKanban, Gauge, Settings, Tags, Wallet } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "@/modules/auth/components/logout-button";
 
 const LINKS = [
   { href: "/lainnya/dompet", label: "Dompet", icon: Wallet },
   { href: "/lainnya/pagu", label: "Pagu", icon: Gauge },
-  { href: "/proyek", label: "Proyek", icon: FolderKanban },
+  { href: "/lainnya/kategori", label: "Kategori", icon: Tags },
+  { href: "/lainnya/proyek", label: "Pengaturan proyek", icon: Settings },
+  { href: "/proyek", label: "Ganti / buat proyek", icon: FolderKanban },
 ] as const;
 
 export function MenuView() {
