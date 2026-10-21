@@ -42,7 +42,7 @@ describe("pengaturan pagu", () => {
     await expect(deleteBudget(db, projectId, created.id)).rejects.toBeInstanceOf(NotFoundError);
   });
 
-  it("jumlah hari per pagu: dipakai untuk batas, kosong = periode proyek, diabaikan untuk basis non-harian", async () => {
+  it("jumlah hari per pagu: dipakai untuk batas, kosong = periode proyek, jadi jumlah trip untuk per mobil", async () => {
     const parkir = await categoryId("Parkir");
     const operasional = await createBudget(db, projectId, { name: "Operasional", rate: 100_000, basis: "per_vehicle_per_day", categoryIds: [parkir] });
     expect(operasional.days).toBeNull();
@@ -51,7 +51,8 @@ describe("pengaturan pagu", () => {
     expect([updated.days, updated.formula, updated.limit]).toEqual([4, "Rp 100.000 × 2 mobil × 4 hari", 800_000]);
 
     const tol = await createBudget(db, projectId, { name: "Tol", rate: 500_000, basis: "per_vehicle", days: 4, categoryIds: [await categoryId("Tol")] });
-    expect(tol.days).toBeNull();
+    expect(tol.days).toBe(4);
+    expect((await getBudgetSettings(db, projectId)).budgets.find((b) => b.id === tol.id)?.limit).toBe(500_000 * 2 * 4);
 
     const error = await updateBudget(db, projectId, operasional.id, { ...operasional, days: 0 }).catch((e) => e);
     expect((error as ValidationError).fieldErrors).toMatchObject({ days: ["Minimal 1 hari."] });

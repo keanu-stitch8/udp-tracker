@@ -23,7 +23,7 @@ describe("pagu", () => {
   it("jumlah hari per pagu menggantikan periode proyek (hanya basis harian)", () => {
     expect(budgetLimit({ rate: 100_000, basis: "per_vehicle_per_day", days: 4 }, ctx)).toBe(800_000);
     expect(budgetLimit({ rate: 150_000, basis: "per_pax_per_day", days: null }, ctx)).toBe(8_100_000);
-    expect(budgetLimit({ rate: 1_300_000, basis: "per_vehicle", days: 4 }, ctx)).toBe(2_600_000);
+    expect(budgetLimit({ rate: 1_300_000, basis: "per_vehicle", days: 2 }, ctx)).toBe(5_200_000);
     expect(budgetLimit({ rate: 2_000_000, basis: "lump_sum", days: 4 }, ctx)).toBe(2_000_000);
     expect(usesDays("per_day")).toBe(true);
     expect(usesDays("per_vehicle")).toBe(false);

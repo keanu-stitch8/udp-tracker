@@ -36,7 +36,8 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
   const fieldErrors = save.error instanceof ApiError ? save.error.fieldErrors : {};
   const errorOf = (field: string) => fieldErrors[field]?.[0];
   const dayBased = usesDays(basis);
-  const customDays = dayBased && days ? Number(days) : null;
+  const tripBased = basis === "per_vehicle";
+  const customDays = (dayBased || tripBased) && days ? Number(days) : null;
   const preview = { rate: rate ?? 0, basis, days: customDays };
   const toggleCategory = (id: string) => setCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
@@ -80,9 +81,9 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
             {errorOf("basis") && <FieldError>{errorOf("basis")}</FieldError>}
           </Field>
         </div>
-        {dayBased && (
+        {(dayBased || tripBased) && (
           <Field data-invalid={errorOf("days") ? true : undefined}>
-            <FieldLabel htmlFor="budget-days">Jumlah hari</FieldLabel>
+            <FieldLabel htmlFor="budget-days">{tripBased ? "Jumlah trip" : "Jumlah hari"}</FieldLabel>
             <Input
               id="budget-days"
               className="h-10"
@@ -90,9 +91,11 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
               pattern="[0-9]*"
               value={days}
               onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))}
-              placeholder={String(settings.context.days)}
+              placeholder={tripBased ? "1" : String(settings.context.days)}
             />
-            <p className="text-xs text-muted-foreground">Kosongkan untuk ikut periode proyek ({settings.context.days} hari). Isi mis. 6 untuk hari kerja.</p>
+            <p className="text-xs text-muted-foreground">
+              {tripBased ? "Kosong = 1 trip. Isi 2 untuk pergi + pulang." : `Kosongkan untuk ikut periode proyek (${settings.context.days} hari). Isi mis. 6 untuk hari kerja.`}
+            </p>
             {errorOf("days") && <FieldError>{errorOf("days")}</FieldError>}
           </Field>
         )}

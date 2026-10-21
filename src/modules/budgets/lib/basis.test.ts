@@ -20,6 +20,6 @@ describe("label & rumus pagu", () => {
     expect(limitFormula({ rate: 50_000, basis: "per_day" }, ctx)).toBe("Rp 50.000 × 6 hari");
     expect(limitFormula({ rate: 2_000_000, basis: "lump_sum" }, ctx)).toBe("Rp 2.000.000");
     expect(limitFormula({ rate: 100_000, basis: "per_vehicle_per_day", days: 4 }, ctx)).toBe("Rp 100.000 × 2 mobil × 4 hari");
-    expect(limitFormula({ rate: 1_300_000, basis: "per_vehicle", days: 4 }, ctx)).toBe("Rp 1.300.000 × 2 mobil");
+    expect(limitFormula({ rate: 1_300_000, basis: "per_vehicle", days: 2 }, ctx)).toBe("Rp 1.300.000 × 2 mobil × 2 trip");
   });
 });
