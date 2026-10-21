@@ -19,6 +19,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ApiError } from "@/lib/api-client";
 import { useResetAfterSave } from "@/lib/use-reset-after-save";
+import { useNowTimeWib } from "@/lib/use-now-time-wib";
 import { useServerDefault } from "@/lib/use-server-default";
 import { ReceiptPicker, type ReceiptItem } from "@/modules/receipts/components/receipt-picker";
 import type { ScanResult } from "@/modules/receipts/types/receipt";
@@ -77,7 +78,8 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const [amount, setAmount] = useState<number | null>(initial?.amount ?? null);
   // Ikut default terbaru dari server sampai diubah pengguna/scan (state form dipertahankan saat halaman dibuka lagi).
   const [date, setDate, dateIsDefault] = useServerDefault(initial?.date, defaultDate);
-  const [time, setTime, timeIsDefault] = useServerDefault(initial?.time, defaultTime);
+  // Default jam = jam sekarang di browser; props server bisa basi (cache router).
+  const [time, setTime, timeIsDefault] = useServerDefault(initial?.time, useNowTimeWib(defaultTime));
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [walletId, setWalletId] = useState(initial?.walletId ?? defaultWalletId);
   const [toWalletId, setToWalletId] = useState<string | null>(initial?.toWalletId ?? null);
