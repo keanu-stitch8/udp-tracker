@@ -14,12 +14,13 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Spec sudah disinkronkan (branch `docs/sync-spec`) |
 | Rencana 3 Scan bon (`…/2026-10-21-03-scan-bon.md`) | ✅ merged (PR #9; juga: fallback model Gemini, DatePicker kalender NeoBrutalism, dialog foto bon, `allowedDevOrigins` rentang IP privat) |
 | Tipografi & font ikut neobrutalism.com/blocks | ✅ merged (PR #11): Space Grotesk + Geist, kelas di `src/components/app/typography.ts`, filter jenis transaksi pakai `Tabs` |
+| Jam transaksi (`…/2026-10-21-05-jam-transaksi.md`) | ✅ di `main`. Kolom `transactions.time` wajib (`HH:mm` WIB, 24 jam, tanpa label WIB di UI); migrasi 0004 sudah di Neon (jam data lama = `created_at` WIB). Scan membaca jam; penyesuaian cek saldo = 23:59; `TimeInput` teks (bukan `type="time"` yang bisa AM/PM) |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
 
 1. ✅ Spec disinkronkan dengan 2b-2/2b-3, PR #6–#8 (trip, Lebih pagu, Total pagu).
-2. ✅ Rencana 3: Scan bon. Berikutnya: **Rencana 4 Ekspor** (spec §6.2) — lampiran punya kolom `driveFileId`/`driveUrl`; file dibaca lewat `readReceipt()`.
+2. ✅ Rencana 3: Scan bon. Berikutnya: **Rencana 4 Ekspor** (spec §6.2) — lampiran punya kolom `driveFileId`/`driveUrl`; file dibaca lewat `readReceipt()`. Sheet transaksi menyertakan kolom Jam di sebelah Tanggal.
 3. ✅ (PR #6) **Jumlah trip untuk basis `per_vehicle`** (permintaan pengguna): BBM + Tol = tarif × mobil × trip (pergi + pulang = 2). Pakai ulang kolom `budgets.days` sebagai "Jumlah trip" untuk `per_vehicle` (default 1; label form & `limitFormula` "× 2 trip"; `planBudget` tidak lagi menolkan `days` untuk `per_vehicle`). Sementara pengguna bisa isi tarif 2.600.000.
 4. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
@@ -31,7 +32,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 ## Lingkungan
 
-- Neon project `calm-lake-03611185`, branch `production`, region Singapura. Sudah di-link (`neon.ts`, `.neon/`). `.env.local` berisi `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, `APP_PASSWORD_HASH`, `SESSION_SECRET` (dibuat pengguna). Migrasi: `npm run db:migrate` (0000–0002 sudah diterapkan).
+- Neon project `calm-lake-03611185`, branch `production`, region Singapura. Sudah di-link (`neon.ts`, `.neon/`). `.env.local` berisi `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, `APP_PASSWORD_HASH`, `SESSION_SECRET` (dibuat pengguna). Migrasi: `npm run db:migrate` (0000–0004 sudah diterapkan). Claude Code menolak menjalankan `db:migrate` ke Neon production; minta pengguna menjalankan `! npm run db:migrate`.
 - Pengguna menjalankan sendiri `npm run dev` di port **3051** (laptop: localhost:3051, HP: `http://<IP-laptop>:3051`). Jangan matikan proses itu.
 - Data asli di Neon: 1 proyek "Q4 Hero & Editorial Feature Videos - Part 1".
 
@@ -55,7 +56,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - Kode di dokumen rencana bisa disalin otomatis per task dengan skrip ekstraktor (cocokkan baris "`path`:" + blok kode). Skrip itu ada di scratchpad sesi lama, jadi buat ulang bila perlu.
 - **Gerbang commit pakai exit code** (`npm run build > log; echo $?`), bukan `grep`. Di zsh, variabel berisi beberapa flag tidak dipecah: tulis skrip uji sebagai file bash.
 - **E2E**: buat kredensial sementara (hash argon2 + secret acak di scratchpad, bukan `.env.local`), `next start -p 3100` dengan env proses, uji via curl. Untuk uji browser pakai **`127.0.0.1:3100`**, bukan `localhost`, karena cookie tidak dibedakan per port dan login uji akan menimpa sesi pengguna di localhost:3051. Hapus proyek "E2E %" dan `login_attempts` uji dari Neon setelahnya.
-- Verifikasi penuh: `npm run ui:check && npm run lint && npm run typecheck && npm test && npm run build`.
+- Verifikasi penuh: `npm run ui:check && npm run lint && npm run typecheck && npm test && npm run build`. Kalau laptop berat, tes DB (PGlite) bisa "Hook timed out in 10000ms": jalankan `npx vitest run --maxWorkers=4`.
 - E2E: hapus proyek uji dengan menghapus `transactions` proyek itu dulu (FK transaksi → dompet/kategori `RESTRICT`), baru `projects` (cascade sisanya). Login di browser uji: `form_input` tidak memicu state React; ketik manual.
 - Halaman `notFound()` di dalam section ber-Suspense membalas HTTP 200 (streaming PPR) dengan isi 404 — perilaku Next, sama di `/transaksi/[id]`.
 
