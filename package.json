@@ -15,7 +15,8 @@
     "db:migrate": "tsx scripts/migrate.mts",
     "ui:sync": "tsx scripts/ui-sync.mts",
     "ui:check": "tsx scripts/ui-sync.mts --check",
-    "hash-password": "tsx scripts/hash-password.mts"
+    "hash-password": "tsx scripts/hash-password.mts",
+    "blob:cleanup": "tsx scripts/cleanup-blobs.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
