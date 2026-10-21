@@ -13,6 +13,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 2b-2 Dompet & cek saldo (`…/2026-10-21-02b2-dompet.md`) | ✅ merged (PR #4; juga: form proyek baru tanpa pax bawaan, 1 mobil) |
 | Rencana 2b-3 Kategori, mobil, pengaturan & hapus proyek (`…/2026-10-21-02b3-pengaturan.md`) | ✅ merged (PR #5). Spec sudah disinkronkan (branch `docs/sync-spec`) |
 | Rencana 3 Scan bon (`…/2026-10-21-03-scan-bon.md`) | ✅ merged (PR #9; juga: fallback model Gemini, DatePicker kalender NeoBrutalism, dialog foto bon, `allowedDevOrigins` rentang IP privat) |
+| Tipografi & font ikut neobrutalism.com/blocks | ✅ merged (PR #11): Space Grotesk + Geist, kelas di `src/components/app/typography.ts`, filter jenis transaksi pakai `Tabs` |
 | Rencana 4 Ekspor | ⏳ Google Sheets + Drive, pola OAuth mkk-dashboard (spec §6.2), PWA, deploy Vercel (`sin1`) |
 
 **Langkah berikutnya:**
@@ -49,7 +50,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 ## Cara kerja yang dipakai (ikuti lagi)
 
-- Superpowers: brainstorming → spec → writing-plans → executing-plans (inline), TDD per task, commit per task dengan `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Kerja di branch fitur, bukan `main`.
+- Superpowers: brainstorming → spec → writing-plans → executing-plans (inline), TDD per task, commit per task dengan `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- **Commit langsung ke `main` lalu push, tanpa branch/PR** (sama seperti repo dashboard; keputusan pengguna 2026-10-21). Deploy hanya kalau pekerjaan sudah beres. Kalau Vercel sudah tersambung ke GitHub, push ke `main` = deploy, jadi cek dulu.
 - Kode di dokumen rencana bisa disalin otomatis per task dengan skrip ekstraktor (cocokkan baris "`path`:" + blok kode). Skrip itu ada di scratchpad sesi lama, jadi buat ulang bila perlu.
 - **Gerbang commit pakai exit code** (`npm run build > log; echo $?`), bukan `grep`. Di zsh, variabel berisi beberapa flag tidak dipecah: tulis skrip uji sebagai file bash.
 - **E2E**: buat kredensial sementara (hash argon2 + secret acak di scratchpad, bukan `.env.local`), `next start -p 3100` dengan env proses, uji via curl. Untuk uji browser pakai **`127.0.0.1:3100`**, bukan `localhost`, karena cookie tidak dibedakan per port dan login uji akan menimpa sesi pengguna di localhost:3051. Hapus proyek "E2E %" dan `login_attempts` uji dari Neon setelahnya.
