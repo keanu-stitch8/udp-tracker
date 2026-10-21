@@ -11,6 +11,7 @@ const LAINNYA: Record<string, string> = {
   "/lainnya/dompet": "Dompet",
   "/lainnya/kategori": "Kategori",
   "/lainnya/pagu": "Pagu",
+  "/lainnya/ekspor": "Ekspor laporan",
   "/lainnya/proyek": "Pengaturan proyek",
 };
 

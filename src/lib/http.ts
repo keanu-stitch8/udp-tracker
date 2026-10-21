@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { env } from "./env";
 import { toErrorResponse, UnauthorizedError, ValidationError } from "./errors";
 import { SESSION_COOKIE, verifySessionToken } from "./session";
@@ -27,6 +28,8 @@ type Handler<C> = (request: Request, context: C) => Promise<Response>;
 /** Bungkus route handler: cek sesi (kecuali `public`) lalu ubah error menjadi respons JSON. */
 export function route<C>(handler: Handler<C>, options: { public?: boolean } = {}): Handler<C> {
   return async (request, context) => {
+    // Tandai dinamis di luar try: penolakan cookies() saat prerender build adalah sinyal Next, jangan diubah jadi respons error.
+    await connection();
     try {
       if (!options.public) await requireSession();
       return await handler(request, context);

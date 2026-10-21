@@ -22,6 +22,7 @@ describe("subPageOf", () => {
     expect(subPageOf("/lainnya/dompet/w1", null)).toEqual({ title: "Detail dompet", back: "/lainnya/dompet" });
     expect(subPageOf("/lainnya/kategori", null)).toEqual({ title: "Kategori", back: "/lainnya" });
     expect(subPageOf("/lainnya/pagu", null)).toEqual({ title: "Pagu", back: "/lainnya" });
+    expect(subPageOf("/lainnya/ekspor", null)).toEqual({ title: "Ekspor laporan", back: "/lainnya" });
     expect(subPageOf("/lainnya/proyek", null)).toEqual({ title: "Pengaturan proyek", back: "/lainnya" });
     expect(subPageOf("/proyek", null)).toEqual({ title: "Proyek", back: "/" });
     expect(subPageOf("/proyek/baru", null)).toEqual({ title: "Proyek baru", back: "/proyek" });
