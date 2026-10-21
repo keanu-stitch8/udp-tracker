@@ -1,3 +1,4 @@
+import type { Attachment } from "@/modules/receipts/types/attachment";
 import type { TransactionType } from "@/modules/shared/types/enums";
 
 export interface Transaction {
@@ -24,6 +25,7 @@ export interface TransactionView extends Transaction {
   walletName: string;
   toWalletName: string | null;
   vehicleName: string | null;
+  attachments: Attachment[];
 }
 
 /** Satu baris pengeluaran: transaksi expense, atau biaya admin dari transfer (kategori isAdminFee). */

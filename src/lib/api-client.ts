@@ -12,12 +12,12 @@ export class ApiError extends Error {
 }
 
 /** Panggil /api/* dari browser. Error → ApiError (pesan + error per field). 401 → ke halaman login. */
-export async function apiFetch<T>(url: string, init: Omit<RequestInit, "body"> & { json?: unknown } = {}): Promise<T> {
-  const { json, headers, ...rest } = init;
+export async function apiFetch<T>(url: string, init: Omit<RequestInit, "body"> & { json?: unknown; form?: FormData } = {}): Promise<T> {
+  const { json, form, headers, ...rest } = init;
   const response = await fetch(url, {
     ...rest,
     headers: { ...(json !== undefined ? { "content-type": "application/json" } : {}), ...headers },
-    body: json !== undefined ? JSON.stringify(json) : undefined,
+    body: json !== undefined ? JSON.stringify(json) : form,
   });
   if (response.status === 401 && typeof window !== "undefined") {
     // Sesi habis: reload penuh (bukan router.push) supaya cache TanStack Query ikut terbuang.

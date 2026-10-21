@@ -3,6 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { DatePicker } from "@/components/app/date-picker";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -63,12 +64,12 @@ function ProjectFormFields({ today, onSaved }: { today: string; onSaved: () => v
         <div className="grid grid-cols-2 gap-3">
           <Field data-invalid={errorOf("startDate") ? true : undefined}>
             <FieldLabel htmlFor="startDate">Mulai</FieldLabel>
-            <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <DatePicker id="startDate" value={startDate} onChange={setStartDate} />
             {errorOf("startDate") && <FieldError>{errorOf("startDate")}</FieldError>}
           </Field>
           <Field data-invalid={errorOf("endDate") ? true : undefined}>
             <FieldLabel htmlFor="endDate">Selesai</FieldLabel>
-            <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <DatePicker id="endDate" value={endDate} onChange={setEndDate} />
             {errorOf("endDate") && <FieldError>{errorOf("endDate")}</FieldError>}
           </Field>
         </div>

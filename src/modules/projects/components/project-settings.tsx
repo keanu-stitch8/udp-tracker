@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/app/date-picker";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,12 +97,12 @@ function ProjectDetailsForm({ project, locked }: { project: ProjectDetail; locke
         <div className="grid grid-cols-2 gap-3">
           <Field data-invalid={errorOf("startDate") ? true : undefined}>
             <FieldLabel htmlFor="settings-start">Mulai</FieldLabel>
-            <Input id="settings-start" type="date" className="h-10" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <DatePicker id="settings-start" className="h-10" value={startDate} onChange={setStartDate} />
             {errorOf("startDate") && <FieldError>{errorOf("startDate")}</FieldError>}
           </Field>
           <Field data-invalid={errorOf("endDate") ? true : undefined}>
             <FieldLabel htmlFor="settings-end">Selesai</FieldLabel>
-            <Input id="settings-end" type="date" className="h-10" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <DatePicker id="settings-end" className="h-10" value={endDate} onChange={setEndDate} />
             {errorOf("endDate") && <FieldError>{errorOf("endDate")}</FieldError>}
           </Field>
         </div>

@@ -42,6 +42,12 @@ export class TooManyRequestsError extends AppError {
   }
 }
 
+export class ServiceUnavailableError extends AppError {
+  constructor(message: string) {
+    super(message, 503);
+  }
+}
+
 /** Bentuk body error JSON yang dibaca `apiFetch` di browser. */
 export interface ErrorBody {
   error: string;

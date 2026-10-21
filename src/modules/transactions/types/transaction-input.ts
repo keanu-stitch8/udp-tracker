@@ -1,5 +1,6 @@
 // Skema input transaksi — dipakai service (validasi) dan form (tipe).
 import { z } from "zod";
+import { attachmentsInputSchema } from "@/modules/receipts/types/attachment";
 import { isoDateSchema } from "@/modules/shared/lib/date";
 import { TRANSACTION_TYPES } from "@/modules/shared/types/enums";
 
@@ -37,6 +38,8 @@ export const transactionInputSchema = z
     vehicleId: optionalId,
     merchant: optionalText(100),
     note: optionalText(500),
+    /** Tidak dikirim = lampiran tidak diubah (dipakai saat ubah transaksi). */
+    attachments: attachmentsInputSchema,
   })
   .superRefine((v, ctx) => {
     if (v.type === "transfer") {

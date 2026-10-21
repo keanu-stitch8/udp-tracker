@@ -5,6 +5,8 @@ import { toCategory } from "@/modules/budgets/mappers/category";
 import { selectVehicles } from "@/modules/projects/api/vehicles-repo";
 import { toVehicle } from "@/modules/projects/mappers/project";
 import { assertProjectEditable, findProjectOrThrow } from "@/modules/projects/services/projects";
+import { deleteReceipts } from "@/modules/receipts/api/blob";
+import { planAttachments, syncAttachments } from "@/modules/receipts/services/attachments";
 import { selectWallets } from "@/modules/wallets/api/wallets-repo";
 import { toWallet } from "@/modules/wallets/mappers/wallet";
 import { insertTransaction, updateTransactionRow } from "../api/transactions-repo";
@@ -25,14 +27,26 @@ async function editableProject(db: Db, projectId: string) {
 export async function createTransaction(db: Db, projectId: string, input: unknown): Promise<Transaction> {
   await editableProject(db, projectId);
   const values = planTransaction(input, await loadRefs(db, projectId));
-  return toTransaction(await insertTransaction(db, { ...values, projectId }));
+  const attachments = planAttachments(input, projectId);
+  return db.transaction(async (tx) => {
+    const row = await insertTransaction(tx, { ...values, projectId });
+    if (attachments) await syncAttachments(tx, row.id, attachments);
+    return toTransaction(row);
+  });
 }
 
 export async function updateTransaction(db: Db, projectId: string, id: string, input: unknown): Promise<Transaction> {
   await editableProject(db, projectId);
   await findTransactionOrThrow(db, projectId, id);
   const values = planTransaction(input, await loadRefs(db, projectId));
-  return toTransaction(await updateTransactionRow(db, id, values));
+  const attachments = planAttachments(input, projectId);
+  const { row, removed } = await db.transaction(async (tx) => ({
+    row: await updateTransactionRow(tx, id, values),
+    removed: attachments ? await syncAttachments(tx, id, attachments) : [],
+  }));
+  // Setelah commit: file Blob baru dihapus bila baris DB-nya benar-benar sudah hilang.
+  if (removed.length) await deleteReceipts(removed);
+  return toTransaction(row);
 }
 
 /** Hapus = soft delete (spec §3.4); bisa diurungkan. */

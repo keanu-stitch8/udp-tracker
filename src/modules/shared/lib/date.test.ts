@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, daysInclusive, formatDateLong, formatDateShort, isIsoDate, isoDateSchema, todayWib } from "./date";
+import { addDays, daysInclusive, formatDateLong, formatDateShort, isIsoDate, isoDateSchema, isoToLocalDate, localDateToIso, todayWib } from "./date";
 
 describe("todayWib", () => {
   it("memakai zona Asia/Jakarta, bukan UTC", () => {
@@ -37,5 +37,14 @@ describe("format id-ID", () => {
   it("pendek dan panjang", () => {
     expect(formatDateShort("2026-10-20")).toBe("Sel, 20 Okt");
     expect(formatDateLong("2026-10-20")).toBe("20 Okt 2026");
+  });
+});
+
+describe("kalender (Date lokal browser)", () => {
+  it("ISO → Date lokal tengah malam di tanggal yang sama, dan kembali lagi", () => {
+    const date = isoToLocalDate("2026-10-21");
+    expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()]).toEqual([2026, 9, 21, 0]);
+    expect(localDateToIso(date)).toBe("2026-10-21");
+    expect(localDateToIso(new Date(2026, 0, 5, 23, 59))).toBe("2026-01-05");
   });
 });

@@ -47,3 +47,14 @@ export function formatDateShort(iso: string): string {
 export function formatDateLong(iso: string): string {
   return longFormat.format(new Date(toUtcMs(iso)));
 }
+
+/** Untuk komponen kalender: tanggal ISO sebagai Date lokal browser (tengah malam), tanpa geser hari karena zona waktu. */
+export function isoToLocalDate(iso: string): Date {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function localDateToIso(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}

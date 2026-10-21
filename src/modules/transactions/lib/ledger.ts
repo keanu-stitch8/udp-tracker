@@ -1,6 +1,7 @@
 // Perhitungan buku kas (spec §3.3). Murni: dipakai beranda, kalender, daftar, dan laporan.
 import type { Category } from "@/modules/budgets/types/category";
 import type { Vehicle } from "@/modules/projects/types/project";
+import type { Attachment } from "@/modules/receipts/types/attachment";
 import { sum } from "@/modules/shared/lib/money";
 import type { Wallet } from "@/modules/wallets/types/wallet";
 import type { ExpenseEntry, LedgerTotals, Transaction, TransactionView } from "../types/transaction";
@@ -39,7 +40,7 @@ export const compareNewestFirst = (a: Transaction, b: Transaction) => b.date.loc
 
 export function toTransactionViews(
   transactions: Transaction[],
-  refs: { wallets: Wallet[]; categories: Category[]; vehicles: Vehicle[] },
+  refs: { wallets: Wallet[]; categories: Category[]; vehicles: Vehicle[]; attachments?: Attachment[] },
 ): TransactionView[] {
   const wallets = new Map(refs.wallets.map((w) => [w.id, w]));
   const categories = new Map(refs.categories.map((c) => [c.id, c]));
@@ -53,6 +54,7 @@ export function toTransactionViews(
       walletName: wallets.get(t.walletId)?.name ?? "?",
       toWalletName: t.toWalletId ? (wallets.get(t.toWalletId)?.name ?? "?") : null,
       vehicleName: t.vehicleId ? (vehicles.get(t.vehicleId)?.name ?? null) : null,
+      attachments: refs.attachments?.filter((a) => a.transactionId === t.id) ?? [],
     };
   });
 }
