@@ -23,6 +23,7 @@
     "@neon/env": "^1.6.4",
     "@node-rs/argon2": "^2.2.2",
     "@tanstack/react-query": "^5.104.5",
+    "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.2",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
