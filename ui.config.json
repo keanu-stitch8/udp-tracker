@@ -1,0 +1,24 @@
+{
+  "registry": "https://neobrutalism.com/r/{name}.json",
+  "outDir": "src/components/ui",
+  "components": [
+    "alert",
+    "badge",
+    "button",
+    "card",
+    "drawer",
+    "empty",
+    "field",
+    "input",
+    "label",
+    "native-select",
+    "progress",
+    "separator",
+    "skeleton",
+    "sonner",
+    "spinner",
+    "tabs",
+    "textarea",
+    "toggle-group"
+  ]
+}
