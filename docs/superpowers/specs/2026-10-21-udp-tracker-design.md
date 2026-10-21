@@ -53,7 +53,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 ### 3.1 Tabel
 
 **projects**
-- `name`, `location`, `startDate`, `endDate`, `pax` (int, default 9), `status` (`active` | `done`)
+- `name`, `location`, `startDate`, `endDate`, `pax` (int, wajib diisi saat membuat proyek; form tanpa angka bawaan, mulai dengan 1 mobil), `status` (`active` | `done`)
 - `driveFolderId?`, `sheetId?`, `sheetUrl?` (diisi saat ekspor)
 - `startDate`/`endDate` (inklusif) menentukan jumlah hari untuk pagu.
 
