@@ -28,9 +28,9 @@ Mode offline/sync, multi-user/role, scan mutasi bank multi-transaksi, migrasi da
 | Bagian | Pilihan |
 | --- | --- |
 | Framework | Next.js 16 (App Router), TypeScript, `src/` |
-| UI | Tailwind CSS v4, shadcn/ui + **RetroUI** (registry shadcn, gaya neo-brutalism) via shadcn MCP |
+| UI | Tailwind CSS v4, shadcn/ui (Base UI) + **NeoBrutalism** (dulu bernama RetroUI; registry `https://neobrutalism.com/r/{name}.json`), disalin oleh `scripts/ui-sync.mts` |
 | Client data | TanStack Query v5 (`useQuery`/`useMutation`, hydration dari server) |
-| DB | Neon Postgres (free) + **Drizzle ORM** (`drizzle-orm/neon-http` + `@neondatabase/serverless`), migrasi `drizzle-kit` |
+| DB | Neon Postgres (free) + **Drizzle ORM** (`drizzle-orm/neon-serverless` + `@neondatabase/serverless`; driver `neon-http` tidak mendukung `db.transaction`), migrasi `drizzle-kit` |
 | File bon | Vercel Blob (free tier) |
 | OCR | Google Gemini API free tier (structured JSON output), model via env |
 | Laporan | Google Sheets + Drive API (`googleapis`), OAuth akun pengguna, scope `drive.file` |
@@ -38,11 +38,15 @@ Mode offline/sync, multi-user/role, scan mutasi bank multi-transaksi, migrasi da
 | Test | Vitest + PGlite (Postgres in-memory) |
 | Hosting | Vercel Hobby (free) |
 
-Versi pasti setiap paket dipin saat scaffolding. Sebelum menulis kode yang bergantung pada API Next.js 16, baca dokumentasi di `node_modules/next/dist/docs/`.
+Selalu memakai versi **latest** (dicek 2026-10-21: next 16.4.2, react 19.3, drizzle-orm 0.45.4, drizzle-kit 0.31.11, @neondatabase/serverless 1.2.0, @electric-sql/pglite 0.5.10, @tanstack/react-query 5.104.5, zod 4.6.7, vitest 5.0.5, shadcn 4.22.1, @types/node 24). Sebelum menulis kode yang bergantung pada API Next.js 16, baca dokumentasi di `node_modules/next/dist/docs/`.
+
+Catatan Next.js 16.4: `create-next-app` mengaktifkan `cacheComponents` dan `partialPrefetching` secara default. Semua pembacaan DB/cookies di halaman wajib berada di dalam `<Suspense>` (sesuai pola `sections/`). GET Route Handler yang membaca cookies/DB otomatis dinamis. `middleware` diganti `proxy.ts`. `params` adalah `Promise`.
+
+**Peringatan keamanan:** repo GitHub `Logging-Stuff/RetroUI` (yang di-link template shadcn.io) sudah diambil alih (repo-jacking) dan sekarang berisi PoC peneliti keamanan. Jangan clone repo itu. Proyek aslinya pindah ke `github.com/neobrutalism/neobrutalism` (MIT) dan `retroui.dev` mengarah ke `neobrutalism.com`.
 
 ## 3. Model domain
 
-Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi memakai `bigint` di SQL. Tanggal transaksi bertipe `date` (`YYYY-MM-DD`) dan ditafsirkan dalam zona **WIB (Asia/Jakarta)**. Setiap tabel punya `id` (uuid), `createdAt`, dan `updatedAt`.
+Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, total, pagu) dihitung di `lib/` (fungsi murni) dari baris transaksi proyek. Satu proyek berisi ratusan baris, dan `number` JS aman sampai 9×10¹⁵. Tidak ada `SUM` di SQL, sehingga perbedaan tipe `bigint` antara Neon dan PGlite tidak jadi masalah. Tanggal transaksi bertipe `date` (`YYYY-MM-DD`) dan ditafsirkan dalam zona **WIB (Asia/Jakarta)**. Setiap tabel punya `id` (uuid), `createdAt`, dan `updatedAt`.
 
 ### 3.1 Tabel
 
@@ -141,8 +145,7 @@ src/
       index.tsx views/ sections/ queries/ commands/ services/ api/
       mappers/ lib/ types/ components/ hooks/
   components/
-    ui/        shadcn primitives — TIDAK PERNAH diedit
-    retroui/   komponen registry RetroUI — TIDAK PERNAH diedit
+    ui/        komponen NeoBrutalism (ex-RetroUI) — TIDAK PERNAH diedit, diverifikasi `npm run ui:check`
     app/       wrapper/compose milik app (MoneyInput, BottomNav, DayDrawer, CategoryGrid, WalletChip, …)
   db/
     schema.ts  client.ts (server-only)  migrations/
@@ -189,6 +192,7 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | Endpoint | Metode | Fungsi |
 | --- | --- | --- |
 | `/api/projects` *(global)* | GET, POST | daftar proyek, buat proyek (+ seed) |
+| `…/activate` | POST | set cookie proyek aktif |
 | `…/` | GET, PATCH | detail, ubah pengaturan/status |
 | `…/summary` | GET | kartu beranda: UDP masuk, pengeluaran, sisa, saldo per dompet, pagu |
 | `…/calendar?month=YYYY-MM` | GET | total per tanggal untuk bulan itu |
@@ -208,7 +212,7 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 
 ## 5. Layar & UX
 
-Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom tengah maksimal ±480px). Gaya RetroUI: border hitam tebal, hard shadow, warna aksen tegas. Target sentuh minimal 44px. Format angka `Rp 1.350.000`, tanggal `Sel, 21 Okt`.
+Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom tengah maksimal ±480px). Gaya NeoBrutalism: border hitam tebal, hard shadow, warna aksen tegas. Target sentuh minimal 44px. Format angka `Rp 1.350.000`, tanggal `Sel, 21 Okt`.
 
 **Shell:** bottom nav berisi Beranda · Kalender · **[+]** · Transaksi · Lainnya. Header menampilkan nama proyek aktif (tap → ganti proyek). Proyek aktif disimpan di cookie.
 
@@ -251,9 +255,10 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 
 **Login:** satu field password.
 
-### 5.1 Aturan komponen RetroUI
+### 5.1 Aturan komponen NeoBrutalism
 
-- Komponen RetroUI dipasang lewat registry shadcn ke `src/components/retroui/` dan **tidak pernah diedit**. Update cukup dengan `shadcn add … --overwrite`.
+- Komponen NeoBrutalism disalin apa adanya ke `src/components/ui/` oleh `npm run ui:sync` (daftar komponen di `ui.config.json`) dan **tidak pernah diedit**. `npm run ui:check` gagal jika ada file yang berbeda dari registry. `shadcn add` tidak dipakai untuk komponen ini karena CLI me-resolve dependensi tanpa namespace (mis. `button`) ke registry default shadcn, sehingga versi NeoBrutalism tertimpa (terbukti saat uji 2026-10-21). `components.json` tetap mendaftarkan registry `@neobrutalism` agar shadcn MCP bisa mencari/melihat komponen.
+- Komponen NeoBrutalism dibangun di atas **Base UI** (bukan Radix). Gunakan prop `render`, bukan `asChild`.
 - Kustomisasi dilakukan di `src/components/app/` dengan membungkus/meng-compose (props, `className`, slot), **bukan** dengan menyalin lalu mengubah isi komponen asli.
 - Token tema (warna, font, radius, shadow) didefinisikan di `globals.css` lewat CSS variables. Override dilakukan di layer token, bukan di komponen.
 
@@ -339,7 +344,7 @@ SESSION_SECRET=
 - `src/lib/env.ts` memvalidasi env dengan zod saat start.
 - Vercel Hobby + integrasi Neon (`DATABASE_URL` otomatis) + Vercel Blob store.
 - `drizzle-kit generate` menghasilkan migrasi yang di-commit. Migrasi dijalankan lewat `npm run db:migrate` (lokal dan sebagai langkah build di Vercel).
-- PWA: `manifest.webmanifest` (nama, ikon, `display: standalone`, theme color RetroUI) agar bisa "Add to Home Screen". Tanpa service worker/offline di v1.
+- PWA: `manifest.webmanifest` (nama, ikon, `display: standalone`, theme color NeoBrutalism) agar bisa "Add to Home Screen". Tanpa service worker/offline di v1.
 - Dokumentasi: `README.md` (setup lokal, env, Google OAuth, Gemini key, deploy), `docs/architecture/data-flow.md` (kontrak + adaptasi §4.2).
 
 ## 11. Risiko & catatan
