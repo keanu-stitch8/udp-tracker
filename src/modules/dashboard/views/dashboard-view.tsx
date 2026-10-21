@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProjectOverviewSection } from "../sections/project-overview-section";
+import { DashboardSection } from "../sections/dashboard-section";
 
 export function DashboardView() {
   return (
-    <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-      <ProjectOverviewSection />
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <DashboardSection />
     </Suspense>
   );
 }
