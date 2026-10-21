@@ -7,4 +7,5 @@ export const ledgerKeys = {
   transactions: (projectId: string) => [...ledgerKeys.all(projectId), "transactions"] as const,
   transaction: (projectId: string, id: string) => [...ledgerKeys.all(projectId), "transaction", id] as const,
   reference: (projectId: string) => [...ledgerKeys.all(projectId), "reference"] as const,
+  budgets: (projectId: string) => [...ledgerKeys.all(projectId), "budgets"] as const,
 };
