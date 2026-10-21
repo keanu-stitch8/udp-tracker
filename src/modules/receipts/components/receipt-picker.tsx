@@ -1,9 +1,10 @@
 "use client";
 
-import { Camera, FileText, X } from "lucide-react";
+import { Camera, ExternalLink, FileText, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { useUploadReceipt } from "../hooks/use-upload-receipt";
 import type { AttachmentDraft, ReceiptScan, ScanResult } from "../types/receipt";
@@ -28,6 +29,7 @@ export function ReceiptPicker({ projectId, items, onChange, onScanned, disabled 
   const input = useRef<HTMLInputElement>(null);
   const upload = useUploadReceipt(projectId);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<ReceiptItem | null>(null);
   const full = items.length >= MAX_ATTACHMENTS;
 
   function pick(file: File | undefined) {
@@ -87,14 +89,17 @@ export function ReceiptPicker({ projectId, items, onChange, onScanned, disabled 
                 </div>
               ) : (
                 <>
-                  <a href={item.previewUrl} target="_blank" rel="noreferrer" className="flex size-20 items-center justify-center overflow-hidden border-2 bg-accent">
-                    {item.mimeType === "application/pdf" ? (
+                  {item.mimeType === "application/pdf" ? (
+                    // PDF dibuka di tab baru: Safari iOS tidak bisa menampilkan PDF dengan baik di dalam dialog.
+                    <a href={item.previewUrl} target="_blank" rel="noreferrer" className="flex size-20 items-center justify-center border-2 bg-accent">
                       <FileText className="size-8" aria-label="PDF bon" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element -- object URL / route privat, bukan aset statis
-                      <img src={item.previewUrl} alt="Foto bon" className="size-full object-cover" />
-                    )}
-                  </a>
+                    </a>
+                  ) : (
+                    <button type="button" aria-label="Lihat foto bon" className="flex size-20 overflow-hidden border-2 bg-accent" onClick={() => setViewing(item)}>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- object URL / route privat, bukan aset statis */}
+                      <img src={item.previewUrl} alt="" className="size-full object-cover" />
+                    </button>
+                  )}
                   {!disabled && (
                     <button
                       type="button"
@@ -111,6 +116,24 @@ export function ReceiptPicker({ projectId, items, onChange, onScanned, disabled 
           ))}
         </ul>
       )}
+
+      <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent showCloseButton={false} className="gap-2 p-2 sm:max-w-lg">
+          <DialogTitle className="sr-only">Foto bon</DialogTitle>
+          {viewing && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- object URL / route privat, bukan aset statis */}
+              <img src={viewing.previewUrl} alt="Foto bon" className="max-h-[75dvh] w-full border-2 bg-accent object-contain" />
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" render={<a href={viewing.previewUrl} target="_blank" rel="noreferrer" />} nativeButton={false}>
+                  <ExternalLink /> Buka ukuran asli
+                </Button>
+                <DialogClose render={<Button className="flex-1" />}>Tutup</DialogClose>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
