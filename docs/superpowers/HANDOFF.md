@@ -20,7 +20,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 1. Sinkronkan spec dengan 2b-2/2b-3 (endpoint categories/vehicles/settings/DELETE project, aturan kategori sistem & mobil).
 2. Tulis & eksekusi inline **Rencana 3: Scan bon** (spec §6.1) — hemat kuota: rencana ringkas, E2E via curl (bukan browser), verifikasi penuh sekali per task.
-3. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
+3. **Jumlah trip untuk basis `per_vehicle`** (permintaan pengguna): BBM + Tol = tarif × mobil × trip (pergi + pulang = 2). Pakai ulang kolom `budgets.days` sebagai "Jumlah trip" untuk `per_vehicle` (default 1; label form & `limitFormula` "× 2 trip"; `planBudget` tidak lagi menolkan `days` untuk `per_vehicle`). Sementara pengguna bisa isi tarif 2.600.000.
+4. Pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
 ## Dokumen kunci
 
