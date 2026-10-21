@@ -13,7 +13,7 @@ export function budgetContextOf(project: { pax: number; days: number; vehicles: 
   return { pax: project.pax, vehicleCount: project.vehicles.length, days: project.days };
 }
 
-/** Batas per hari; null untuk lump_sum (tidak punya batas harian). */
+/** Batas per hari; null untuk basis yang tidak dikali hari (per_vehicle, lump_sum). */
 export function dailyLimit(budget: Pick<Budget, "rate" | "basis">, ctx: BudgetContext): number | null {
   switch (budget.basis) {
     case "per_pax_per_day":
@@ -22,12 +22,14 @@ export function dailyLimit(budget: Pick<Budget, "rate" | "basis">, ctx: BudgetCo
       return budget.rate * ctx.vehicleCount;
     case "per_day":
       return budget.rate;
+    case "per_vehicle":
     case "lump_sum":
       return null;
   }
 }
 
 export function budgetLimit(budget: Pick<Budget, "rate" | "basis">, ctx: BudgetContext): number {
+  if (budget.basis === "per_vehicle") return budget.rate * ctx.vehicleCount;
   const daily = dailyLimit(budget, ctx);
   return daily === null ? budget.rate : daily * ctx.days;
 }

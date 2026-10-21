@@ -17,6 +17,8 @@ describe("pagu", () => {
     expect(budgetLimit({ rate: 100_000, basis: "per_day" }, ctx)).toBe(600_000);
     expect(dailyLimit({ rate: 2_000_000, basis: "lump_sum" }, ctx)).toBeNull();
     expect(budgetLimit({ rate: 2_000_000, basis: "lump_sum" }, ctx)).toBe(2_000_000);
+    expect(dailyLimit({ rate: 1_300_000, basis: "per_vehicle" }, ctx)).toBeNull();
+    expect(budgetLimit({ rate: 1_300_000, basis: "per_vehicle" }, ctx)).toBe(2_600_000);
   });
   it("pemakaian hanya dari kategori tercakup", () => {
     expect(budgetUsage(mealBudget, ctx, entries)).toEqual({

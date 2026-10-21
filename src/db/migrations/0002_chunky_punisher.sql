@@ -1,0 +1,1 @@
+ALTER TYPE "public"."budget_basis" ADD VALUE 'per_vehicle' BEFORE 'per_day';

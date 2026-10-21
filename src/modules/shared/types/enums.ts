@@ -8,7 +8,7 @@ export type WalletKind = (typeof WALLET_KINDS)[number];
 export const CATEGORY_KINDS = ["expense", "income"] as const;
 export type CategoryKind = (typeof CATEGORY_KINDS)[number];
 
-export const BUDGET_BASES = ["per_pax_per_day", "per_vehicle_per_day", "per_day", "lump_sum"] as const;
+export const BUDGET_BASES = ["per_pax_per_day", "per_vehicle_per_day", "per_vehicle", "per_day", "lump_sum"] as const;
 export type BudgetBasis = (typeof BUDGET_BASES)[number];
 
 export const TRANSACTION_TYPES = ["expense", "income", "transfer"] as const;
