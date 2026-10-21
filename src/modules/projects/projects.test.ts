@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { budgetCategories, budgets, categories, projects, wallets } from "@/db/schema";
+import { budgets, categories, projects, wallets } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createTestDb } from "@tests/helpers/test-db";
@@ -16,7 +16,7 @@ beforeEach(async () => {
 const input = { name: "Hero Kudus", location: "Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] };
 
 describe("createProject", () => {
-  it("menyimpan proyek beserta mobil, dompet, kategori, dan pagu default", async () => {
+  it("menyimpan proyek beserta mobil, dompet, dan kategori; tanpa pagu bawaan", async () => {
     const project = await createProject(db, input);
     expect(project).toMatchObject({ name: "Hero Kudus", location: "Kudus", pax: 9, status: "active", sheetUrl: null });
 
@@ -27,13 +27,7 @@ describe("createProject", () => {
     const categoryRows = await db.select().from(categories).where(eq(categories.projectId, project.id));
     expect(categoryRows).toHaveLength(12);
 
-    const budgetRows = await db.select().from(budgets).where(eq(budgets.projectId, project.id));
-    expect(budgetRows.map((b) => b.name).sort()).toEqual(["BBM + Tol", "Operasional Harian", "Pagu Makan", "Pagu Sarapan"]);
-    const budget = budgetRows.find((b) => b.name === "Pagu Makan")!;
-    expect(budget).toMatchObject({ name: "Pagu Makan", rate: 150_000, basis: "per_pax_per_day" });
-    const links = await db.select().from(budgetCategories).where(eq(budgetCategories.budgetId, budget.id));
-    const linkedNames = categoryRows.filter((c) => links.some((l) => l.categoryId === c.id)).map((c) => c.name).sort();
-    expect(linkedNames).toEqual(["Makan Malam", "Makan Siang"]);
+    expect(await db.select().from(budgets).where(eq(budgets.projectId, project.id))).toHaveLength(0);
   });
 
   it("input tidak valid → ValidationError dan tidak ada data tersimpan", async () => {

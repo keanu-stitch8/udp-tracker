@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { ledgerKeys } from "@/modules/transactions/hooks/keys";
-import type { ApplyDefaultsResult } from "../commands/save-budget";
 import type { BudgetSettings } from "../queries/budget-settings";
 import type { Budget } from "../types/budget";
 import type { BudgetInput } from "../types/budget-input";
@@ -26,8 +25,4 @@ export function useSaveBudget(projectId: string, budgetId?: string) {
 
 export function useDeleteBudget(projectId: string) {
   return useLedgerMutation(projectId, (budgetId: string) => apiFetch<void>(`${base(projectId)}/${budgetId}`, { method: "DELETE" }));
-}
-
-export function useApplyDefaultBudgets(projectId: string) {
-  return useLedgerMutation(projectId, () => apiFetch<ApplyDefaultsResult>(`${base(projectId)}/defaults`, { method: "POST" }));
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildProjectDefaults, MEAL_RATE_PER_PAX_PER_DAY } from "./seed-defaults";
+import { buildProjectDefaults } from "./seed-defaults";
 
 const vehicles = [
   { id: "v1", name: "Mobil 1" },
@@ -28,16 +28,8 @@ describe("buildProjectDefaults", () => {
     expect(defaults.categories.filter((c) => c.isOfficeFunding).map((c) => c.name)).toEqual(["UDP Kantor"]);
   });
 
-  it("pagu sesuai surat penawaran", () => {
-    expect(MEAL_RATE_PER_PAX_PER_DAY).toBe(150_000);
-    expect(defaults.budgets.map((b) => [b.name, b.rate, b.basis, b.categoryNames])).toEqual([
-      ["Pagu Makan", 150_000, "per_pax_per_day", ["Makan Siang", "Makan Malam"]],
-      ["Pagu Sarapan", 25_000, "per_pax_per_day", ["Sarapan"]],
-      ["BBM + Tol", 1_300_000, "per_vehicle", ["BBM Perjalanan", "Tol"]],
-      ["Operasional Harian", 100_000, "per_vehicle_per_day", ["Bensin Harian", "Parkir", "Lain-lain"]],
-    ]);
-    const names = new Set(defaults.categories.map((c) => c.name));
-    expect(defaults.budgets.flatMap((b) => b.categoryNames).every((n) => names.has(n))).toBe(true);
+  it("tanpa pagu bawaan — pagu diatur sendiri per proyek", () => {
+    expect(defaults).not.toHaveProperty("budgets");
   });
 
   it("tanpa mobil → tanpa Flazz", () => {

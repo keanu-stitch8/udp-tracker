@@ -1,6 +1,5 @@
 import "server-only";
 import type { Db } from "@/db/types";
-import { insertBudget, insertBudgetCategories } from "@/modules/budgets/api/budgets-repo";
 import { insertCategories } from "@/modules/budgets/api/categories-repo";
 import { insertWallets } from "@/modules/wallets/api/wallets-repo";
 import { insertProject } from "../api/projects-repo";
@@ -30,15 +29,10 @@ export async function createProject(db: Db, input: unknown): Promise<Project> {
       tx,
       defaults.wallets.map((wallet, index) => ({ ...wallet, projectId: project.id, sortOrder: index })),
     );
-    const categoryRows = await insertCategories(
+    await insertCategories(
       tx,
       defaults.categories.map((category, index) => ({ ...category, projectId: project.id, sortOrder: index })),
     );
-    for (const seed of defaults.budgets) {
-      const budget = await insertBudget(tx, { projectId: project.id, name: seed.name, rate: seed.rate, basis: seed.basis, note: seed.note });
-      const ids = categoryRows.filter((c) => seed.categoryNames.includes(c.name)).map((c) => c.id);
-      await insertBudgetCategories(tx, budget.id, ids);
-    }
     return toProject(project);
   });
 }

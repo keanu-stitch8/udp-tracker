@@ -5,6 +5,7 @@ import { getCalendarMonth, getDayDetail } from "@/modules/calendar/queries/calen
 import { getDashboardSummary } from "@/modules/dashboard/queries/summary";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
+import { createBudget } from "@/modules/budgets/commands/save-budget";
 import { createTestDb } from "@tests/helpers/test-db";
 import { createTransaction, deleteTransaction, restoreTransaction, updateTransaction } from "./commands/save-transaction";
 import { getLedger } from "./queries/ledger";
@@ -23,6 +24,7 @@ beforeEach(async () => {
 });
 
 async function seedSample() {
+  await createBudget(db, projectId, { name: "Pagu Makan", rate: 150_000, basis: "per_pax_per_day", categoryIds: [ref.category("Makan Siang"), ref.category("Makan Malam")] });
   await createTransaction(db, projectId, { type: "income", date: "2026-10-19", amount: 5_000_000, walletId: ref.wallet("Rekening"), categoryId: ref.category("UDP Kantor") });
   await createTransaction(db, projectId, { type: "transfer", date: "2026-10-19", amount: 1_000_000, walletId: ref.wallet("Rekening"), toWalletId: ref.wallet("Cash"), adminFee: 6_500 });
   await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", amount: 600_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Siang"), merchant: "RM Sederhana" });
@@ -48,12 +50,7 @@ describe("ringkasan beranda", () => {
       "Flazz Mobil 1": -50_000,
       "Flazz Mobil 2": 0,
     });
-    expect(summary.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([
-      ["Pagu Makan", 8_100_000, 1_500_000],
-      ["Pagu Sarapan", 1_350_000, 0],
-      ["BBM + Tol", 2_600_000, 50_000],
-      ["Operasional Harian", 1_200_000, 0],
-    ]);
+    expect(summary.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([["Pagu Makan", 8_100_000, 1_500_000]]);
     expect(summary.recent.map((t) => t.categoryName ?? "transfer")).toEqual(["Tol", "Makan Malam", "Makan Siang", "transfer", "UDP Kantor"]);
   });
 });
@@ -71,11 +68,7 @@ describe("kalender", () => {
       ["Makan Malam", 900_000],
       ["Makan Siang", 600_000],
     ]);
-    expect(day.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([
-      ["Pagu Makan", 1_350_000, 1_500_000],
-      ["Pagu Sarapan", 225_000, 0],
-      ["Operasional Harian", 200_000, 0],
-    ]);
+    expect(day.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([["Pagu Makan", 1_350_000, 1_500_000]]);
     expect(day.transactions).toHaveLength(2);
     await expect(getCalendarMonth(db, projectId, "2026-13")).rejects.toBeInstanceOf(ValidationError);
   });

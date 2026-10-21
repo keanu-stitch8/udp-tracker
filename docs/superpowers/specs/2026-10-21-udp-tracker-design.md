@@ -6,9 +6,11 @@
 
 ## 1. Tujuan
 
-Aplikasi web mobile-first untuk mencatat dan mempertanggungjawabkan **UDP** (uang operasional) yang ditransfer kantor ke tim untuk produksi video *hero* & *editorial feature* di Kudus. Satu pengguna (pemegang UDP) mencatat semua pemasukan, pengeluaran, dan perpindahan uang antar "dompet", lalu mengekspor laporan akhir ke **Google Sheets** lengkap dengan link foto bon/kwitansi di Google Drive.
+Aplikasi web mobile-first untuk mencatat dan mempertanggungjawabkan **UDP** (uang operasional) yang ditransfer kantor ke tim produksi di lapangan. Satu pengguna (pemegang UDP) mencatat semua pemasukan, pengeluaran, dan perpindahan uang antar "dompet", lalu mengekspor laporan akhir ke **Google Sheets** lengkap dengan link foto bon/kwitansi di Google Drive.
 
-Konteks produksi tipikal: 9 orang, 2 mobil, 1 kartu Flazz per mobil, kantor transfer UDP ±4 kali selama produksi.
+Contoh konteks produksi: 9 orang, 2 mobil, 1 kartu Flazz per mobil, kantor transfer UDP ±4 kali selama produksi.
+
+**Prinsip: aplikasi generik (reusable).** Tidak ada logika, tarif, atau data khusus satu klien/kontrak di kode (keputusan pengguna 2026-10-21). Semua angka (pagu, tarif, jumlah hari) diatur per proyek lewat UI. Seed proyek baru hanya berisi dompet dan kategori umum.
 
 ### Kriteria sukses
 
@@ -96,12 +98,7 @@ Semua nominal adalah **integer rupiah** (tidak ada float). Agregasi (saldo, tota
 - **Dompet:** Rekening (bank), Cash (cash), Flazz {Mobil n} (flazz, satu per mobil yang dibuat).
 - **Kategori pengeluaran:** Makan Siang, Makan Malam, Sarapan, Snack & Air Minum, BBM Perjalanan, Bensin Harian, Tol, Parkir (empat terakhir `isVehicleRelated`), Biaya Admin (`isAdminFee`), Lain-lain.
 - **Kategori pemasukan:** UDP Kantor, Lainnya.
-- **Pagu (surat penawaran, 2026-10):** catatan internal; jika realisasi melebihi pagu, kelebihannya **ditanggung kantor**.
-  - Pagu Makan: Rp150.000 per orang per hari → Makan Siang + Makan Malam
-  - Pagu Sarapan: Rp25.000 per orang per hari → Sarapan
-  - BBM + Tol: Rp1.300.000 per mobil per trip (`per_vehicle`) → BBM Perjalanan + Tol
-  - Operasional Harian: Rp100.000 per mobil per hari → Bensin Harian + Parkir + Lain-lain
-- Proyek lama dilengkapi lewat tombol "Terapkan pagu surat penawaran" (`applyDefaultBudgets`): menambah kategori/pagu default yang belum ada berdasarkan nama, mengganti nama "BBM" → "BBM Perjalanan", tanpa mengubah pagu yang sudah ada.
+- **Pagu:** tidak ada pagu bawaan. Pengguna menambah pagu sendiri per proyek (Lainnya → Pagu). Jika realisasi melebihi pagu, kelebihannya **ditanggung kantor**.
 
 ### 3.3 Aturan perhitungan (pure, di `lib/`)
 
@@ -210,7 +207,6 @@ Semua di bawah `/api/projects/[projectId]/…` kecuali yang ditandai.
 | `…/balance-checks/[id]/adjust` | POST | catat selisih sebagai transaksi |
 | `…/budgets` | GET, POST | pengaturan pagu (rumus, batas, pemakaian, kategori pengeluaran) / tambah |
 | `…/budgets/[budgetId]` | PATCH, DELETE | ubah / hapus pagu |
-| `…/budgets/defaults` | POST | terapkan pagu surat penawaran yang belum ada |
 | `…/categories`, `…/vehicles` | GET, POST, PATCH | master data (Rencana 2b) |
 | `…/export` | POST | ekspor ke Google Sheets + Drive |
 | `/api/receipts/upload-token` *(global)* | POST | token client upload Vercel Blob |
@@ -254,7 +250,7 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 
 **Lainnya**
 - Dompet: daftar, tambah/ubah/arsip, **Cek Saldo** (input saldo asli → tampil selisih → "Catat selisih").
-- **Pagu** (`/lainnya/pagu`): kartu per pagu (tarif, rumus → batas, bar pemakaian, kategori), ubah inline dengan pratinjau rumus, tambah pagu, hapus dengan konfirmasi dua langkah, tombol "Terapkan pagu surat penawaran".
+- **Pagu** (`/lainnya/pagu`): kartu per pagu (tarif, rumus → batas, bar pemakaian, kategori), ubah inline dengan pratinjau rumus, tambah pagu, isian jumlah hari per pagu (kosong = periode proyek), hapus dengan konfirmasi dua langkah, empty state saat belum ada pagu.
 - Kategori: kelola kategori (Rencana 2b).
 - Mobil, Pengaturan proyek (nama, lokasi, tanggal, pax, status Selesai/Buka lagi).
 - Proyek: daftar & buat proyek baru.

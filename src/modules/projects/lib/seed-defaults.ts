@@ -1,7 +1,6 @@
 // Isi awal proyek baru (spec §3.2). Murni: tanpa DB — command yang menyimpannya.
-import type { BudgetBasis, CategoryKind, WalletKind } from "@/modules/shared/types/enums";
-
-export const MEAL_RATE_PER_PAX_PER_DAY = 150_000;
+// Sengaja generik: tanpa pagu/tarif bawaan — pagu diatur sendiri per proyek.
+import type { CategoryKind, WalletKind } from "@/modules/shared/types/enums";
 
 export interface WalletSeed {
   kind: WalletKind;
@@ -18,18 +17,9 @@ export interface CategorySeed {
   isOfficeFunding: boolean;
 }
 
-export interface BudgetSeed {
-  name: string;
-  rate: number;
-  basis: BudgetBasis;
-  note: string;
-  categoryNames: string[];
-}
-
 export interface ProjectDefaults {
   wallets: WalletSeed[];
   categories: CategorySeed[];
-  budgets: BudgetSeed[];
 }
 
 const expense = (name: string, icon: string, flags: Partial<Pick<CategorySeed, "isVehicleRelated" | "isAdminFee">> = {}): CategorySeed => ({
@@ -49,14 +39,6 @@ const income = (name: string, icon: string, isOfficeFunding = false): CategorySe
   isAdminFee: false,
   isOfficeFunding,
 });
-
-/** Pagu dari surat penawaran (2026-10). Kelebihan pemakaian ditanggung kantor. */
-export const OFFER_BUDGETS: BudgetSeed[] = [
-  { name: "Pagu Makan", rate: MEAL_RATE_PER_PAX_PER_DAY, basis: "per_pax_per_day", note: "Makan siang + malam.", categoryNames: ["Makan Siang", "Makan Malam"] },
-  { name: "Pagu Sarapan", rate: 25_000, basis: "per_pax_per_day", note: "Sarapan pagi.", categoryNames: ["Sarapan"] },
-  { name: "BBM + Tol", rate: 1_300_000, basis: "per_vehicle", note: "Per mobil per trip.", categoryNames: ["BBM Perjalanan", "Tol"] },
-  { name: "Operasional Harian", rate: 100_000, basis: "per_vehicle_per_day", note: "Bensin harian + parkir + lain-lain.", categoryNames: ["Bensin Harian", "Parkir", "Lain-lain"] },
-];
 
 export function buildProjectDefaults(vehicles: { id: string; name: string }[]): ProjectDefaults {
   return {
@@ -79,6 +61,5 @@ export function buildProjectDefaults(vehicles: { id: string; name: string }[]): 
       income("UDP Kantor", "building-2", true),
       income("Lainnya", "circle-plus"),
     ],
-    budgets: OFFER_BUDGETS,
   };
 }
