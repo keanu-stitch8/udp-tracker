@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -345,6 +345,16 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
               setAdminFee(value);
               touched("adminFee");
             }}
+            // Transfer selalu punya field ini; di Pengeluaran bisa ditutup lagi (mis. "+ Biaya admin" tak sengaja terpencet).
+            onRemove={
+              type === "expense"
+                ? () => {
+                    setAdminFee(0);
+                    setAdminOpen(false);
+                    touched("adminFee");
+                  }
+                : undefined
+            }
           />
         ) : (
           type === "expense" && (
@@ -410,12 +420,31 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   );
 }
 
-function AdminFeeField({ value, error, checkAgain, onChange }: { value: number | null; error?: string; checkAgain: boolean; onChange: (value: number | null) => void }) {
+function AdminFeeField({
+  value,
+  error,
+  checkAgain,
+  onChange,
+  onRemove,
+}: {
+  value: number | null;
+  error?: string;
+  checkAgain: boolean;
+  onChange: (value: number | null) => void;
+  onRemove?: () => void;
+}) {
   return (
     <Field data-invalid={error ? true : undefined}>
-      <FieldLabel htmlFor="adminFee">
-        Biaya admin <CheckAgain show={checkAgain} />
-      </FieldLabel>
+      <div className="flex items-center justify-between gap-2">
+        <FieldLabel htmlFor="adminFee">
+          Biaya admin <CheckAgain show={checkAgain} />
+        </FieldLabel>
+        {onRemove && (
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove} aria-label="Hapus biaya admin">
+            <X /> Hapus
+          </Button>
+        )}
+      </div>
       <div className="flex flex-wrap gap-2">
         {ADMIN_FEE_PRESETS.map((fee) => (
           <Toggle key={fee} pressed={value === fee} onPressedChange={() => onChange(fee)} className="h-10 px-3">
