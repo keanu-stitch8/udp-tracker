@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { NATIVE_SELECT_CLASS } from "@/components/app/form-classes";
+import { AppSelect } from "@/components/app/app-select";
 import { MoneyInput } from "@/components/app/money-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { ApiError } from "@/lib/api-client";
 import type { Vehicle } from "@/modules/projects/types/project";
 import { WALLET_KINDS, type WalletKind } from "@/modules/shared/types/enums";
@@ -54,13 +53,7 @@ export function WalletForm({ projectId, vehicles, initial, onDone }: WalletFormP
         <div className="grid grid-cols-2 gap-3">
           <Field data-invalid={errorOf("kind") ? true : undefined}>
             <FieldLabel htmlFor="wallet-kind">Jenis</FieldLabel>
-            <NativeSelect id="wallet-kind" className={NATIVE_SELECT_CLASS} value={kind} onChange={(e) => setKind(e.target.value as WalletKind)}>
-              {WALLET_KINDS.map((k) => (
-                <NativeSelectOption key={k} value={k}>
-                  {WALLET_KIND_LABELS[k]}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            <AppSelect id="wallet-kind" value={kind} items={WALLET_KINDS.map((k) => ({ value: k, label: WALLET_KIND_LABELS[k] }))} onChange={setKind} />
             {errorOf("kind") && <FieldError>{errorOf("kind")}</FieldError>}
           </Field>
           <Field data-invalid={errorOf("name") ? true : undefined}>
@@ -72,14 +65,12 @@ export function WalletForm({ projectId, vehicles, initial, onDone }: WalletFormP
         {showVehicle && (
           <Field data-invalid={errorOf("vehicleId") ? true : undefined}>
             <FieldLabel htmlFor="wallet-vehicle">Mobil</FieldLabel>
-            <NativeSelect id="wallet-vehicle" className={NATIVE_SELECT_CLASS} value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>
-              <NativeSelectOption value="">Tanpa mobil</NativeSelectOption>
-              {vehicles.map((v) => (
-                <NativeSelectOption key={v.id} value={v.id}>
-                  {v.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            <AppSelect
+              id="wallet-vehicle"
+              value={vehicleId}
+              items={[{ value: "", label: "Tanpa mobil" }, ...vehicles.map((v) => ({ value: v.id, label: v.name }))]}
+              onChange={setVehicleId}
+            />
             {errorOf("vehicleId") && <FieldError>{errorOf("vehicleId")}</FieldError>}
           </Field>
         )}

@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { NATIVE_SELECT_CLASS } from "@/components/app/form-classes";
+import { AppSelect } from "@/components/app/app-select";
 import { MoneyInput } from "@/components/app/money-input";
 import { CategoryIcon } from "@/components/app/category-icon";
 import { AMOUNT } from "@/components/app/typography";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Toggle } from "@/components/ui/toggle";
 import { ApiError } from "@/lib/api-client";
 import { formatRupiah } from "@/modules/shared/lib/money";
@@ -72,13 +71,7 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
           </Field>
           <Field data-invalid={errorOf("basis") ? true : undefined}>
             <FieldLabel htmlFor="budget-basis">Dihitung</FieldLabel>
-            <NativeSelect id="budget-basis" className={NATIVE_SELECT_CLASS} value={basis} onChange={(e) => setBasis(e.target.value as BudgetBasis)}>
-              {BUDGET_BASES.map((b) => (
-                <NativeSelectOption key={b} value={b}>
-                  {BASIS_LABELS[b]}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            <AppSelect id="budget-basis" value={basis} items={BUDGET_BASES.map((b) => ({ value: b, label: BASIS_LABELS[b] }))} onChange={setBasis} />
             {errorOf("basis") && <FieldError>{errorOf("basis")}</FieldError>}
           </Field>
         </div>

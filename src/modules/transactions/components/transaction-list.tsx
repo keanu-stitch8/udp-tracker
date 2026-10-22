@@ -3,12 +3,11 @@
 import { ListPlus, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { NATIVE_SELECT_CLASS } from "@/components/app/form-classes";
+import { AppSelect } from "@/components/app/app-select";
 import { LABEL } from "@/components/app/typography";
 import { buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDateShort } from "@/modules/shared/lib/date";
 import { formatRupiah } from "@/modules/shared/lib/money";
@@ -23,6 +22,9 @@ const TYPES: { value: TransactionFilters["type"]; label: string }[] = [
   { value: "income", label: "Masuk" },
   { value: "transfer", label: "Transfer" },
 ];
+
+// Opsi "Semua …" bernilai "" = tanpa filter.
+const withAll = (label: string, options: { id: string; name: string }[]) => [{ value: "", label }, ...options.map((o) => ({ value: o.id, label: o.name }))];
 
 export function TransactionList({ reference }: { reference: TransactionReference }) {
   const { data: views = [] } = useTransactionList(reference.project.id);
@@ -63,31 +65,10 @@ export function TransactionList({ reference }: { reference: TransactionReference
           </TabsList>
         </Tabs>
         <div className="grid grid-cols-2 gap-2">
-          <NativeSelect aria-label="Kategori" className={NATIVE_SELECT_CLASS} value={filters.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
-            <NativeSelectOption value="">Semua kategori</NativeSelectOption>
-            {reference.categories.map((c) => (
-              <NativeSelectOption key={c.id} value={c.id}>
-                {c.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          <NativeSelect aria-label="Dompet" className={NATIVE_SELECT_CLASS} value={filters.walletId} onChange={(e) => set({ walletId: e.target.value })}>
-            <NativeSelectOption value="">Semua dompet</NativeSelectOption>
-            {reference.wallets.map((w) => (
-              <NativeSelectOption key={w.id} value={w.id}>
-                {w.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <AppSelect label="Kategori" value={filters.categoryId} items={withAll("Semua kategori", reference.categories)} onChange={(categoryId) => set({ categoryId })} />
+          <AppSelect label="Dompet" value={filters.walletId} items={withAll("Semua dompet", reference.wallets)} onChange={(walletId) => set({ walletId })} />
           {reference.vehicles.length > 0 && (
-            <NativeSelect aria-label="Mobil" className={NATIVE_SELECT_CLASS} value={filters.vehicleId} onChange={(e) => set({ vehicleId: e.target.value })}>
-              <NativeSelectOption value="">Semua mobil</NativeSelectOption>
-              {reference.vehicles.map((v) => (
-                <NativeSelectOption key={v.id} value={v.id}>
-                  {v.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            <AppSelect label="Mobil" value={filters.vehicleId} items={withAll("Semua mobil", reference.vehicles)} onChange={(vehicleId) => set({ vehicleId })} />
           )}
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
