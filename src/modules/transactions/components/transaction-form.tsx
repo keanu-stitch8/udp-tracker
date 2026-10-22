@@ -84,7 +84,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const [walletId, setWalletId] = useState(initial?.walletId ?? defaultWalletId);
   const [toWalletId, setToWalletId] = useState<string | null>(initial?.toWalletId ?? null);
   const [adminFee, setAdminFee] = useState<number | null>(initial?.adminFee ?? 0);
-  // Pengeluaran: field biaya admin dibuka lewat tombol, atau otomatis bila nilainya > 0 (scan/data tersimpan).
+  // Pengeluaran/Transfer: field biaya admin dibuka lewat tombol, atau otomatis bila nilainya > 0 (scan/data tersimpan).
   const [adminOpen, setAdminOpen] = useState(false);
   const [vehicleId, setVehicleId] = useState<string | null>(initial?.vehicleId ?? null);
   const [merchant, setMerchant] = useState(initial?.merchant ?? "");
@@ -97,7 +97,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const categories = reference.categories.filter((c) => c.kind === type && (!c.isAdminFee || c.id === initial?.categoryId));
   const category = reference.categories.find((c) => c.id === categoryId);
   const showVehicle = type !== "transfer" && !!category?.isVehicleRelated && reference.vehicles.length > 0;
-  const showAdminFee = type === "transfer" || (type === "expense" && (adminOpen || (adminFee ?? 0) > 0));
+  const showAdminFee = type !== "income" && (adminOpen || (adminFee ?? 0) > 0);
   const outsidePeriod = date < reference.project.startDate || date > reference.project.endDate;
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fieldErrors : {};
@@ -311,19 +311,15 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
               setAdminFee(value);
               touched("adminFee");
             }}
-            // Transfer selalu punya field ini; di Pengeluaran bisa ditutup lagi (mis. "+ Biaya admin" tak sengaja terpencet).
-            onRemove={
-              type === "expense"
-                ? () => {
-                    setAdminFee(0);
-                    setAdminOpen(false);
-                    touched("adminFee");
-                  }
-                : undefined
-            }
+            // Bisa ditutup lagi, mis. "+ Biaya admin" tak sengaja terpencet.
+            onRemove={() => {
+              setAdminFee(0);
+              setAdminOpen(false);
+              touched("adminFee");
+            }}
           />
         ) : (
-          type === "expense" && (
+          type !== "income" && (
             <Button type="button" variant="outline" className="self-start" onClick={() => setAdminOpen(true)}>
               + Biaya admin
             </Button>
@@ -431,7 +427,7 @@ function AdminFeeField({
   error?: string;
   checkAgain: boolean;
   onChange: (value: number | null) => void;
-  onRemove?: () => void;
+  onRemove: () => void;
 }) {
   return (
     <Field data-invalid={error ? true : undefined}>
@@ -439,11 +435,9 @@ function AdminFeeField({
         <FieldLabel htmlFor="adminFee">
           Biaya admin <CheckAgain show={checkAgain} />
         </FieldLabel>
-        {onRemove && (
-          <Button type="button" variant="ghost" size="sm" onClick={onRemove} aria-label="Hapus biaya admin">
-            <X /> Hapus
-          </Button>
-        )}
+        <Button type="button" variant="ghost" size="sm" onClick={onRemove} aria-label="Hapus biaya admin">
+          <X /> Hapus
+        </Button>
       </div>
       <div className="flex flex-wrap gap-2">
         {ADMIN_FEE_PRESETS.map((fee) => (
