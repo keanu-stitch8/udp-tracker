@@ -27,6 +27,8 @@ export interface TransactionView extends Transaction {
   walletName: string;
   toWalletName: string | null;
   vehicleName: string | null;
+  /** Menyentuh dompet Reimburse: belanja talangan atau penggantiannya. */
+  reimburse: boolean;
   attachments: Attachment[];
 }
 

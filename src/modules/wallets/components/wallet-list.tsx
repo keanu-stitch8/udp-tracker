@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { useWalletList } from "../hooks/use-wallets";
 import { WALLET_KIND_LABELS } from "../lib/kinds";
+import { reimburseStatus } from "../lib/reimburse";
 import type { WalletListItem } from "../queries/wallets";
 import { WalletForm } from "./wallet-form";
 
@@ -71,7 +72,11 @@ function WalletLinks({ wallets }: { wallets: WalletListItem[] }) {
               <p className="truncate font-medium">{wallet.name}</p>
               <p className="truncate text-xs text-muted-foreground">{[WALLET_KIND_LABELS[wallet.kind], wallet.vehicleName, wallet.holder].filter(Boolean).join(" · ")}</p>
             </div>
-            <span className={cn(AMOUNT, wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+            {wallet.kind === "reimburse" ? (
+              <span className="shrink-0 text-right text-sm font-medium">{reimburseStatus(wallet.balance)}</span>
+            ) : (
+              <span className={cn(AMOUNT, wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+            )}
             <ChevronRight className="size-4 shrink-0" />
           </Link>
         </li>

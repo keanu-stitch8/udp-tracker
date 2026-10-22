@@ -18,6 +18,7 @@ import { useCreateBalanceCheck, useSaveWallet, useWalletDetail } from "../hooks/
 import { describeDifference } from "../lib/balance-check";
 import { balanceAt } from "../lib/balances";
 import { WALLET_KIND_LABELS } from "../lib/kinds";
+import { reimburseStatus } from "../lib/reimburse";
 import type { WalletDetail } from "../queries/wallets";
 import { BalanceCheckItem } from "./balance-check-item";
 import { WalletForm } from "./wallet-form";
@@ -71,8 +72,12 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div>
-              <p className={`${LABEL} text-muted-foreground`}>Saldo di aplikasi</p>
-              <p className={cn(AMOUNT, "text-3xl", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</p>
+              <p className={`${LABEL} text-muted-foreground`}>{wallet.kind === "reimburse" ? "Status reimburse" : "Saldo di aplikasi"}</p>
+              {wallet.kind === "reimburse" ? (
+                <p className="font-head text-2xl font-bold">{reimburseStatus(wallet.balance)}</p>
+              ) : (
+                <p className={cn(AMOUNT, "text-3xl", wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</p>
+              )}
               <p className="text-xs text-muted-foreground">Saldo awal {formatRupiah(wallet.openingBalance)}</p>
             </div>
             <div className="flex items-center gap-2">

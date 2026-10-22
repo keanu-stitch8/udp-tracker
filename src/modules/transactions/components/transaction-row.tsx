@@ -21,6 +21,7 @@ export function TransactionRow({ view, href }: { view: TransactionView; href?: s
         <p className="flex items-center gap-1.5 text-sm font-medium">
           <span className="truncate">{title}</span>
           {view.attachments.length > 0 && <Paperclip className="size-3.5 shrink-0" aria-label={`${view.attachments.length} bon`} />}
+          {view.reimburse && <span className="shrink-0 border bg-yellow-200 px-1 text-[10px] leading-4 font-normal">reimburse</span>}
           {view.type === "expense" && view.attachments.length === 0 && (
             <span className="shrink-0 border px-1 text-[10px] leading-4 font-normal text-muted-foreground">tanpa bon</span>
           )}

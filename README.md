@@ -42,6 +42,15 @@ Buka http://localhost:3051. Untuk mencoba di HP pada WiFi yang sama, buka `http:
 3. Biaya admin diisi di kolom **Biaya admin** pada transaksi itu (Pengeluaran atau Transfer). Jangan digabung ke nominal, jangan dicatat sebagai transaksi terpisah.
 4. Pakai Scan bon: fee terisi otomatis. Cek angkanya.
 
+## SOP reimburse (uang talangan)
+
+Untuk belanja yang dibayar dulu pakai uang pribadi anggota tim, lalu diganti dari UDP.
+
+1. Buat dompet jenis **Reimburse** per orang (mis. "Reimburse Lucky", pemegang Lucky, saldo awal 0).
+2. Belanja dicatat sebagai **Pengeluaran dari dompet Reimburse** di **tanggal asli**, dengan bon aslinya. Saldo dompet tampil "Belum diganti Rp X".
+3. Saat diganti: **Transfer** dari dompet UDP (mis. Rekening) ke dompet Reimburse di tanggal refund, isi biaya admin bila ada, lampirkan bukti transfernya. Beberapa bon boleh diganti dengan satu transfer.
+4. Saldo dompet Reimburse kembali "Lunas". Transaksi yang menyentuh dompet Reimburse ditandai chip **reimburse**.
+
 ## Deploy (Vercel + Neon)
 
 1. Push ke GitHub, lalu import ke Vercel.

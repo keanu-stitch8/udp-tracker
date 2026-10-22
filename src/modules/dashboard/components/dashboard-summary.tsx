@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { TransactionRow } from "@/modules/transactions/components/transaction-row";
+import { reimburseStatus } from "@/modules/wallets/lib/reimburse";
 import { useDashboardSummary } from "../hooks/use-summary";
 
 export function DashboardSummaryView({ projectId }: { projectId: string }) {
@@ -76,7 +77,11 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
               <li key={wallet.id}>
                 <Link href={`/lainnya/dompet/${wallet.id}`} className="flex min-h-11 items-center justify-between gap-2 py-2">
                   <span>{wallet.name}</span>
-                  <span className={cn(AMOUNT, wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+                  {wallet.kind === "reimburse" ? (
+                    <span className="text-right font-medium">{reimburseStatus(wallet.balance)}</span>
+                  ) : (
+                    <span className={cn(AMOUNT, wallet.balance < 0 && "text-destructive")}>{formatRupiah(wallet.balance)}</span>
+                  )}
                 </Link>
               </li>
             ))}

@@ -18,6 +18,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Rencana 4 Ekspor + PWA (`…/2026-10-22-06-ekspor.md`, addendum spec `2026-10-22-ekspor-design.md`) | ✅ di `main`, uji nyata lulus 2026-10-22 (proyek asli: 6 foto ke Drive, Sheet 4 tab). Lainnya → Ekspor laporan |
 | Scan bon lanjutan (2026-10-22) | ✅ di `main`: default model lite, scan di form Ubah menimpa tanggal/jam, jam berdetik, nominal format bank, `adminFee` dari bukti transfer (BIAYA / BI FAST) |
 | Biaya admin konsisten (spec `docs/superpowers/specs/2026-10-22-biaya-admin-design.md`, rencana `…/2026-10-22-07-biaya-admin.md`) | ✅ di `main`: expense punya `adminFee` (dua entri di `expenseEntries`), kategori Biaya Admin otomatis (tidak bisa dipilih untuk transaksi baru), filter/jumlah kategori menghitung `adminFee > 0`, preset 0/2.000/2.500/6.500, scan fee sesuai angka tertulis (uji nyata QRIS 16.500 + 2.000 lulus), kolom Biaya admin di tab Detail, SOP di README |
+| Dompet Reimburse (2026-10-22) | ✅ di `main`: jenis dompet `reimburse` (migrasi 0005, **pengguna menjalankan `npm run db:migrate`**), chip "reimburse" di baris transaksi, saldo tampil "Belum diganti / Lunas / Lebih diganti", tidak pernah jadi dompet default. SOP di README |
 | Deploy Vercel (`sin1`) | ⏳ **berikutnya** |
 
 **Langkah berikutnya (chat baru mulai di sini):**

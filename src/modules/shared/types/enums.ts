@@ -2,7 +2,7 @@
 export const PROJECT_STATUSES = ["active", "done"] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
-export const WALLET_KINDS = ["bank", "cash", "flazz", "ewallet"] as const;
+export const WALLET_KINDS = ["bank", "cash", "flazz", "ewallet", "reimburse"] as const;
 export type WalletKind = (typeof WALLET_KINDS)[number];
 
 export const CATEGORY_KINDS = ["expense", "income"] as const;

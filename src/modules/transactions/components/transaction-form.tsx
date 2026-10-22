@@ -73,7 +73,8 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const queryClient = useQueryClient();
   const locked = reference.project.status === "done";
 
-  const defaultWalletId = reference.lastWalletId ?? reference.wallets[0]?.id ?? "";
+  // Dompet Reimburse tidak pernah jadi default: talangan harus dipilih sadar.
+  const defaultWalletId = reference.lastWalletId ?? (reference.wallets.find((w) => w.kind !== "reimburse") ?? reference.wallets[0])?.id ?? "";
   const [type, setType] = useState<TransactionType>(initial?.type ?? "expense");
   const [amount, setAmount] = useState<number | null>(initial?.amount ?? null);
   // Ikut default terbaru dari server sampai diubah pengguna/scan (state form dipertahankan saat halaman dibuka lagi).

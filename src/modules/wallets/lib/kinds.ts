@@ -5,4 +5,5 @@ export const WALLET_KIND_LABELS: Record<WalletKind, string> = {
   cash: "Cash",
   flazz: "Flazz",
   ewallet: "E-wallet",
+  reimburse: "Reimburse",
 };

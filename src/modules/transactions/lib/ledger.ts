@@ -70,6 +70,7 @@ export function toTransactionViews(
       walletName: wallets.get(t.walletId)?.name ?? "?",
       toWalletName: t.toWalletId ? (wallets.get(t.toWalletId)?.name ?? "?") : null,
       vehicleName: t.vehicleId ? (vehicles.get(t.vehicleId)?.name ?? null) : null,
+      reimburse: [t.walletId, t.toWalletId].some((id) => id && wallets.get(id)?.kind === "reimburse"),
       attachments: refs.attachments?.filter((a) => a.transactionId === t.id) ?? [],
     };
   });

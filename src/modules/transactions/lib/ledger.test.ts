@@ -70,6 +70,13 @@ describe("toTransactionViews", () => {
     expect(views[0]).toMatchObject({ categoryName: "tol", walletName: "flazz1", vehicleName: "Mobil 1", toWalletName: null });
     expect(views.find((v) => v.id === "tf1")).toMatchObject({ categoryName: null, walletName: "rekening", toWalletName: "cash" });
   });
+  it("reimburse: transaksi yang menyentuh dompet Reimburse (talangan & penggantiannya)", () => {
+    const withReimburse = [...wallets, { ...wallets[1], id: "lucky", name: "Reimburse Lucky", kind: "reimburse" as const }];
+    const talangan = tx({ id: "talangan", type: "expense", date: "2026-10-10", amount: 669_800, walletId: "lucky", categoryId: "makan-siang" });
+    const ganti = tx({ id: "ganti", type: "transfer", date: "2026-10-15", amount: 669_800, walletId: "rekening", toWalletId: "lucky", adminFee: 2_500 });
+    const views = toTransactionViews([...transactions, talangan, ganti], { wallets: withReimburse, categories, vehicles: [] });
+    expect(views.filter((v) => v.reimburse).map((v) => v.id)).toEqual(["ganti", "talangan"]);
+  });
   it("tanggal sama → createdAt terbaru dulu", () => {
     const a = tx({ id: "a", type: "income", date: "2026-10-22", time: "09:00", amount: 1, walletId: "cash", createdAt: "2026-10-22T01:00:00.000Z" });
     const b = tx({ id: "b", type: "income", date: "2026-10-22", time: "09:00", amount: 1, walletId: "cash", createdAt: "2026-10-22T02:00:00.000Z" });

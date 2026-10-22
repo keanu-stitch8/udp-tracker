@@ -28,18 +28,19 @@ export interface TransactionReference {
   wallets: Wallet[];
   categories: Category[];
   vehicles: Vehicle[];
-  /** Dompet pengeluaran terakhir → default pilihan dompet (spec §5). */
+  /** Dompet pengeluaran terakhir (bukan Reimburse) → default pilihan dompet (spec §5). */
   lastWalletId: string | null;
 }
 
 export const getTransactionReference = cache(async (db: Db, projectId: string): Promise<TransactionReference> => {
   const ledger = await getLedger(db, projectId);
   const { project } = ledger;
+  const reimburseWallets = new Set(ledger.wallets.filter((w) => w.kind === "reimburse").map((w) => w.id));
   return {
     project: { id: project.id, startDate: project.startDate, endDate: project.endDate, status: project.status },
     wallets: ledger.wallets.filter((w) => !w.archived),
     categories: sortCategoriesForPicker(ledger.categories.filter((c) => !c.archived)),
     vehicles: project.vehicles,
-    lastWalletId: ledger.transactions.find((t) => t.type === "expense")?.walletId ?? null,
+    lastWalletId: ledger.transactions.find((t) => t.type === "expense" && !reimburseWallets.has(t.walletId))?.walletId ?? null,
   };
 });
