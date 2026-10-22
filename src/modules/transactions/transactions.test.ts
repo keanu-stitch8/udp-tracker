@@ -7,6 +7,7 @@ import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
 import { createBudget } from "@/modules/budgets/commands/save-budget";
 import { createTestDb } from "@tests/helpers/test-db";
+import { insertTransaction } from "./api/transactions-repo";
 import { createTransaction, deleteTransaction, restoreTransaction, updateTransaction } from "./commands/save-transaction";
 import { getLedger } from "./queries/ledger";
 import { getTransactionReference, getTransactionView, listTransactionViews } from "./queries/views";
@@ -137,5 +138,17 @@ describe("jam transaksi", () => {
     const input = { type: "expense" as const, date: "2026-10-20", amount: 10_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Makan Siang") };
     await expect(createTransaction(db, projectId, input)).rejects.toBeInstanceOf(ValidationError);
     await expect(createTransaction(db, projectId, { ...input, time: "25:00" })).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+describe("biaya admin", () => {
+  it("pengeluaran menyimpan biaya admin; kategori Biaya Admin hanya untuk transaksi lama", async () => {
+    const saved = await createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 16_500, adminFee: 2_000, walletId: ref.wallet("Rekening"), categoryId: ref.category("Makan Siang") });
+    expect(saved.adminFee).toBe(2_000);
+
+    const legacy = { type: "expense", date: "2026-10-20", time: "09:00", amount: 2_500, walletId: ref.wallet("Cash"), categoryId: ref.category("Biaya Admin") } as const;
+    await expect(createTransaction(db, projectId, legacy)).rejects.toBeInstanceOf(ValidationError);
+    const row = await insertTransaction(db, { ...legacy, projectId });
+    expect((await updateTransaction(db, projectId, row.id, { ...legacy, amount: 3_000 })).amount).toBe(3_000);
   });
 });

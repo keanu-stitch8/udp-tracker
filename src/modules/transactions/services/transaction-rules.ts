@@ -27,8 +27,11 @@ export interface TransactionValues {
   note: string | null;
 }
 
-/** Validasi input + aturan bisnis spec §3.4 terhadap referensi proyek; hasil siap disimpan. */
-export function planTransaction(input: unknown, refs: TransactionRefs): TransactionValues {
+/**
+ * Validasi input + aturan bisnis spec §3.4 terhadap referensi proyek; hasil siap disimpan.
+ * `existing` = transaksi yang sedang diubah: pengeluaran lama berkategori Biaya Admin tetap boleh disimpan.
+ */
+export function planTransaction(input: unknown, refs: TransactionRefs, existing?: { categoryId: string | null }): TransactionValues {
   const { attachments, ...v } = parseOrThrow(transactionInputSchema, input);
   void attachments; // diproses terpisah oleh planAttachments, bukan kolom transaksi
   const errors: FieldErrors = {};
@@ -43,10 +46,12 @@ export function planTransaction(input: unknown, refs: TransactionRefs): Transact
   const category = refs.categories.find((c) => c.id === v.categoryId);
   if (!category) errors.categoryId = ["Kategori tidak ditemukan di proyek ini."];
   else if (category.kind !== v.type) errors.categoryId = ["Kategori tidak cocok dengan jenis transaksi."];
+  else if (category.isAdminFee && existing?.categoryId !== category.id) errors.categoryId = ["Isi di kolom Biaya admin pada transaksi yang terkena biaya."];
+  if (v.type === "income" && v.adminFee > 0) errors.adminFee = ["Pemasukan tidak punya biaya admin."];
   if (v.vehicleId) {
     if (category && !category.isVehicleRelated) errors.vehicleId = ["Kategori ini tidak terkait mobil."];
     else if (!refs.vehicles.some((vehicle) => vehicle.id === v.vehicleId)) errors.vehicleId = ["Mobil tidak ditemukan di proyek ini."];
   }
   if (Object.keys(errors).length) throw new ValidationError(errors);
-  return { ...v, toWalletId: null, adminFee: 0 };
+  return { ...v, toWalletId: null };
 }

@@ -37,8 +37,8 @@ export async function createTransaction(db: Db, projectId: string, input: unknow
 
 export async function updateTransaction(db: Db, projectId: string, id: string, input: unknown): Promise<Transaction> {
   await editableProject(db, projectId);
-  await findTransactionOrThrow(db, projectId, id);
-  const values = planTransaction(input, await loadRefs(db, projectId));
+  const existing = await findTransactionOrThrow(db, projectId, id);
+  const values = planTransaction(input, await loadRefs(db, projectId), existing);
   const attachments = planAttachments(input, projectId);
   const { row, removed } = await db.transaction(async (tx) => ({
     row: await updateTransactionRow(tx, id, values),
