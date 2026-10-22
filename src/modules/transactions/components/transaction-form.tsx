@@ -380,7 +380,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
 
         <Field data-invalid={errorOf("merchant") ? true : undefined}>
           <FieldLabel htmlFor="merchant">
-            {type === "transfer" ? "Keterangan" : "Toko / keterangan"} <CheckAgain show={ocrFields.has("merchant")} />
+            Berita <CheckAgain show={ocrFields.has("merchant")} />
           </FieldLabel>
           <Input
             id="merchant"

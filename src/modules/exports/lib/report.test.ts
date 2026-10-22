@@ -39,7 +39,7 @@ describe("buildReport", () => {
   it("Detail: kronologis, jam, transfer A → B, saldo berjalan gabungan, link bon", () => {
     const detail = tab("Detail");
     expect(detail.freezeRows).toBe(1);
-    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Kategori", "Toko/Keterangan", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Bon 1"]);
+    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Bon 1"]);
     const rows = values(detail).slice(1);
     expect(rows.map((r) => r[11])).toEqual([5_200_000, 5_300_000, 5_293_500, 4_693_500, 3_793_500, 3_743_500]);
     expect(rows[0].slice(0, 9)).toEqual([1, "19 Okt 2026", "09:00", "Masuk", "udp", null, "rekening", null, 5_000_000]);

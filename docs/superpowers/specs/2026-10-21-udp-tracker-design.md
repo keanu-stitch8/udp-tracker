@@ -253,7 +253,7 @@ Desain mobile-first (target lebar 360–430px), tetap rapi di desktop (kolom ten
 5. Expense/income: grid ikon kategori. Transfer: dompet asal → tujuan + biaya admin (preset Rp0 / 2.500 / 6.500 + isian bebas).
 6. Dompet (chip). Default: dompet terakhir yang dipakai. Jika kategori Tol dan mobil dipilih, default ke Flazz mobil itu.
 7. Mobil (muncul hanya untuk kategori `isVehicleRelated`).
-8. Toko/keterangan, catatan.
+8. Berita (toko/penerima/keterangan), catatan.
 9. Field yang diisi OCR diberi badge "cek lagi" sampai pengguna menyentuhnya.
 
 **Lainnya**
@@ -309,7 +309,7 @@ simpan transaksi → input `attachments: [{ ...attachment, ocr }]` → baris `at
 3. Buat spreadsheet baru `UDP – {nama proyek} – {YYYY-MM-DD}` di folder proyek, locale `in_ID`, timezone `Asia/Jakarta`.
 4. Tulis 4 tab (nilai angka sebagai angka, format `#,##0`, header tebal + freeze baris header):
    - **Rekap:** info proyek (nama, lokasi, periode, pax, mobil), daftar UDP masuk (tanggal, nominal, dompet), total pemasukan, total pengeluaran per kategori (termasuk Biaya Admin), saldo akhir per dompet, Sisa (dikembalikan/kurang).
-   - **Detail:** No · Tanggal · Jenis · Kategori · Toko/Keterangan · Dompet · Mobil · Masuk · Keluar · Saldo berjalan (gabungan semua dompet) · Bon (`=HYPERLINK(url;"Bon 1")`, kolom tambahan untuk lampiran ke-2+). Transfer ditampilkan sebagai satu baris "Transfer A → B" (Masuk = Keluar = 0, kecuali admin di kolom Keluar).
+   - **Detail:** No · Tanggal · Jenis · Kategori · Berita · Dompet · Mobil · Masuk · Keluar · Saldo berjalan (gabungan semua dompet) · Bon (`=HYPERLINK(url;"Bon 1")`, kolom tambahan untuk lampiran ke-2+). Transfer ditampilkan sebagai satu baris "Transfer A → B" (Masuk = Keluar = 0, kecuali admin di kolom Keluar).
    - **Harian:** baris = tanggal, kolom = kategori pengeluaran, baris total.
    - **Pagu (internal):** per pagu: nilai pagu, realisasi, selisih/ditanggung kantor. Untuk Pagu Makan juga ada rincian per hari.
 5. Setelah semua tab berhasil ditulis: jika ada `sheetId` lama, rename Sheet lama menjadi `… (lama {YYYY-MM-DD})`.

@@ -98,7 +98,7 @@ function detailTab({ wallets, categories, transactions, project, receipts }: Rep
   const receiptHeaders = Array.from({ length: maxReceipts }, (_, i) => `Bon ${i + 1}`);
   return {
     title: "Detail",
-    rows: [header("No", "Tanggal", "Jam", "Jenis", "Kategori", "Toko/Keterangan", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", ...receiptHeaders), ...rows],
+    rows: [header("No", "Tanggal", "Jam", "Jenis", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", ...receiptHeaders), ...rows],
     freezeRows: 1,
   };
 }
