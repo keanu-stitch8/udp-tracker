@@ -87,7 +87,7 @@ function CategoryItem({ projectId, category, locked, onEdit }: { projectId: stri
   const system = category.isAdminFee || category.isOfficeFunding;
   const detail = [
     category.isVehicleRelated && "terkait mobil",
-    category.isAdminFee && "biaya admin transfer",
+    category.isAdminFee && "biaya admin otomatis",
     category.isOfficeFunding && "UDP kantor",
     category.usedCount > 0 && `${category.usedCount} transaksi`,
     category.budgetNames.length > 0 && `pagu: ${category.budgetNames.join(", ")}`,

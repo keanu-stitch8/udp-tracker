@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { Db } from "@/db/types";
-import { sumBy } from "@/modules/transactions/lib/ledger";
+import { categoryUseCounts } from "@/modules/transactions/lib/ledger";
 import { getLedger } from "@/modules/transactions/queries/ledger";
 import type { Category } from "../types/category";
 
@@ -21,11 +21,7 @@ export interface CategorySettings {
 
 export const getCategorySettings = cache(async (db: Db, projectId: string): Promise<CategorySettings> => {
   const ledger = await getLedger(db, projectId);
-  const used = sumBy(
-    ledger.transactions.filter((t) => t.categoryId),
-    (t) => t.categoryId!,
-    () => 1,
-  );
+  const used = categoryUseCounts(ledger.transactions, ledger.categories);
   return {
     projectId,
     locked: ledger.project.status === "done",

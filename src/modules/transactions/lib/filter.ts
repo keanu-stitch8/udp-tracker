@@ -1,5 +1,6 @@
 import type { TransactionType } from "@/modules/shared/types/enums";
 import type { TransactionView } from "../types/transaction";
+import { isAdminFeeTransaction } from "./ledger";
 
 /** "" = semua. */
 export interface TransactionFilters {
@@ -12,12 +13,15 @@ export interface TransactionFilters {
 
 export const EMPTY_FILTERS: TransactionFilters = { type: "all", categoryId: "", walletId: "", vehicleId: "", q: "" };
 
-export function filterTransactions(views: TransactionView[], filters: TransactionFilters): TransactionView[] {
+/** `adminCategoryId`: filter kategori Biaya Admin mencakup biaya admin pengeluaran/transfer. */
+export function filterTransactions(views: TransactionView[], filters: TransactionFilters, adminCategoryId: string | null = null): TransactionView[] {
   const q = filters.q.trim().toLowerCase();
+  const matchesCategory = (v: TransactionView) =>
+    filters.categoryId === adminCategoryId ? isAdminFeeTransaction(v, adminCategoryId) : v.categoryId === filters.categoryId;
   return views.filter(
     (v) =>
       (filters.type === "all" || v.type === filters.type) &&
-      (!filters.categoryId || v.categoryId === filters.categoryId) &&
+      (!filters.categoryId || matchesCategory(v)) &&
       (!filters.walletId || v.walletId === filters.walletId || v.toWalletId === filters.walletId) &&
       (!filters.vehicleId || v.vehicleId === filters.vehicleId) &&
       (!q || [v.merchant, v.note, v.categoryName].some((text) => text?.toLowerCase().includes(q))),

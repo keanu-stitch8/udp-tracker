@@ -15,6 +15,13 @@ describe("filterTransactions", () => {
     expect(ids(filterTransactions(views, { ...EMPTY_FILTERS, categoryId: "makan-siang" }))).toEqual(["siang"]);
     expect(ids(filterTransactions(views, { ...EMPTY_FILTERS, vehicleId: "mobil1" }))).toEqual(["tol1"]);
   });
+  it("kategori Biaya Admin: transaksi ber-adminFee + pengeluaran lama berkategori admin", () => {
+    const fee = tx({ id: "fee", type: "expense", date: "2026-10-21", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
+    const legacy = tx({ id: "legacy", type: "expense", date: "2026-10-21", amount: 2_500, walletId: "cash", categoryId: "admin" });
+    const all = toTransactionViews([...transactions, fee, legacy], { wallets, categories, vehicles: [] });
+    expect(ids(filterTransactions(all, { ...EMPTY_FILTERS, categoryId: "admin" }, "admin"))).toEqual(["legacy", "fee", "tf1"]);
+    expect(ids(filterTransactions(all, { ...EMPTY_FILTERS, categoryId: "makan-siang" }, "admin"))).toEqual(["fee", "siang"]);
+  });
   it("dompet mencocokkan asal maupun tujuan transfer", () => {
     expect(ids(filterTransactions(views, { ...EMPTY_FILTERS, walletId: "cash" }))).toEqual(["malam", "siang", "tf1", "refund"]);
   });

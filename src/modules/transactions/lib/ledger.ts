@@ -35,6 +35,23 @@ export function sumBy<T, K>(items: T[], key: (item: T) => K, value: (item: T) =>
   return totals;
 }
 
+/** Transaksi yang masuk kategori Biaya Admin: ada biaya admin, atau pengeluaran lama berkategori itu. */
+export function isAdminFeeTransaction(t: Transaction, adminCategoryId: string | null): boolean {
+  return t.adminFee > 0 || (adminCategoryId !== null && t.categoryId === adminCategoryId);
+}
+
+/** Jumlah transaksi per kategori (daftar Kategori). */
+export function categoryUseCounts(transactions: Transaction[], categories: Category[]): Map<string, number> {
+  const adminCategoryId = categories.find((c) => c.isAdminFee)?.id ?? null;
+  const counts = sumBy(
+    transactions.filter((t) => t.categoryId && t.categoryId !== adminCategoryId),
+    (t) => t.categoryId!,
+    () => 1,
+  );
+  if (adminCategoryId) counts.set(adminCategoryId, transactions.filter((t) => isAdminFeeTransaction(t, adminCategoryId)).length);
+  return counts;
+}
+
 export const compareNewestFirst = (a: Transaction, b: Transaction) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time) || b.createdAt.localeCompare(a.createdAt);
 
 export function toTransactionViews(

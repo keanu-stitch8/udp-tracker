@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { categories, transactions, tx, wallets } from "@tests/helpers/ledger-fixture";
-import { expenseEntries, ledgerTotals, sumBy, toTransactionViews } from "./ledger";
+import { categoryUseCounts, expenseEntries, ledgerTotals, sumBy, toTransactionViews } from "./ledger";
 
 describe("expenseEntries", () => {
   it("expense + biaya admin transfer (di kategori admin), tanpa pemasukan/nominal transfer", () => {
@@ -44,6 +44,21 @@ describe("sumBy", () => {
       "2026-10-19": 6_500,
       "2026-10-20": 1_500_000,
       "2026-10-21": 50_000,
+    });
+  });
+});
+
+describe("categoryUseCounts", () => {
+  it("Biaya Admin = transaksi ber-adminFee + pengeluaran lama berkategori admin", () => {
+    const fee = tx({ type: "expense", date: "2026-10-21", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
+    const legacy = tx({ type: "expense", date: "2026-10-21", amount: 2_500, walletId: "cash", categoryId: "admin" });
+    expect(Object.fromEntries(categoryUseCounts([...transactions, fee, legacy], categories))).toEqual({
+      udp: 1,
+      lainnya: 1,
+      "makan-siang": 2,
+      "makan-malam": 1,
+      tol: 1,
+      admin: 3,
     });
   });
 });

@@ -28,7 +28,8 @@ export function TransactionList({ reference }: { reference: TransactionReference
   const { data: views = [] } = useTransactionList(reference.project.id);
   const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
   const set = (patch: Partial<TransactionFilters>) => setFilters((current) => ({ ...current, ...patch }));
-  const groups = groupByDate(filterTransactions(views, filters));
+  const adminCategoryId = reference.categories.find((c) => c.isAdminFee)?.id ?? null;
+  const groups = groupByDate(filterTransactions(views, filters, adminCategoryId));
 
   if (!views.length) {
     return (
