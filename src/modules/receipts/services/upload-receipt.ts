@@ -35,7 +35,7 @@ const RETRY_NEXT_MODEL = new Set<GeminiFailure>(["busy", "quota", "timeout"]);
 
 async function scan(db: Db, project: { id: string; startDate: string }, file: { mimeType: string; base64: string }, config: ReceiptsEnv): Promise<ScanResult> {
   if (!config.geminiApiKey) return { ok: false, reason: "unconfigured" };
-  const categoryNames = (await selectCategories(db, project.id)).filter((c) => c.kind === "expense" && !c.archived).map((c) => c.name);
+  const categoryNames = (await selectCategories(db, project.id)).filter((c) => c.kind === "expense" && !c.archived && !c.isAdminFee).map((c) => c.name);
   const projectYear = Number(project.startDate.slice(0, 4));
   const deadline = Date.now() + SCAN_BUDGET_MS;
   let reason: GeminiFailure = "failed";

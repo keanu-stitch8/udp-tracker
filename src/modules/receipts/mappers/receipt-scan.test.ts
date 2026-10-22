@@ -38,6 +38,7 @@ describe("toReceiptScan", () => {
     expect(scan({ adminFee: 2_500 }).adminFee).toBe(2_500);
     expect(scan({ adminFee: "Rp 2,500.00" }).adminFee).toBe(2_500);
     expect(scan({ adminFee: "6.500" }).adminFee).toBe(6_500);
+    expect(scan({ adminFee: "Rp2.000,00" }).adminFee).toBe(2_000);
     for (const adminFee of [0, -1, 1_000_001, "x", null, undefined]) expect(scan({ adminFee }).adminFee).toBeNull();
   });
 

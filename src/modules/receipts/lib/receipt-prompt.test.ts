@@ -9,6 +9,13 @@ describe("receiptPrompt", () => {
     expect(prompt).toMatch(/tahun tidak tertulis.*2026/);
   });
 
+  it("biaya admin sesuai angka tertulis; nominal bukan Total Transfer; BI FAST hanya bila angka tidak tertulis", () => {
+    const prompt = receiptPrompt([], 2026);
+    expect(prompt).toContain("\"Fee: Rp2.000,00\" = 2000");
+    expect(prompt).toContain("bukan \"Total Transfer\"");
+    expect(prompt).toMatch(/BI FAST.*tidak tertulis.*2500/);
+  });
+
   it("schema membatasi categoryHint ke kategori proyek", () => {
     const schema = receiptResponseSchema(["Tol", "Parkir"]);
     expect(schema.properties.categoryHint).toEqual({ type: "STRING", enum: ["Tol", "Parkir"], nullable: true });
