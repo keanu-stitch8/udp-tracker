@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { Db } from "@/db/types";
 import { NotFoundError } from "@/lib/errors";
+import { sortCategoriesForPicker } from "@/modules/budgets/lib/category-order";
 import type { Category } from "@/modules/budgets/types/category";
 import type { Vehicle } from "@/modules/projects/types/project";
 import type { ProjectStatus } from "@/modules/shared/types/enums";
@@ -37,7 +38,7 @@ export const getTransactionReference = cache(async (db: Db, projectId: string): 
   return {
     project: { id: project.id, startDate: project.startDate, endDate: project.endDate, status: project.status },
     wallets: ledger.wallets.filter((w) => !w.archived),
-    categories: ledger.categories.filter((c) => !c.archived),
+    categories: sortCategoriesForPicker(ledger.categories.filter((c) => !c.archived)),
     vehicles: project.vehicles,
     lastWalletId: ledger.transactions.find((t) => t.type === "expense")?.walletId ?? null,
   };

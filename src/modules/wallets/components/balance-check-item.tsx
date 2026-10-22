@@ -8,6 +8,7 @@ import { AMOUNT } from "@/components/app/typography";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
+import { sortCategoriesForPicker } from "@/modules/budgets/lib/category-order";
 import { formatDateShort } from "@/modules/shared/lib/date";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { useAdjustBalanceCheck } from "../hooks/use-wallets";
@@ -21,7 +22,7 @@ export function BalanceCheckItem({ check, detail, canAdjust }: { check: BalanceC
   const [open, setOpen] = useState(false);
   const [categoryId, setCategoryId] = useState(() => defaultAdjustmentCategoryId(check.difference, detail.wallet, detail.categories) ?? "");
   const kind = check.difference < 0 ? "expense" : "income";
-  const options = detail.categories.filter((c) => c.kind === kind && !c.isAdminFee && !c.isOfficeFunding);
+  const options = sortCategoriesForPicker(detail.categories.filter((c) => c.kind === kind && !c.isAdminFee && !c.isOfficeFunding));
 
   return (
     <li className="flex flex-col gap-2 py-3 text-sm">

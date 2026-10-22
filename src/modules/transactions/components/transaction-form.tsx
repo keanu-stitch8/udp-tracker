@@ -302,6 +302,34 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
           )}
         </div>
 
+        {showAdminFee ? (
+          <AdminFeeField
+            value={adminFee}
+            error={errorOf("adminFee")}
+            checkAgain={ocrFields.has("adminFee")}
+            onChange={(value) => {
+              setAdminFee(value);
+              touched("adminFee");
+            }}
+            // Transfer selalu punya field ini; di Pengeluaran bisa ditutup lagi (mis. "+ Biaya admin" tak sengaja terpencet).
+            onRemove={
+              type === "expense"
+                ? () => {
+                    setAdminFee(0);
+                    setAdminOpen(false);
+                    touched("adminFee");
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          type === "expense" && (
+            <Button type="button" variant="outline" className="self-start" onClick={() => setAdminOpen(true)}>
+              + Biaya admin
+            </Button>
+          )
+        )}
+
         {type !== "transfer" && (
           <Field data-invalid={errorOf("categoryId") ? true : undefined}>
             <FieldLabel>
@@ -334,34 +362,6 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
             <WalletChips wallets={reference.wallets.filter((w) => w.id !== walletId)} value={toWalletId ?? ""} onChange={setToWalletId} />
             {errorOf("toWalletId") && <FieldError>{errorOf("toWalletId")}</FieldError>}
           </Field>
-        )}
-
-        {showAdminFee ? (
-          <AdminFeeField
-            value={adminFee}
-            error={errorOf("adminFee")}
-            checkAgain={ocrFields.has("adminFee")}
-            onChange={(value) => {
-              setAdminFee(value);
-              touched("adminFee");
-            }}
-            // Transfer selalu punya field ini; di Pengeluaran bisa ditutup lagi (mis. "+ Biaya admin" tak sengaja terpencet).
-            onRemove={
-              type === "expense"
-                ? () => {
-                    setAdminFee(0);
-                    setAdminOpen(false);
-                    touched("adminFee");
-                  }
-                : undefined
-            }
-          />
-        ) : (
-          type === "expense" && (
-            <Button type="button" variant="outline" className="self-start" onClick={() => setAdminOpen(true)}>
-              + Biaya admin
-            </Button>
-          )
         )}
 
         {showVehicle && (
