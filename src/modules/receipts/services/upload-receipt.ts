@@ -28,7 +28,7 @@ export async function uploadReceipt(db: Db, projectId: string, file: File, confi
   return { attachment, scan: await scan(db, project, { mimeType, base64: bytes.toString("base64") }, config) };
 }
 
-/** Total waktu scan (route `maxDuration` 60 detik); satu model maksimal 30 detik. */
+/** Total waktu scan (route `maxDuration` 60 detik). Model yang masih punya cadangan maksimal 30 detik; model terakhir memakai sisa jatah. */
 const SCAN_BUDGET_MS = 55_000;
 const MODEL_TIMEOUT_MS = 30_000;
 const RETRY_NEXT_MODEL = new Set<GeminiFailure>(["busy", "quota", "timeout"]);
@@ -40,8 +40,9 @@ async function scan(db: Db, project: { id: string; startDate: string }, file: { 
   const deadline = Date.now() + SCAN_BUDGET_MS;
   let reason: GeminiFailure = "failed";
   // Model berikutnya hanya dicoba bila model sebelumnya sibuk/kuota/timeout (mis. 503 "high demand", 2026-10-21).
-  for (const model of config.geminiModels) {
-    const timeoutMs = Math.min(MODEL_TIMEOUT_MS, deadline - Date.now());
+  for (const [index, model] of config.geminiModels.entries()) {
+    const remaining = deadline - Date.now();
+    const timeoutMs = index < config.geminiModels.length - 1 ? Math.min(MODEL_TIMEOUT_MS, remaining) : remaining;
     if (timeoutMs < 5_000) break;
     try {
       const raw = await generateJson({

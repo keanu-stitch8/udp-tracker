@@ -35,8 +35,9 @@ export async function generateJson({ apiKey, model, prompt, file, schema, timeou
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: schema,
-          // thinkingLevel hanya dikenal model Gemini 3+.
-          ...(/^gemini-[12]\./.test(model) ? {} : { thinkingConfig: { thinkingLevel: "low" } }),
+          // thinkingLevel hanya dikenal model Gemini 3+. "minimal": baca bon tidak perlu penalaran; "low" membuat scan
+          // 35–90+ detik saat Gemini ramai (diukur 2026-10-22, hasil sama dengan minimal) → timeout.
+          ...(/^gemini-[12]\./.test(model) ? {} : { thinkingConfig: { thinkingLevel: "minimal" } }),
         },
       }),
       signal: AbortSignal.timeout(timeoutMs),

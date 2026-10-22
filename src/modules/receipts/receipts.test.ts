@@ -55,6 +55,19 @@ describe("uploadReceipt", () => {
     }
   });
 
+  it("batas waktu: model dengan cadangan maks 30 detik; model terakhir memakai sisa jatah scan", async () => {
+    vi.mocked(generateJson).mockRejectedValueOnce(new GeminiError("timeout", "x")).mockResolvedValueOnce({ amount: 10_000, confident: true });
+    await uploadReceipt(db, projectId, jpeg(), config);
+    const [first, last] = vi.mocked(generateJson).mock.calls.map(([input]) => input.timeoutMs!);
+    expect(first).toBe(30_000);
+    expect(last).toBeGreaterThan(20_000);
+
+    vi.mocked(generateJson).mockReset();
+    vi.mocked(generateJson).mockResolvedValue({ amount: 10_000, confident: true });
+    await uploadReceipt(db, projectId, jpeg(), { ...config, geminiModels: ["gemini-uji"] });
+    expect(vi.mocked(generateJson).mock.calls[0][0].timeoutMs).toBeGreaterThan(50_000);
+  });
+
   it("semua model gagal → alasan terakhir dikembalikan, lampiran tetap tersimpan; error lain tidak dicoba ulang", async () => {
     vi.mocked(generateJson).mockRejectedValue(new GeminiError("busy", "sibuk"));
     expect((await uploadReceipt(db, projectId, jpeg(), config)).scan).toEqual({ ok: false, reason: "busy" });
