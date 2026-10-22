@@ -1,7 +1,8 @@
 "use client";
 
-import { ListPlus, Search } from "lucide-react";
+import { ListPlus, Search, X } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AppSelect } from "@/components/app/app-select";
 import { LABEL } from "@/components/app/typography";
@@ -9,6 +10,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { groupCategories } from "@/modules/budgets/lib/category-groups";
+import { sortCategoriesForPicker } from "@/modules/budgets/lib/category-order";
 import { formatDateShort } from "@/modules/shared/lib/date";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { useTransactionList } from "../hooks/use-transactions";
@@ -26,9 +29,19 @@ const TYPES: { value: TransactionFilters["type"]; label: string }[] = [
 // Opsi "Semua …" bernilai "" = tanpa filter.
 const withAll = (label: string, options: { id: string; name: string }[]) => [{ value: "", label }, ...options.map((o) => ({ value: o.id, label: o.name }))];
 
+/** Pengeluaran per grup (urutan tampil), lalu pemasukan di grup "Pemasukan". */
+function categoryOptions(reference: TransactionReference) {
+  return [
+    { value: "", label: "Semua kategori" },
+    ...groupCategories(reference.groups, reference.categories).flatMap(({ group, categories }) => categories.map((c) => ({ value: c.id, label: c.name, group: group.name }))),
+    ...sortCategoriesForPicker(reference.categories.filter((c) => c.kind === "income")).map((c) => ({ value: c.id, label: c.name, group: "Pemasukan" })),
+  ];
+}
+
 export function TransactionList({ reference }: { reference: TransactionReference }) {
   const { data: views = [] } = useTransactionList(reference.project.id);
-  const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
+  const searchParams = useSearchParams();
+  const [filters, setFilters] = useState<TransactionFilters>(() => ({ ...EMPTY_FILTERS, receipt: searchParams.get("bon") === "belum" ? "missing" : "all" }));
   const set = (patch: Partial<TransactionFilters>) => setFilters((current) => ({ ...current, ...patch }));
   const adminCategoryId = reference.categories.find((c) => c.isAdminFee)?.id ?? null;
   const groups = groupByDate(filterTransactions(views, filters, adminCategoryId));
@@ -65,7 +78,7 @@ export function TransactionList({ reference }: { reference: TransactionReference
           </TabsList>
         </Tabs>
         <div className="grid grid-cols-2 gap-2">
-          <AppSelect label="Kategori" value={filters.categoryId} items={withAll("Semua kategori", reference.categories)} onChange={(categoryId) => set({ categoryId })} />
+          <AppSelect label="Kategori" value={filters.categoryId} items={categoryOptions(reference)} onChange={(categoryId) => set({ categoryId })} />
           <AppSelect label="Dompet" value={filters.walletId} items={withAll("Semua dompet", reference.wallets)} onChange={(walletId) => set({ walletId })} />
           {reference.vehicles.length > 0 && (
             <AppSelect label="Mobil" value={filters.vehicleId} items={withAll("Semua mobil", reference.vehicles)} onChange={(vehicleId) => set({ vehicleId })} />
@@ -75,6 +88,11 @@ export function TransactionList({ reference }: { reference: TransactionReference
             <Input aria-label="Cari" placeholder="Cari…" className="h-10 pl-8" value={filters.q} onChange={(e) => set({ q: e.target.value })} />
           </div>
         </div>
+        {filters.receipt === "missing" && (
+          <button type="button" onClick={() => set({ receipt: "all" })} className="flex items-center gap-1 self-start border-2 bg-accent px-2 py-1 text-xs font-medium">
+            Tanpa bon <X className="size-3.5" aria-label="Hapus filter" />
+          </button>
+        )}
       </div>
 
       {groups.length === 0 ? (

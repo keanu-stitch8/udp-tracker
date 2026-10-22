@@ -1,17 +1,19 @@
 import type { TransactionType } from "@/modules/shared/types/enums";
 import type { TransactionView } from "../types/transaction";
 import { isAdminFeeTransaction } from "./ledger";
+import { isMissingReceipt } from "./receipt";
 
-/** "" = semua. */
+/** "" = semua. `receipt: "missing"` = hanya pengeluaran tanpa bon (dibuka dari beranda lewat ?bon=belum). */
 export interface TransactionFilters {
   type: TransactionType | "all";
   categoryId: string;
   walletId: string;
   vehicleId: string;
   q: string;
+  receipt: "all" | "missing";
 }
 
-export const EMPTY_FILTERS: TransactionFilters = { type: "all", categoryId: "", walletId: "", vehicleId: "", q: "" };
+export const EMPTY_FILTERS: TransactionFilters = { type: "all", categoryId: "", walletId: "", vehicleId: "", q: "", receipt: "all" };
 
 /** `adminCategoryId`: filter kategori Biaya Admin mencakup biaya admin pengeluaran/transfer. */
 export function filterTransactions(views: TransactionView[], filters: TransactionFilters, adminCategoryId: string | null = null): TransactionView[] {
@@ -24,6 +26,7 @@ export function filterTransactions(views: TransactionView[], filters: Transactio
       (!filters.categoryId || matchesCategory(v)) &&
       (!filters.walletId || v.walletId === filters.walletId || v.toWalletId === filters.walletId) &&
       (!filters.vehicleId || v.vehicleId === filters.vehicleId) &&
+      (filters.receipt === "all" || isMissingReceipt(v, adminCategoryId)) &&
       (!q || [v.merchant, v.note, v.categoryName].some((text) => text?.toLowerCase().includes(q))),
   );
 }

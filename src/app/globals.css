@@ -53,6 +53,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-tile-green: var(--tile-green);
+  --color-tile-pink: var(--tile-pink);
 }
 
 :root {
@@ -83,6 +85,9 @@
   --chart-3: #e7f192;
   --chart-4: #000;
   --chart-5: #ff30cd;
+  /* Kotak ikon kartu angka beranda (gaya Brutadmin neobrutalism.com). */
+  --tile-green: #c4ff83;
+  --tile-pink: #ffd2d2;
 }
 
 @layer base {

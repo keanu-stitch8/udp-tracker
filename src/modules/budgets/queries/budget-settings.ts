@@ -7,6 +7,7 @@ import { limitFormula } from "../lib/basis";
 import { budgetContextOf, budgetUsage, type BudgetContext } from "../lib/budget";
 import type { Budget } from "../types/budget";
 import type { Category } from "../types/category";
+import type { CategoryGroup } from "../types/category-group";
 
 export interface BudgetSetting extends Budget {
   formula: string;
@@ -22,6 +23,7 @@ export interface BudgetSettings {
   budgets: BudgetSetting[];
   /** Kategori pengeluaran aktif — pilihan untuk pagu. */
   categories: Category[];
+  groups: CategoryGroup[];
 }
 
 export const getBudgetSettings = cache(async (db: Db, projectId: string): Promise<BudgetSettings> => {
@@ -37,5 +39,6 @@ export const getBudgetSettings = cache(async (db: Db, projectId: string): Promis
       return { ...budget, formula: limitFormula(budget, context), limit: usage.limit, used: usage.used, overBy: usage.overBy };
     }),
     categories: ledger.categories.filter((c) => c.kind === "expense" && !c.archived),
+    groups: ledger.groups,
   };
 });

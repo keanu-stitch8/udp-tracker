@@ -3,10 +3,13 @@ import { cache } from "react";
 import type { Db } from "@/db/types";
 import { selectBudgetCategoryLinks, selectBudgets } from "@/modules/budgets/api/budgets-repo";
 import { selectCategories } from "@/modules/budgets/api/categories-repo";
+import { selectCategoryGroups } from "@/modules/budgets/api/category-groups-repo";
 import { toBudget } from "@/modules/budgets/mappers/budget";
 import { toCategory } from "@/modules/budgets/mappers/category";
+import { toCategoryGroup } from "@/modules/budgets/mappers/category-group";
 import type { Budget } from "@/modules/budgets/types/budget";
 import type { Category } from "@/modules/budgets/types/category";
+import type { CategoryGroup } from "@/modules/budgets/types/category-group";
 import { getProjectDetail } from "@/modules/projects/queries/projects";
 import type { ProjectDetail } from "@/modules/projects/types/project";
 import { selectProjectAttachments } from "@/modules/receipts/api/attachments-repo";
@@ -24,6 +27,7 @@ export interface Ledger {
   project: ProjectDetail;
   wallets: Wallet[];
   categories: Category[];
+  groups: CategoryGroup[];
   budgets: Budget[];
   transactions: Transaction[];
   attachments: Attachment[];
@@ -31,9 +35,10 @@ export interface Ledger {
 
 export const getLedger = cache(async (db: Db, projectId: string): Promise<Ledger> => {
   const project = await getProjectDetail(db, projectId);
-  const [walletRows, categoryRows, budgetRows, transactionRows, attachmentRows] = await Promise.all([
+  const [walletRows, categoryRows, groupRows, budgetRows, transactionRows, attachmentRows] = await Promise.all([
     selectWallets(db, projectId),
     selectCategories(db, projectId),
+    selectCategoryGroups(db, projectId),
     selectBudgets(db, projectId),
     selectTransactions(db, projectId),
     selectProjectAttachments(db, projectId),
@@ -46,6 +51,7 @@ export const getLedger = cache(async (db: Db, projectId: string): Promise<Ledger
     project,
     wallets: walletRows.map(toWallet),
     categories: categoryRows.map(toCategory),
+    groups: groupRows.map(toCategoryGroup),
     budgets: budgetRows.map((b) => toBudget(b, links.filter((l) => l.budgetId === b.id).map((l) => l.categoryId))),
     transactions: transactionRows.map(toTransaction),
     attachments: attachmentRows.map((row) => toAttachment(row, projectId)),

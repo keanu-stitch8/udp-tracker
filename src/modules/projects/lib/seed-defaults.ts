@@ -16,20 +16,25 @@ export interface CategorySeed {
   isVehicleRelated: boolean;
   isAdminFee: boolean;
   isOfficeFunding: boolean;
+  /** Nama grup (salah satu `ProjectDefaults.groups`); null untuk pemasukan. */
+  group: string | null;
 }
 
 export interface ProjectDefaults {
   wallets: WalletSeed[];
+  /** Grup kategori bawaan, mengikuti judul RAB. */
+  groups: string[];
   categories: CategorySeed[];
 }
 
-const expense = (name: string, icon: string, flags: Partial<Pick<CategorySeed, "isVehicleRelated" | "isAdminFee">> = {}): CategorySeed => ({
+const expense = (group: string, name: string, icon: string, flags: Partial<Pick<CategorySeed, "isVehicleRelated" | "isAdminFee">> = {}): CategorySeed => ({
   kind: "expense",
   name,
   icon,
   isVehicleRelated: flags.isVehicleRelated ?? false,
   isAdminFee: flags.isAdminFee ?? false,
   isOfficeFunding: false,
+  group,
 });
 
 const income = (name: string, icon: string, isOfficeFunding = false): CategorySeed => ({
@@ -39,6 +44,7 @@ const income = (name: string, icon: string, isOfficeFunding = false): CategorySe
   isVehicleRelated: false,
   isAdminFee: false,
   isOfficeFunding,
+  group: null,
 });
 
 export function buildProjectDefaults(vehicles: { id: string; name: string }[]): ProjectDefaults {
@@ -48,17 +54,21 @@ export function buildProjectDefaults(vehicles: { id: string; name: string }[]): 
       { kind: "cash", name: "Cash", vehicleId: null },
       ...vehicles.map((vehicle) => ({ kind: "flazz" as const, name: flazzWalletName(vehicle.name), vehicleId: vehicle.id })),
     ],
+    // Perjalanan (berangkat/pulang) vs harian dipisah seperti RAB: Transportation vs Operasional.
+    // Snack & Air Minum: satu bon minimarket = satu transaksi, masuk Operasional (tidak dipecah per item).
+    groups: ["Akomodasi", "Meal", "Operasional", "Transportation", "Lain-lain"],
     categories: [
-      expense("Makan Siang", "sandwich"),
-      expense("Makan Malam", "utensils"),
-      expense("Sarapan", "coffee"),
-      expense("Snack & Air Minum", "cup-soda"),
-      expense("BBM Perjalanan", "fuel", { isVehicleRelated: true }),
-      expense("Bensin Harian", "fuel", { isVehicleRelated: true }),
-      expense("Tol", "ticket", { isVehicleRelated: true }),
-      expense("Parkir", "square-parking", { isVehicleRelated: true }),
-      expense("Biaya Admin", "landmark", { isAdminFee: true }),
-      expense("Lain-lain", "ellipsis"),
+      expense("Meal", "Makan Siang", "sandwich"),
+      expense("Meal", "Makan Malam", "utensils"),
+      expense("Akomodasi", "Sarapan", "coffee"),
+      expense("Operasional", "Snack & Air Minum", "cup-soda"),
+      expense("Transportation", "BBM Perjalanan", "fuel", { isVehicleRelated: true }),
+      expense("Operasional", "Bensin Harian", "fuel", { isVehicleRelated: true }),
+      expense("Transportation", "Tol", "ticket", { isVehicleRelated: true }),
+      expense("Transportation", "Parkir Perjalanan", "square-parking", { isVehicleRelated: true }),
+      expense("Operasional", "Parkir Harian", "square-parking", { isVehicleRelated: true }),
+      expense("Lain-lain", "Biaya Admin", "landmark", { isAdminFee: true }),
+      expense("Lain-lain", "Lain-lain", "ellipsis"),
       income("UDP Kantor", "building-2", true),
       income("Lainnya", "circle-plus"),
     ],

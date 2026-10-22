@@ -60,6 +60,7 @@ export async function exportReport(db: Db, projectId: string, { gateway, readFil
     project: ledger.project,
     wallets: ledger.wallets,
     categories: ledger.categories,
+    groups: ledger.groups,
     budgets: ledger.budgets,
     transactions: ledger.transactions,
     receipts: rows.map((a) => ({ transactionId: a.transactionId, driveUrl: driveUrls.get(a.id) ?? null })),

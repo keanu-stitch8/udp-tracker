@@ -14,6 +14,7 @@ import { ApiError } from "@/lib/api-client";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { BUDGET_BASES, type BudgetBasis } from "@/modules/shared/types/enums";
 import { useSaveBudget } from "../hooks/use-budgets";
+import { CategorySections } from "./category-sections";
 import { BASIS_LABELS, limitFormula } from "../lib/basis";
 import { budgetLimit, usesDays } from "../lib/budget";
 import type { BudgetSetting, BudgetSettings } from "../queries/budget-settings";
@@ -98,14 +99,14 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
         </p>
         <Field data-invalid={errorOf("categoryIds") ? true : undefined}>
           <FieldLabel>Kategori yang dihitung</FieldLabel>
-          <div className="flex flex-wrap gap-2">
-            {settings.categories.map((c) => (
+          <CategorySections groups={settings.groups} categories={settings.categories} grouped listClassName="flex flex-wrap gap-2">
+            {(c) => (
               <Toggle key={c.id} pressed={categoryIds.includes(c.id)} onPressedChange={() => toggleCategory(c.id)} className="h-9 px-2.5">
                 <CategoryIcon name={c.icon} className="size-4" />
                 {c.name}
               </Toggle>
-            ))}
-          </div>
+            )}
+          </CategorySections>
           {errorOf("categoryIds") && <FieldError>{errorOf("categoryIds")}</FieldError>}
         </Field>
       </FieldGroup>

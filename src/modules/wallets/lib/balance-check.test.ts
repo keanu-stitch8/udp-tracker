@@ -12,6 +12,7 @@ const named = (id: string, name: string, kind: Category["kind"], flags: Partial<
   isAdminFee: false,
   isOfficeFunding: false,
   archived: false,
+  groupId: kind === "expense" ? "g" : null,
   ...flags,
 });
 

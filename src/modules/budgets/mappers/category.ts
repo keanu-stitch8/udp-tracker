@@ -11,5 +11,6 @@ export function toCategory(row: CategoryRow): Category {
     isAdminFee: row.isAdminFee,
     isOfficeFunding: row.isOfficeFunding,
     archived: row.archived,
+    groupId: row.groupId,
   };
 }

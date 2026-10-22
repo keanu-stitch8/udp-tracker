@@ -24,3 +24,14 @@ export async function selectBalanceCheck(db: Db, projectId: string, id: string):
     .where(and(eq(wallets.projectId, projectId), eq(balanceChecks.id, id)));
   return row?.check;
 }
+
+/** Semua cek saldo dompet proyek, terbaru dulu (baris pertama per dompet = cek terbaru). */
+export async function selectProjectBalanceChecks(db: Db, projectId: string): Promise<BalanceCheckRow[]> {
+  const rows = await db
+    .select({ check: balanceChecks })
+    .from(balanceChecks)
+    .innerJoin(wallets, eq(wallets.id, balanceChecks.walletId))
+    .where(eq(wallets.projectId, projectId))
+    .orderBy(desc(balanceChecks.date), desc(balanceChecks.createdAt));
+  return rows.map((row) => row.check);
+}

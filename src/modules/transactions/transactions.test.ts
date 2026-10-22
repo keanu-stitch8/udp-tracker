@@ -42,7 +42,7 @@ async function seedSample() {
 }
 
 describe("ringkasan beranda", () => {
-  it("menghitung UDP, pengeluaran, sisa, saldo dompet, dan pagu makan", async () => {
+  it("menghitung UDP, pengeluaran, sisa, saldo dompet, tindak lanjut, per kategori; tanpa pagu", async () => {
     await seedSample();
     const summary = await getDashboardSummary(db, projectId);
     expect(summary.totals).toEqual({ openingTotal: 0, totalIncome: 5_000_000, udpReceived: 5_000_000, totalExpense: 1_556_500, remaining: 3_443_500 });
@@ -52,7 +52,13 @@ describe("ringkasan beranda", () => {
       "Flazz Mobil 1": -50_000,
       "Flazz Mobil 2": 0,
     });
-    expect(summary.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([["Pagu Makan", 8_100_000, 1_500_000]]);
+    expect(summary).not.toHaveProperty("budgets");
+    expect(summary.attention.map((a) => a.label)).toEqual(["3 pengeluaran belum ada bon", "Cash minus Rp 500.000", "Flazz Mobil 1 minus Rp 50.000"]);
+    expect(summary.groups.map((g) => [g.name, g.amount, g.categories.map((c) => c.name)])).toEqual([
+      ["Meal", 1_500_000, ["Makan Malam", "Makan Siang"]],
+      ["Transportation", 50_000, ["Tol"]],
+      ["Lain-lain", 6_500, ["Biaya Admin"]],
+    ]);
     expect(summary.recent.map((t) => t.categoryName ?? "transfer")).toEqual(["Tol", "Makan Malam", "Makan Siang", "transfer", "UDP Kantor"]);
   });
 });

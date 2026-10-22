@@ -21,6 +21,7 @@ import { ApiError } from "@/lib/api-client";
 import { useResetAfterSave } from "@/lib/use-reset-after-save";
 import { useNowTimeWib } from "@/lib/use-now-time-wib";
 import { useServerDefault } from "@/lib/use-server-default";
+import { CategorySections } from "@/modules/budgets/components/category-sections";
 import { ReceiptPicker, type ReceiptItem } from "@/modules/receipts/components/receipt-picker";
 import type { ScanResult } from "@/modules/receipts/types/receipt";
 import { formatDateLong } from "@/modules/shared/lib/date";
@@ -332,17 +333,22 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
             <FieldLabel>
               Kategori <CheckAgain show={ocrFields.has("categoryId")} />
             </FieldLabel>
-            <div className="grid grid-cols-3 gap-2">
-              {categories.map((c) => (
-                <Toggle key={c.id} pressed={categoryId === c.id} onPressedChange={() => {
+            <CategorySections groups={reference.groups} categories={categories} grouped={type === "expense"} listClassName="grid grid-cols-3 gap-2">
+              {(c) => (
+                <Toggle
+                  key={c.id}
+                  pressed={categoryId === c.id}
+                  onPressedChange={() => {
                     chooseCategory(c.id);
                     touched("categoryId");
-                  }} className="h-auto min-h-16 flex-col gap-1 py-2 text-xs whitespace-normal">
+                  }}
+                  className="h-auto min-h-16 flex-col gap-1 py-2 text-xs whitespace-normal"
+                >
                   <CategoryIcon name={c.icon} className="size-5" />
                   {c.name}
                 </Toggle>
-              ))}
-            </div>
+              )}
+            </CategorySections>
             {errorOf("categoryId") && <FieldError>{errorOf("categoryId")}</FieldError>}
           </Field>
         )}

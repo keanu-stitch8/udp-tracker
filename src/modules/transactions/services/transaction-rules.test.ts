@@ -13,10 +13,10 @@ const refs: TransactionRefs = {
     { id: W.cash, kind: "cash", name: "Cash", holder: null, vehicleId: null, openingBalance: 0, archived: false },
   ],
   categories: [
-    { id: C.makan, kind: "expense", name: "Makan Siang", icon: "sandwich", isVehicleRelated: false, isAdminFee: false, isOfficeFunding: false, archived: false },
-    { id: C.tol, kind: "expense", name: "Tol", icon: "ticket", isVehicleRelated: true, isAdminFee: false, isOfficeFunding: false, archived: false },
-    { id: C.udp, kind: "income", name: "UDP Kantor", icon: "building-2", isVehicleRelated: false, isAdminFee: false, isOfficeFunding: true, archived: false },
-    { id: C.admin, kind: "expense", name: "Biaya Admin", icon: "landmark", isVehicleRelated: false, isAdminFee: true, isOfficeFunding: false, archived: false },
+    { id: C.makan, kind: "expense", name: "Makan Siang", icon: "sandwich", isVehicleRelated: false, isAdminFee: false, isOfficeFunding: false, archived: false, groupId: "g" },
+    { id: C.tol, kind: "expense", name: "Tol", icon: "ticket", isVehicleRelated: true, isAdminFee: false, isOfficeFunding: false, archived: false, groupId: "g" },
+    { id: C.udp, kind: "income", name: "UDP Kantor", icon: "building-2", isVehicleRelated: false, isAdminFee: false, isOfficeFunding: true, archived: false, groupId: null },
+    { id: C.admin, kind: "expense", name: "Biaya Admin", icon: "landmark", isVehicleRelated: false, isAdminFee: true, isOfficeFunding: false, archived: false, groupId: "g" },
   ],
   vehicles: [{ id: V.mobil1, name: "Mobil 1", plate: null }],
 };

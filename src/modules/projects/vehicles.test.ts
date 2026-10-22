@@ -68,7 +68,7 @@ describe("kelola mobil", () => {
       time: "09:00",
       amount: 20_000,
       walletId: ref.wallets.find((w) => w.name === "Cash")!.id,
-      categoryId: ref.categories.find((c) => c.name === "Parkir")!.id,
+      categoryId: ref.categories.find((c) => c.name === "Parkir Harian")!.id,
       vehicleId: mobil1,
     });
     expect((await getProjectSettings(db, projectId)).vehicles[0].removable).toBe(false);

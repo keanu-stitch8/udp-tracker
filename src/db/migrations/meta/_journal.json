@@ -43,6 +43,13 @@
       "when": 1792662145655,
       "tag": "0005_wallet_reimburse",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792686438979,
+      "tag": "0006_grup_kategori",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { AppSelect } from "@/components/app/app-select";
 import { CategoryIcon } from "@/components/app/category-icon";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -13,22 +14,27 @@ import { CATEGORY_ICONS, type CategoryIconName } from "@/modules/shared/types/ca
 import type { CategoryKind } from "@/modules/shared/types/enums";
 import { useSaveCategory } from "../hooks/use-categories";
 import type { Category } from "../types/category";
+import type { CategoryGroup } from "../types/category-group";
 
 const KIND_LABELS: Record<CategoryKind, string> = { expense: "Pengeluaran", income: "Pemasukan" };
 
 interface CategoryFormProps {
   projectId: string;
   defaultKind: CategoryKind;
+  /** Grup kategori proyek (urutan tampil); dipilih untuk kategori pengeluaran. */
+  groups: CategoryGroup[];
+  defaultGroupId?: string;
   initial?: Category;
   onDone: () => void;
 }
 
-export function CategoryForm({ projectId, defaultKind, initial, onDone }: CategoryFormProps) {
+export function CategoryForm({ projectId, defaultKind, groups, defaultGroupId, initial, onDone }: CategoryFormProps) {
   const save = useSaveCategory(projectId, initial?.id);
   const [kind, setKind] = useState<CategoryKind>(initial?.kind ?? defaultKind);
   const [name, setName] = useState(initial?.name ?? "");
   const [icon, setIcon] = useState<CategoryIconName>((initial?.icon as CategoryIconName | undefined) ?? "ellipsis");
   const [isVehicleRelated, setIsVehicleRelated] = useState(initial?.isVehicleRelated ?? false);
+  const [groupId, setGroupId] = useState(initial?.groupId ?? defaultGroupId ?? "");
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fieldErrors : {};
   const errorOf = (field: string) => fieldErrors[field]?.[0];
@@ -39,7 +45,7 @@ export function CategoryForm({ projectId, defaultKind, initial, onDone }: Catego
       onSubmit={(event) => {
         event.preventDefault();
         save.mutate(
-          { kind, name, icon, isVehicleRelated: kind === "expense" && isVehicleRelated, archived: initial?.archived ?? false },
+          { kind, name, icon, isVehicleRelated: kind === "expense" && isVehicleRelated, archived: initial?.archived ?? false, groupId: kind === "expense" ? groupId || null : null },
           {
             onSuccess: () => {
               toast.success(initial ? "Kategori diperbarui." : "Kategori ditambahkan.");
@@ -61,6 +67,18 @@ export function CategoryForm({ projectId, defaultKind, initial, onDone }: Catego
               ))}
             </ToggleGroup>
             {errorOf("kind") && <FieldError>{errorOf("kind")}</FieldError>}
+          </Field>
+        )}
+        {kind === "expense" && (
+          <Field data-invalid={errorOf("groupId") ? true : undefined}>
+            <FieldLabel htmlFor="category-group">Grup</FieldLabel>
+            <AppSelect
+              id="category-group"
+              value={groupId}
+              items={[{ value: "", label: "Pilih grup" }, ...groups.map((g) => ({ value: g.id, label: g.name }))]}
+              onChange={setGroupId}
+            />
+            {errorOf("groupId") && <FieldError>{errorOf("groupId")}</FieldError>}
           </Field>
         )}
         <Field data-invalid={errorOf("name") ? true : undefined}>

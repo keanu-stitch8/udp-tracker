@@ -25,7 +25,8 @@ describe("createProject", () => {
     expect(walletRows.filter((w) => w.kind === "flazz").every((w) => w.vehicleId !== null)).toBe(true);
 
     const categoryRows = await db.select().from(categories).where(eq(categories.projectId, project.id));
-    expect(categoryRows).toHaveLength(12);
+    expect(categoryRows).toHaveLength(13);
+    expect(categoryRows.filter((c) => c.kind === "expense").every((c) => c.groupId !== null)).toBe(true);
 
     expect(await db.select().from(budgets).where(eq(budgets.projectId, project.id))).toHaveLength(0);
   });

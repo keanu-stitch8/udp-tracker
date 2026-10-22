@@ -9,6 +9,11 @@ export const categoryInputSchema = z.object({
   icon: z.enum(CATEGORY_ICONS, "Pilih ikon."),
   isVehicleRelated: z.boolean().default(false),
   archived: z.boolean().default(false),
+  /** Wajib untuk pengeluaran (dicek service: grup milik proyek); diabaikan untuk pemasukan. */
+  groupId: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
 });
 
 export type CategoryInput = z.input<typeof categoryInputSchema>;

@@ -66,6 +66,20 @@ export const wallets = pgTable(
   (t) => [index("wallets_project_idx").on(t.projectId)],
 );
 
+// Grup kategori pengeluaran, mengikuti judul RAB (spec grup kategori). Urutan tampil A–Z, "Lain-lain" terakhir.
+export const categoryGroups = pgTable(
+  "category_groups",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    ...timestamps,
+  },
+  (t) => [index("category_groups_project_idx").on(t.projectId)],
+);
+
 export const categories = pgTable(
   "categories",
   {
@@ -82,9 +96,15 @@ export const categories = pgTable(
     isOfficeFunding: boolean().notNull().default(false),
     sortOrder: integer().notNull().default(0),
     archived: boolean().notNull().default(false),
+    // Wajib untuk pengeluaran, kosong untuk pemasukan. Tanpa onDelete: hapus grup berisi ditolak (NO ACTION, dicek di akhir
+    // statement sehingga hapus proyek yang meng-cascade grup + kategori tetap jalan).
+    groupId: uuid().references(() => categoryGroups.id),
     ...timestamps,
   },
-  (t) => [index("categories_project_idx").on(t.projectId)],
+  (t) => [
+    index("categories_project_idx").on(t.projectId),
+    check("categories_group_by_kind", sql`(${t.kind} = 'expense') = (${t.groupId} is not null)`),
+  ],
 );
 
 export const budgets = pgTable(

@@ -9,4 +9,6 @@ export interface Category {
   isAdminFee: boolean;
   isOfficeFunding: boolean;
   archived: boolean;
+  /** Wajib untuk pengeluaran, null untuk pemasukan. */
+  groupId: string | null;
 }

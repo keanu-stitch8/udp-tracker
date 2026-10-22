@@ -1,7 +1,7 @@
 "use client";
 
+import { CalendarDays, Landmark, Receipt, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { BudgetBar } from "@/components/app/budget-bar";
 import { AMOUNT, CARD_TITLE, LABEL } from "@/components/app/typography";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,10 @@ import { formatRupiah } from "@/modules/shared/lib/money";
 import { TransactionRow } from "@/modules/transactions/components/transaction-row";
 import { reimburseStatus } from "@/modules/wallets/lib/reimburse";
 import { useDashboardSummary } from "../hooks/use-summary";
+import { progressLabel } from "../lib/progress";
+import { AttentionCard } from "./attention-card";
+import { GroupBreakdown } from "./group-breakdown";
+import { StatTile } from "./stat-tile";
 
 export function DashboardSummaryView({ projectId }: { projectId: string }) {
   const { data } = useDashboardSummary(projectId);
@@ -18,54 +22,23 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <p className={`${LABEL} text-muted-foreground`}>{progressLabel(data.progress)}</p>
+
+      <Card className="bg-primary">
+        <CardContent className="py-3">
+          <p className={LABEL}>{totals.remaining >= 0 ? "Sisa (dikembalikan ke kantor)" : "Kurang (perlu reimburse)"}</p>
+          <p className={`${AMOUNT} text-3xl`}>{formatRupiah(Math.abs(totals.remaining))}</p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="UDP diterima" value={totals.udpReceived} />
-        <Stat label="Pengeluaran" value={totals.totalExpense} />
-        <Card className="col-span-2 bg-primary">
-          <CardContent className="py-3">
-            <p className={LABEL}>{totals.remaining >= 0 ? "Sisa (dikembalikan ke kantor)" : "Kurang (perlu reimburse)"}</p>
-            <p className={`${AMOUNT} text-3xl`}>{formatRupiah(Math.abs(totals.remaining))}</p>
-          </CardContent>
-        </Card>
+        <StatTile label="UDP diterima" value={formatRupiah(totals.udpReceived)} icon={Landmark} tone="bg-accent" />
+        <StatTile label="Pengeluaran" value={formatRupiah(totals.totalExpense)} icon={Receipt} tone="bg-tile-pink" />
+        <StatTile label="Hari ini" value={formatRupiah(data.todayExpense)} icon={CalendarDays} tone="bg-tile-green" />
+        <StatTile label="Rata-rata/hari" value={data.dailyAverage === null ? "—" : formatRupiah(data.dailyAverage)} icon={TrendingUp} tone="bg-chart-1" />
       </div>
 
-      {data.budgets.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className={CARD_TITLE}>Total pagu</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 text-sm">
-            <BudgetBar used={data.budgetTotal.used} limit={data.budgetTotal.limit} />
-            <p className="tabular-nums">
-              {formatRupiah(data.budgetTotal.used)} dari {formatRupiah(data.budgetTotal.limit)}
-            </p>
-            {data.budgetTotal.overBy > 0 ? (
-              <p className="font-medium text-destructive">Lebih total pagu {formatRupiah(data.budgetTotal.overBy)}</p>
-            ) : (
-              <p className="text-muted-foreground">Sisa total pagu {formatRupiah(data.budgetTotal.remaining)}</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {data.budgets.map((budget) => (
-        <Card key={budget.budgetId}>
-          <CardHeader>
-            <CardTitle className={CARD_TITLE}>{budget.name}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 text-sm">
-            <BudgetBar used={budget.used} limit={budget.limit} />
-            <p className="tabular-nums">
-              {formatRupiah(budget.used)} dari {formatRupiah(budget.limit)}
-            </p>
-            {budget.overBy > 0 ? (
-              <p className="font-medium text-destructive">Lebih pagu {formatRupiah(budget.overBy)}</p>
-            ) : (
-              <p className="text-muted-foreground">Sisa pagu {formatRupiah(budget.remaining)}</p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+      <AttentionCard items={data.attention} />
 
       <Card>
         <CardHeader>
@@ -110,17 +83,8 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
           </Link>
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <Card>
-      <CardContent className="py-3">
-        <p className={`${LABEL} text-muted-foreground`}>{label}</p>
-        <p className={`${AMOUNT} text-lg`}>{formatRupiah(value)}</p>
-      </CardContent>
-    </Card>
+      <GroupBreakdown groups={data.groups} />
+    </div>
   );
 }

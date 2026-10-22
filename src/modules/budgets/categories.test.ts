@@ -14,6 +14,7 @@ import { getCategorySettings } from "./queries/category-settings";
 let db: Db;
 let projectId: string;
 const category = async (name: string) => (await getCategorySettings(db, projectId)).categories.find((c) => c.name === name)!;
+const groupId = async (name: string) => (await getCategorySettings(db, projectId)).groups.find((g) => g.name === name)!.id;
 
 beforeEach(async () => {
   db = await createTestDb();
@@ -23,7 +24,7 @@ beforeEach(async () => {
 describe("kelola kategori", () => {
   it("daftar berisi pemakaian transaksi & pagu", async () => {
     const settings = await getCategorySettings(db, projectId);
-    expect(settings.categories).toHaveLength(12);
+    expect(settings.categories).toHaveLength(13);
     const sarapan = await category("Sarapan");
     expect([sarapan.usedCount, sarapan.budgetNames]).toEqual([0, []]);
 
@@ -34,7 +35,7 @@ describe("kelola kategori", () => {
   });
 
   it("tambah & ubah; jenis tidak bisa diubah", async () => {
-    const hotel = await createCategory(db, projectId, { kind: "expense", name: "Hotel", icon: "bed-double" });
+    const hotel = await createCategory(db, projectId, { kind: "expense", name: "Hotel", icon: "bed-double", groupId: await groupId("Akomodasi") });
     expect(hotel).toMatchObject({ kind: "expense", name: "Hotel", icon: "bed-double", isVehicleRelated: false, archived: false });
     expect((await getCategorySettings(db, projectId)).categories.at(-1)?.name).toBe("Hotel");
 
@@ -46,13 +47,13 @@ describe("kelola kategori", () => {
   });
 
   it("validasi: nama unik, ikon dari daftar, terkait mobil hanya pengeluaran", async () => {
-    const error = await createCategory(db, projectId, { kind: "expense", name: "tol", icon: "ticket" }).catch((e) => e);
+    const error = await createCategory(db, projectId, { kind: "expense", name: "tol", icon: "ticket", groupId: await groupId("Transportation") }).catch((e) => e);
     expect((error as ValidationError).fieldErrors).toEqual({ name: ["Nama kategori sudah dipakai."] });
 
     const error2 = await createCategory(db, projectId, { kind: "income", name: "Refund", icon: "circle-plus", isVehicleRelated: true }).catch((e) => e);
     expect((error2 as ValidationError).fieldErrors).toEqual({ isVehicleRelated: ["Hanya kategori pengeluaran yang bisa terkait mobil."] });
 
-    await expect(createCategory(db, projectId, { kind: "expense", name: "X", icon: "bukan-ikon" })).rejects.toBeInstanceOf(ValidationError);
+    await expect(createCategory(db, projectId, { kind: "expense", name: "X", icon: "bukan-ikon", groupId: await groupId("Meal") })).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("arsip: hilang dari form & pilihan pagu; kategori sistem tidak bisa diarsipkan", async () => {

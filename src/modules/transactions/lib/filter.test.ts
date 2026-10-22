@@ -22,6 +22,9 @@ describe("filterTransactions", () => {
     expect(ids(filterTransactions(all, { ...EMPTY_FILTERS, categoryId: "admin" }, "admin"))).toEqual(["legacy", "fee", "tf1"]);
     expect(ids(filterTransactions(all, { ...EMPTY_FILTERS, categoryId: "makan-siang" }, "admin"))).toEqual(["fee", "siang"]);
   });
+  it("tanpa bon: pengeluaran tanpa lampiran saja", () => {
+    expect(ids(filterTransactions(views, { ...EMPTY_FILTERS, receipt: "missing" }, "admin"))).toEqual(["tol1", "malam", "siang"]);
+  });
   it("dompet mencocokkan asal maupun tujuan transfer", () => {
     expect(ids(filterTransactions(views, { ...EMPTY_FILTERS, walletId: "cash" }))).toEqual(["malam", "siang", "tf1", "refund"]);
   });

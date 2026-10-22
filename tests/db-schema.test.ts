@@ -1,6 +1,12 @@
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { PGlite } from "@electric-sql/pglite";
 import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/pglite";
+import { migrate } from "drizzle-orm/pglite/migrator";
 import { describe, expect, it } from "vitest";
-import { projects, transactions, wallets } from "@/db/schema";
+import { categories, categoryGroups, projects, transactions, wallets } from "@/db/schema";
 import { createTestDb } from "@tests/helpers/test-db";
 
 describe("skema DB", () => {
@@ -24,5 +30,51 @@ describe("skema DB", () => {
     ).rejects.toThrow();
     const result = (await db.execute(sql`select date_trunc('minute', timestamptz '2026-10-21T02:15:40Z' at time zone 'Asia/Jakarta')::time as t`)) as { rows: unknown[] };
     expect(result.rows[0]).toEqual({ t: "09:15:00" });
+  });
+
+  it("kategori pengeluaran wajib punya grup, pemasukan tidak boleh", async () => {
+    const db = await createTestDb();
+    const [project] = await db.insert(projects).values({ name: "Hero Kudus", startDate: "2026-10-20", endDate: "2026-10-25" }).returning();
+    const [group] = await db.insert(categoryGroups).values({ projectId: project.id, name: "Meal" }).returning();
+    const base = { projectId: project.id, icon: "ellipsis" };
+    await expect(db.insert(categories).values({ ...base, kind: "expense", name: "Makan" })).rejects.toThrow();
+    await expect(db.insert(categories).values({ ...base, kind: "income", name: "UDP", groupId: group.id })).rejects.toThrow();
+    await db.insert(categories).values({ ...base, kind: "expense", name: "Makan", groupId: group.id });
+    await expect(db.delete(categoryGroups)).rejects.toThrow();
+    await db.delete(projects); // cascade grup + kategori sekaligus tetap jalan
+  });
+
+  it("migrasi 0006: proyek lama dapat 5 grup, kategori diisi menurut nama", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "migr-"));
+    try {
+      await cp("src/db/migrations", dir, { recursive: true });
+      const journalPath = path.join(dir, "meta/_journal.json");
+      const journal = JSON.parse(await readFile(journalPath, "utf8")) as { entries: { tag: string }[] };
+      journal.entries = journal.entries.filter((e) => e.tag < "0006");
+      await writeFile(journalPath, JSON.stringify(journal));
+      const db = drizzle({ client: new PGlite(), casing: "snake_case" });
+      await migrate(db, { migrationsFolder: dir });
+
+      await db.execute(sql`insert into projects (id, name, start_date, end_date) values ('00000000-0000-4000-8000-000000000001', 'Lama', '2026-10-09', '2026-10-16')`);
+      for (const [kind, name] of [["expense", "Sarapan"], ["expense", "Makan Siang"], ["expense", "Parkir"], ["expense", "Tol"], ["expense", "Laundry"], ["expense", "Biaya Admin"], ["income", "UDP Kantor"]]) {
+        await db.execute(sql`insert into categories (project_id, kind, name, icon) values ('00000000-0000-4000-8000-000000000001', ${kind}, ${name}, 'ellipsis')`);
+      }
+      await migrate(db, { migrationsFolder: "src/db/migrations" });
+
+      const result = (await db.execute(sql`select c.name, g.name as "group" from categories c left join category_groups g on g.id = c.group_id order by c.name`)) as { rows: unknown[] };
+      expect(result.rows).toEqual([
+        { name: "Biaya Admin", group: "Lain-lain" },
+        { name: "Laundry", group: "Lain-lain" },
+        { name: "Makan Siang", group: "Meal" },
+        { name: "Parkir", group: "Operasional" },
+        { name: "Sarapan", group: "Akomodasi" },
+        { name: "Tol", group: "Transportation" },
+        { name: "UDP Kantor", group: null },
+      ]);
+      const groups = (await db.execute(sql`select count(*)::int as n from category_groups`)) as { rows: { n: number }[] };
+      expect(groups.rows[0].n).toBe(5);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -23,3 +23,8 @@ export async function selectCategory(db: Db, projectId: string, id: string): Pro
   const [row] = await db.select().from(categories).where(and(eq(categories.projectId, projectId), eq(categories.id, id)));
   return row;
 }
+
+/** Pindahkan semua kategori (termasuk arsip) dari satu grup ke grup lain. */
+export async function moveCategoriesToGroup(db: Db, fromGroupId: string, toGroupId: string): Promise<void> {
+  await db.update(categories).set({ groupId: toGroupId }).where(eq(categories.groupId, fromGroupId));
+}

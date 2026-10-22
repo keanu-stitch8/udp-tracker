@@ -1,7 +1,9 @@
 // Isi laporan ekspor (spec §6.2 + addendum 2026-10-22). Murni: dari data buku kas → baris 4 tab, tanpa Google.
 import { budgetContextOf, budgetUsage, dailyBudgetUsage, totalBudgetUsage } from "@/modules/budgets/lib/budget";
 import { limitFormula } from "@/modules/budgets/lib/basis";
+import { groupCategories } from "@/modules/budgets/lib/category-groups";
 import { addDays, daysInclusive, formatDateLong, nowTimeWib, todayWib } from "@/modules/shared/lib/date";
+import { sum } from "@/modules/shared/lib/money";
 import { compareNewestFirst, expenseEntries, ledgerTotals, sumBy } from "@/modules/transactions/lib/ledger";
 import type { Transaction } from "@/modules/transactions/types/transaction";
 import { walletBalances } from "@/modules/wallets/lib/balances";
@@ -17,7 +19,7 @@ export function buildReport(input: ReportInput): ReportTab[] {
   return [recapTab(input), detailTab(input), dailyTab(input), budgetTab(input)];
 }
 
-function recapTab({ project, wallets, categories, transactions, exportedAt }: ReportInput): ReportTab {
+function recapTab({ project, wallets, categories, groups, transactions, exportedAt }: ReportInput): ReportTab {
   const totals = ledgerTotals(wallets, categories, transactions);
   const walletName = new Map(wallets.map((w) => [w.id, w.name]));
   const officeFunding = new Set(categories.filter((c) => c.isOfficeFunding).map((c) => c.id));
@@ -42,9 +44,16 @@ function recapTab({ project, wallets, categories, transactions, exportedAt }: Re
     [text("Saldo awal semua dompet"), money(totals.openingTotal)],
     [text("Total pemasukan"), money(totals.totalIncome)],
     [],
-    [bold("Pengeluaran per kategori")],
-    header("Kategori", "Total"),
-    ...categories.filter((c) => byCategory.has(c.id)).map((c) => [text(c.name), money(byCategory.get(c.id)!)]),
+    // Struktur RAB: baris grup (tebal, subtotal) lalu kategorinya menjorok.
+    [bold("Pengeluaran per grup")],
+    header("Grup / kategori", "Total"),
+    ...groupCategories(
+      groups,
+      categories.filter((c) => byCategory.has(c.id)),
+    ).flatMap(({ group, categories: items }) => [
+      [bold(group.name), money(sum(items.map((c) => byCategory.get(c.id)!)))],
+      ...items.map((c) => [text(`  ${c.name}`), money(byCategory.get(c.id)!)]),
+    ]),
     ...(byCategory.has(null) ? [[text("Tanpa kategori"), money(byCategory.get(null)!)]] : []),
     [bold("Total pengeluaran"), money(totals.totalExpense)],
     [],
@@ -57,8 +66,10 @@ function recapTab({ project, wallets, categories, transactions, exportedAt }: Re
   return { title: "Rekap", rows, freezeRows: 0 };
 }
 
-function detailTab({ wallets, categories, transactions, project, receipts }: ReportInput): ReportTab {
+function detailTab({ wallets, categories, groups, transactions, project, receipts }: ReportInput): ReportTab {
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
+  const groupName = new Map(groups.map((g) => [g.id, g.name]));
+  const groupOf = new Map(categories.map((c) => [c.id, c.groupId ? (groupName.get(c.groupId) ?? null) : null]));
   const walletName = new Map(wallets.map((w) => [w.id, w.name]));
   const vehicleName = new Map(project.vehicles.map((v) => [v.id, v.name]));
   const receiptsOf = new Map<string, (string | null)[]>();
@@ -84,6 +95,7 @@ function detailTab({ wallets, categories, transactions, project, receipts }: Rep
       text(formatDateLong(t.date)),
       text(t.time),
       text(TYPE_LABELS[t.type]),
+      text(groupOf.get(t.categoryId ?? "") ?? "-"),
       text(isTransfer ? "Transfer" : (categoryName.get(t.categoryId ?? "") ?? "-")),
       text([t.merchant, t.note].filter(Boolean).join(" · ") || null),
       text(isTransfer ? `${walletName.get(t.walletId)} → ${walletName.get(t.toWalletId ?? "")}` : (walletName.get(t.walletId) ?? "-")),
@@ -98,14 +110,17 @@ function detailTab({ wallets, categories, transactions, project, receipts }: Rep
   const receiptHeaders = Array.from({ length: maxReceipts }, (_, i) => `Bon ${i + 1}`);
   return {
     title: "Detail",
-    rows: [header("No", "Tanggal", "Jam", "Jenis", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", ...receiptHeaders), ...rows],
+    rows: [header("No", "Tanggal", "Jam", "Jenis", "Grup", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", ...receiptHeaders), ...rows],
     freezeRows: 1,
   };
 }
 
-function dailyTab({ categories, transactions }: ReportInput): ReportTab {
+function dailyTab({ categories, groups, transactions }: ReportInput): ReportTab {
   const entries = expenseEntries(transactions, categories);
-  const used = categories.filter((c) => c.kind === "expense" && entries.some((e) => e.categoryId === c.id));
+  const used = groupCategories(
+    groups,
+    categories.filter((c) => c.kind === "expense" && entries.some((e) => e.categoryId === c.id)),
+  ).flatMap((section) => section.categories);
   const dates = [...new Set(entries.map((e) => e.date))].sort();
   const amount = (date: string | null, categoryId: string | null) =>
     entries.filter((e) => (date === null || e.date === date) && (categoryId === null || e.categoryId === categoryId)).reduce((total, e) => total + e.amount, 0);

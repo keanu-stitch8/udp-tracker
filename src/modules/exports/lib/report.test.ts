@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProjectDetail } from "@/modules/projects/types/project";
-import { categories, mealBudget, transactions, tx, wallets } from "@tests/helpers/ledger-fixture";
+import { categories, groups, mealBudget, transactions, tx, wallets } from "@tests/helpers/ledger-fixture";
 import type { ReportInput, ReportTab } from "../types/report";
 import { buildReport } from "./report";
 
@@ -21,6 +21,7 @@ const input: ReportInput = {
   project,
   wallets,
   categories,
+  groups,
   budgets: [mealBudget],
   transactions,
   receipts: [{ transactionId: "siang", driveUrl: "https://drive.google.com/file/d/bon1/view" }],
@@ -36,30 +37,31 @@ describe("buildReport", () => {
     expect(buildReport(input).map((t) => t.title)).toEqual(["Rekap", "Detail", "Harian", "Pagu"]);
   });
 
-  it("Detail: kronologis, jam, transfer A → B, saldo berjalan gabungan, link bon", () => {
+  it("Detail: kronologis, jam, grup, transfer A → B, saldo berjalan gabungan, link bon", () => {
     const detail = tab("Detail");
     expect(detail.freezeRows).toBe(1);
-    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Bon 1"]);
+    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Grup", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Bon 1"]);
     const rows = values(detail).slice(1);
-    expect(rows.map((r) => r[11])).toEqual([5_200_000, 5_300_000, 5_293_500, 4_693_500, 3_793_500, 3_743_500]);
-    expect(rows[0].slice(0, 9)).toEqual([1, "19 Okt 2026", "09:00", "Masuk", "udp", null, "rekening", null, 5_000_000]);
-    expect(rows[2].slice(3, 11)).toEqual(["Transfer", "Transfer", null, "rekening → cash", null, null, null, 6_500]);
-    expect(rows[5][7]).toBe("Mobil 1");
-    expect(detail.rows[4][12]).toEqual({ value: "Bon 1", link: "https://drive.google.com/file/d/bon1/view" });
-    expect(detail.rows[1][8]).toMatchObject({ money: true });
+    expect(rows.map((r) => r[12])).toEqual([5_200_000, 5_300_000, 5_293_500, 4_693_500, 3_793_500, 3_743_500]);
+    expect(rows[0].slice(0, 10)).toEqual([1, "19 Okt 2026", "09:00", "Masuk", "-", "udp", null, "rekening", null, 5_000_000]);
+    expect(rows[2].slice(3, 12)).toEqual(["Transfer", "-", "Transfer", null, "rekening → cash", null, null, null, 6_500]);
+    expect(rows[3].slice(4, 6)).toEqual(["Meal", "makan-siang"]);
+    expect(rows[5][8]).toBe("Mobil 1");
+    expect(detail.rows[4][13]).toEqual({ value: "Bon 1", link: "https://drive.google.com/file/d/bon1/view" });
+    expect(detail.rows[1][9]).toMatchObject({ money: true });
   });
 
   it("Detail: pengeluaran dengan biaya admin → Keluar + Biaya admin, saldo berjalan kurangi keduanya", () => {
     const fee = tx({ type: "expense", date: "2026-10-22", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
     const detail = buildReport({ ...input, transactions: [...transactions, fee] }).find((t) => t.title === "Detail")!;
-    expect(values(detail).at(-1)!.slice(9, 12)).toEqual([16_500, 2_000, 3_743_500 - 18_500]);
+    expect(values(detail).at(-1)!.slice(10, 13)).toEqual([16_500, 2_000, 3_743_500 - 18_500]);
   });
 
-  it("Harian: kolom kategori pengeluaran yang terpakai + total", () => {
+  it("Harian: kolom kategori pengeluaran yang terpakai, urut per grup, + total", () => {
     const daily = values(tab("Harian"));
-    expect(daily[0]).toEqual(["Tanggal", "makan-siang", "makan-malam", "tol", "admin", "Total"]);
+    expect(daily[0]).toEqual(["Tanggal", "makan-malam", "makan-siang", "tol", "admin", "Total"]);
     expect(daily[1]).toEqual(["19 Okt 2026", null, null, null, 6_500, 6_500]);
-    expect(daily.at(-1)).toEqual(["Total", 600_000, 900_000, 50_000, 6_500, 1_556_500]);
+    expect(daily.at(-1)).toEqual(["Total", 900_000, 600_000, 50_000, 6_500, 1_556_500]);
   });
 
   it("Pagu: rumus, nilai, realisasi, sisa, lebih pagu, total, rincian harian", () => {
@@ -70,8 +72,21 @@ describe("buildReport", () => {
     expect(rowOf(budget, "20 Okt 2026")).toEqual(["20 Okt 2026", 1_350_000, 1_500_000, -150_000]);
   });
 
-  it("Rekap: info proyek, UDP masuk, pengeluaran per kategori, saldo dompet, sisa", () => {
+  it("Rekap: info proyek, UDP masuk, pengeluaran per grup (subtotal + kategori), saldo dompet, sisa", () => {
     const recap = tab("Rekap");
+    const rows = values(recap);
+    const start = rows.findIndex((row) => row[0] === "Pengeluaran per grup");
+    expect(rows.slice(start + 1, start + 9)).toEqual([
+      ["Grup / kategori", "Total"],
+      ["Meal", 1_500_000],
+      ["  makan-malam", 900_000],
+      ["  makan-siang", 600_000],
+      ["Transportation", 50_000],
+      ["  tol", 50_000],
+      ["Lain-lain", 6_500],
+      ["  admin", 6_500],
+    ]);
+    expect(recap.rows[start + 2][0]).toMatchObject({ bold: true });
     expect(rowOf(recap, "Proyek")).toEqual(["Proyek", "Hero Kudus"]);
     expect(rowOf(recap, "Periode")).toEqual(["Periode", "20 Okt 2026 – 25 Okt 2026"]);
     expect(rowOf(recap, "Diekspor")).toEqual(["Diekspor", "22 Okt 2026 00:40"]);

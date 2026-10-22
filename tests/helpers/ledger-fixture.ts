@@ -1,5 +1,6 @@
 import type { Budget } from "@/modules/budgets/types/budget";
 import type { Category } from "@/modules/budgets/types/category";
+import type { CategoryGroup } from "@/modules/budgets/types/category-group";
 import type { Transaction } from "@/modules/transactions/types/transaction";
 import type { Wallet } from "@/modules/wallets/types/wallet";
 
@@ -22,6 +23,7 @@ const category = (id: string, kind: Category["kind"], flags: Partial<Category> =
   isAdminFee: false,
   isOfficeFunding: false,
   archived: false,
+  groupId: kind === "expense" ? "lain" : null,
   ...flags,
 });
 
@@ -46,10 +48,16 @@ export const tx = (t: Partial<Transaction> & Pick<Transaction, "type" | "date" |
 
 export const wallets: Wallet[] = [wallet("rekening", "bank"), wallet("cash", "cash"), wallet("flazz1", "flazz", 200_000, "mobil1")];
 
+export const groups: CategoryGroup[] = [
+  { id: "meal", name: "Meal" },
+  { id: "transport", name: "Transportation" },
+  { id: "lain", name: "Lain-lain" },
+];
+
 export const categories: Category[] = [
-  category("makan-siang", "expense"),
-  category("makan-malam", "expense"),
-  category("tol", "expense", { isVehicleRelated: true }),
+  category("makan-siang", "expense", { groupId: "meal" }),
+  category("makan-malam", "expense", { groupId: "meal" }),
+  category("tol", "expense", { isVehicleRelated: true, groupId: "transport" }),
   category("admin", "expense", { isAdminFee: true }),
   category("udp", "income", { isOfficeFunding: true }),
   category("lainnya", "income"),

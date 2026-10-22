@@ -1,6 +1,7 @@
 import "server-only";
 import type { Db } from "@/db/types";
 import { insertCategories } from "@/modules/budgets/api/categories-repo";
+import { insertCategoryGroups } from "@/modules/budgets/api/category-groups-repo";
 import { insertWallets } from "@/modules/wallets/api/wallets-repo";
 import { insertProject } from "../api/projects-repo";
 import { insertVehicles } from "../api/vehicles-repo";
@@ -29,9 +30,14 @@ export async function createProject(db: Db, input: unknown): Promise<Project> {
       tx,
       defaults.wallets.map((wallet, index) => ({ ...wallet, projectId: project.id, sortOrder: index })),
     );
+    const groupRows = await insertCategoryGroups(
+      tx,
+      defaults.groups.map((name) => ({ projectId: project.id, name })),
+    );
+    const groupId = new Map(groupRows.map((g) => [g.name, g.id]));
     await insertCategories(
       tx,
-      defaults.categories.map((category, index) => ({ ...category, projectId: project.id, sortOrder: index })),
+      defaults.categories.map(({ group, ...category }, index) => ({ ...category, groupId: group ? groupId.get(group)! : null, projectId: project.id, sortOrder: index })),
     );
     return toProject(project);
   });

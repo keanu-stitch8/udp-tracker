@@ -43,7 +43,7 @@ describe("pengaturan pagu", () => {
   });
 
   it("jumlah hari per pagu: dipakai untuk batas, kosong = periode proyek, jadi jumlah trip untuk per mobil", async () => {
-    const parkir = await categoryId("Parkir");
+    const parkir = await categoryId("Parkir Harian");
     const operasional = await createBudget(db, projectId, { name: "Operasional", rate: 100_000, basis: "per_vehicle_per_day", categoryIds: [parkir] });
     expect(operasional.days).toBeNull();
     await updateBudget(db, projectId, operasional.id, { ...operasional, days: 4 });
