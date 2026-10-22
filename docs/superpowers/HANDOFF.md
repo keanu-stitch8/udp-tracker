@@ -1,4 +1,4 @@
-# Handoff — UDP Tracker (per 2026-10-22)
+# Handoff — UDP Tracker (per 2026-10-23)
 
 Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
@@ -19,13 +19,18 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Scan bon lanjutan (2026-10-22) | ✅ di `main`: default model lite, scan di form Ubah menimpa tanggal/jam, jam berdetik, nominal format bank, `adminFee` dari bukti transfer (BIAYA / BI FAST) |
 | Biaya admin konsisten (spec `docs/superpowers/specs/2026-10-22-biaya-admin-design.md`, rencana `…/2026-10-22-07-biaya-admin.md`) | ✅ di `main`: expense punya `adminFee` (dua entri di `expenseEntries`), kategori Biaya Admin otomatis (tidak bisa dipilih untuk transaksi baru), filter/jumlah kategori menghitung `adminFee > 0`, preset 0/2.000/2.500/6.500, scan fee sesuai angka tertulis (uji nyata QRIS 16.500 + 2.000 lulus), kolom Biaya admin di tab Detail, SOP di README |
 | Dompet Reimburse (2026-10-22) | ✅ di `main`: jenis dompet `reimburse` (migrasi 0005, **pengguna menjalankan `npm run db:migrate`**), chip "reimburse" di baris transaksi, saldo tampil "Belum diganti / Lunas / Lebih diganti", tidak pernah jadi dompet default. SOP di README |
-| Deploy Vercel (`sin1`) | ⏳ **berikutnya** |
+| Select NeoBrutalism (2026-10-22) | ✅ di `main`: semua `NativeSelect` diganti `AppSelect` (`src/components/app/app-select.tsx`, Base UI Select; popup turun di bawah trigger, selebar trigger, opsi bisa bergrup lewat `group`). `native-select` dibuang dari `ui.config.json` |
+| Scan bon timeout (2026-10-22) | ✅ di `main` (`03357bf`): `thinkingLevel` `minimal` (bukan `low`: 35–90+ detik saat Gemini ramai → timeout), model terakhir memakai sisa jatah scan 55 detik |
+| Beranda baru (spec `…/specs/2026-10-22-beranda-design.md`, rencana `…/plans/2026-10-22-beranda.md`) | ✅ di `main` (`0610b77`): **tanpa pagu** (rahasia management, juga tidak dikirim ke browser), progres hari, 4 kartu angka berikon warna (token `tile-green`/`tile-pink`), "Perlu ditindaklanjuti" (tanpa bon, selisih cek saldo, dompet minus, reimburse; kartu hilang bila kosong), pengeluaran per grup. Filter `/transaksi?bon=belum` (chip "Tanpa bon ×") |
+| Grup kategori (spec `…/specs/2026-10-22-grup-kategori-design.md`, rencana ringkas `…/plans/2026-10-22-grup-kategori.md`) | ✅ di `main` (`0610b77`), **migrasi 0006 sudah di Neon**: tabel `category_groups`, `categories.group_id` wajib untuk pengeluaran (CHECK). Grup bawaan mengikuti RAB: Akomodasi, Meal, Operasional, Transportation, Lain-lain; Parkir dipecah Parkir Perjalanan/Harian untuk proyek baru. Hapus grup berisi → pilih grup tujuan. Picker, filter, beranda, ekspor (Rekap per grup, kolom Grup di Detail) bergrup. Kategori proyek asli sudah dipindah pengguna |
+| Deploy Vercel (`sin1`) | ⏳ **berikutnya** (cek dulu apakah push ke `main` sudah auto-deploy) |
 
 **Langkah berikutnya (chat baru mulai di sini):**
 
-1. **Data lama biaya admin** (opsional): pengeluaran yang nominalnya sudah termasuk fee (mis. "Akomodasi 18.500 Refund Laundry Lucky" = 16.500 + fee 2.000) dikoreksi pengguna sendiri; tidak ada migrasi.
-2. **Deploy Vercel** (lihat paragraf di bawah).
-3. Riwayat: PR #1–#11 sudah merged; trip `per_vehicle` (PR #6); pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
+1. **Cek deploy**: DB production sudah migrasi 0006. Versi lama app (kalau ter-deploy) tidak bisa menambah kategori pengeluaran/proyek baru sampai kode `0610b77` live.
+2. **Data lama biaya admin** (opsional): pengeluaran yang nominalnya sudah termasuk fee (mis. "Akomodasi 18.500 Refund Laundry Lucky" = 16.500 + fee 2.000) dikoreksi pengguna sendiri; tidak ada migrasi.
+3. **Deploy Vercel** (lihat paragraf di bawah).
+4. Riwayat: PR #1–#11 sudah merged; trip `per_vehicle` (PR #6); pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
 **Deploy Vercel (langkah terakhir):** env produksi = semua isi `.env.local` (kecuali `NEON_BRANCH`), tambah redirect URI `https://<domain-vercel>/api/auth/google/callback` di OAuth client **milik UDP Tracker** (client baru, bukan client dashboard), lalu hubungkan Google sekali dari domain produksi. Migrasi DB: pengguna menjalankan `npm run db:migrate` (Claude Code menolak menyentuh Neon production).
 
@@ -37,7 +42,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 ## Lingkungan
 
-- Neon project `calm-lake-03611185`, branch `production`, region Singapura. Sudah di-link (`neon.ts`, `.neon/`). `.env.local` berisi `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, `APP_PASSWORD_HASH`, `SESSION_SECRET` (dibuat pengguna). Migrasi: `npm run db:migrate` (0000–0004 sudah diterapkan). Claude Code menolak menjalankan `db:migrate` ke Neon production; minta pengguna menjalankan `! npm run db:migrate`.
+- Neon project `calm-lake-03611185`, branch `production`, region Singapura. Sudah di-link (`neon.ts`, `.neon/`). `.env.local` berisi `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, `APP_PASSWORD_HASH`, `SESSION_SECRET` (dibuat pengguna). Migrasi: `npm run db:migrate` (0000–0006 sudah diterapkan). Claude Code menolak menjalankan `db:migrate` ke Neon production; minta pengguna menjalankan `! npm run db:migrate`.
 - Pengguna menjalankan sendiri `npm run dev` di port **3051** (laptop: localhost:3051, HP: `http://<IP-laptop>:3051`). Jangan matikan proses itu.
 - Data asli di Neon: 1 proyek "Q4 Hero & Editorial Feature Videos - Part 1".
 
@@ -46,12 +51,12 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Next.js 16.4**: `cacheComponents` aktif. Setiap section yang membaca DB/cookies memanggil `await connection()` di baris pertama. Kalau tidak, build gagal karena `env()` terbaca saat prerender. `usePathname`/`useSearchParams` di layout harus di dalam `<Suspense>` (lihat `AppShell` + `BottomNavLinks`). `middleware` → `src/proxy.ts`. `params` berupa Promise; pakai `RouteContext<"/api/…">` dan `PageProps<"/…">`.
 - **Dev via IP**: `next.config.ts` mengisi `allowedDevOrigins` dengan IP LAN laptop. Tanpa itu halaman yang dibuka lewat IP tidak hydrate (tombol mati).
 - **DB**: Drizzle + `pg` Pool + `attachDatabasePool` (rekomendasi skill Neon). Migrasi lewat `DATABASE_URL_UNPOOLED`. `withVerifiedSsl()` mengunci `sslmode=verify-full`. Test pakai PGlite (`tests/helpers/test-db.ts`). Fungsi server menerima `db: Db` sebagai parameter pertama.
-- **UI**: komponen NeoBrutalism (ex-RetroUI, berbasis **Base UI**) disalin oleh `npm run ui:sync` ke `src/components/ui`, yang **tidak boleh diedit** (`npm run ui:check`). Jangan pakai `shadcn add`, karena CLI mengambil `button` dari registry default. Repo `Logging-Stuff/RetroUI` sudah di-repo-jack, jangan di-clone. `ToggleGroup` memakai `value` berupa array. `NativeSelect` butuh `NATIVE_SELECT_CLASS` (`src/components/app/form-classes.ts`). `DrawerContent className="mx-auto max-w-[480px]"`.
+- **UI**: komponen NeoBrutalism (ex-RetroUI, berbasis **Base UI**) disalin oleh `npm run ui:sync` ke `src/components/ui`, yang **tidak boleh diedit** (`npm run ui:check`). Jangan pakai `shadcn add`, karena CLI mengambil `button` dari registry default. Repo `Logging-Stuff/RetroUI` sudah di-repo-jack, jangan di-clone. `ToggleGroup` memakai `value` berupa array. Select: pakai `AppSelect` (bukan native). `DrawerContent className="mx-auto max-w-[480px]"`.
 - **Next 16 menyimpan state halaman** (Cache Components menyembunyikan route dengan `<Activity>`, maks 3 route, per URL termasuk query): tutup drawer sebelum navigasi (lihat `DayDetailPanel onNavigate`); form "buat baru" pakai `useResetAfterSave` (`src/lib/use-reset-after-save.ts`) sebagai `key` agar kosong lagi setelah simpan, draf belum disimpan tetap ada. Dokumen: `node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`. Default dari server (jam/tanggal) jangan dibandingkan dengan state (`state === defaultProp` gagal saat props lebih baru, dan props bisa basi dari cache router): pakai `useServerDefault` (`src/lib/use-server-default.ts`) dan `useNowTimeWib` untuk jam sekarang.
 - Test komponen/hook React: file `*.test.tsx` dengan `// @vitest-environment happy-dom` (happy-dom dipin 20.14.5).
 - **Chrome**: Enter setelah mengetik password kadang dimakan popup saran password bawaan. Ini bukan bug app.
 - **Blob store private** (`put` public ditolak). Baca file lewat `readReceipt()`/route `attachments/[id]`, jangan pakai `blobUrl` langsung di browser. Skrip di luar app yang memakai drizzle wajib `casing: "snake_case"`.
-- **Gemini**: hanya **`gemini-flash-lite-latest`** (keputusan pengguna 2026-10-22: `gemini-flash-latest` dibuang karena tidak konsisten dan jatah gratisnya cuma 20 request/hari). Provider lain (Qwen, GLM-4.6V-Flash/Z.ai, OpenRouter, Groq) sudah ditimbang dan **ditolak pengguna**: bukti transfer berisi data rekening, dan Qwen gratisnya cuma trial 90 hari. Jangan tawarkan lagi. Lite cukup akurat dengan prompt sekarang (bukti transfer, dd/mm/yyyy, jam berdetik, `adminFee`/BI FAST Rp 2.500). Scan di form **Ubah** menimpa tanggal/jam ("cek lagi"); di form baru hanya bila belum diubah. Uji ulang foto yang sudah di Blob tanpa HP: skrip `rescan.mts` (list Blob → generateJson) dengan `NODE_OPTIONS=--conditions=react-server npx tsx --tsconfig tsconfig.json`. Pesan error asli tercatat di terminal dev (`[gemini] <model> <reason> …`). Struk uji sintetis bisa dibuat tanpa PIL: `cupsfilter struk.txt > struk.pdf` lalu `sips -s format jpeg struk.pdf --out struk.jpg`.
+- **Gemini**: hanya **`gemini-flash-lite-latest`** (keputusan pengguna 2026-10-22: `gemini-flash-latest` dibuang karena tidak konsisten dan jatah gratisnya cuma 20 request/hari). Provider lain (Qwen, GLM-4.6V-Flash/Z.ai, OpenRouter, Groq) sudah ditimbang dan **ditolak pengguna**: bukti transfer berisi data rekening, dan Qwen gratisnya cuma trial 90 hari. Jangan tawarkan lagi. `thinkingLevel: "minimal"` wajib (lihat status). Lite cukup akurat dengan prompt sekarang (bukti transfer, dd/mm/yyyy, jam berdetik, `adminFee`/BI FAST Rp 2.500). Scan di form **Ubah** menimpa tanggal/jam ("cek lagi"); di form baru hanya bila belum diubah. Uji ulang foto yang sudah di Blob tanpa HP: skrip `rescan.mts` (list Blob → generateJson) dengan `NODE_OPTIONS=--conditions=react-server npx tsx --tsconfig tsconfig.json`. Pesan error asli tercatat di terminal dev dan di `.next/dev/logs/next-development.log` (`[gemini] <model> <reason> …`; jam di log = waktu sejak dev start). Hasil scan tersimpan di `attachments.ocr_json`; `null` = scan gagal total. Struk uji sintetis bisa dibuat tanpa PIL: `cupsfilter struk.txt > struk.pdf` lalu `sips -s format jpeg struk.pdf --out struk.jpg`.
 - **Seluruh angka** (saldo, total, pagu) dihitung di `lib/` dari `getLedger()`, bukan dengan SUM di SQL.
 - **Google (ekspor):** OAuth client sendiri (dibuat pengguna 2026-10-22; redirect `http://localhost:3051/api/auth/google/callback`). Hubungkan hanya dari `localhost`/https (Google menolak IP LAN). Token terenkripsi (`ENCRYPTION_KEY`, khusus app ini) di `google_credentials`; Putuskan hanya menghapus token di DB. Consent screen mode Testing → token habis tiap 7 hari (ubah ke In production). Gateway googleapis di `src/modules/exports/api/google-gateway.ts`; isi laporan murni di `exports/lib/report.ts`.
 - **Route handler GET tanpa params:** `route()` memanggil `await connection()` sebelum try/catch; tanpa itu build mencatat error prerender `cookies()`.
@@ -59,7 +64,8 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 ## Cara kerja yang dipakai (ikuti lagi)
 
-- Superpowers: brainstorming → spec → writing-plans → executing-plans (inline), TDD per task, commit per task dengan `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Superpowers: brainstorming → spec → writing-plans → executing-plans (inline), TDD per task. Rencana boleh ringkas (daftar tugas + file + tes) bila dieksekusi di sesi yang sama.
+- **Jangan auto-commit** (pengguna 2026-10-22): biarkan perubahan uncommitted sampai pengguna bilang "commit". Pesan commit diakhiri `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Commit langsung ke `main` lalu push, tanpa branch/PR** (sama seperti repo dashboard; keputusan pengguna 2026-10-21). Deploy hanya kalau pekerjaan sudah beres. Kalau Vercel sudah tersambung ke GitHub, push ke `main` = deploy, jadi cek dulu.
 - Kode di dokumen rencana bisa disalin otomatis per task dengan skrip ekstraktor (cocokkan baris "`path`:" + blok kode). Skrip itu ada di scratchpad sesi lama, jadi buat ulang bila perlu.
 - **Gerbang commit pakai exit code** (`npm run build > log; echo $?`), bukan `grep`. Di zsh, variabel berisi beberapa flag tidak dipecah: tulis skrip uji sebagai file bash.
@@ -73,4 +79,6 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - **Aplikasi generik/reusable:** jangan hardcode tarif, seed, atau tombol migrasi khusus satu kontrak. Kebutuhan dari proyek pengguna dibuat versi umum yang bisa diatur di UI (contoh: "operasional 6 hari" → isian jumlah hari per pagu).
 - Bahasa Indonesia santai. Hanya layanan gratis (Gemini free tier, Neon/Vercel free).
 - **Aksi yang menghapus wajib ada konfirmasi** (pengguna pernah kecewa dengan tombol tanpa konfirmasi).
+- **Pagu rahasia management**: jangan tampilkan di beranda (halaman Pagu, kalender, dan ekspor tab Pagu tetap ada).
+- Grup kategori mengikuti struktur RAB pengguna (realisasi dibandingkan RAB untuk surat penawaran final). Satu bon minimarket (snack + air) = satu transaksi "Snack & Air Minum" (Operasional), tidak dipecah.
 - Kelebihan satu pagu ditampilkan netral "Lebih pagu Rp X" (bukan "ditanggung kantor"), karena bisa tertutup sisa pagu lain di total pagu (keputusan pengguna 2026-10-21).
