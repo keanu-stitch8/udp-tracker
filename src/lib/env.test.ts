@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnv } from "./env";
+import { parseEnv, receiptsEnv } from "./env";
 
 const hash = "$argon2id$v=19$m=19456,t=2,p=1$abc$def";
 const valid = {
@@ -16,5 +16,12 @@ describe("parseEnv", () => {
     expect(() => parseEnv({ ...valid, DATABASE_URL: undefined })).toThrow(/DATABASE_URL/);
     expect(() => parseEnv({ ...valid, SESSION_SECRET: "pendek" })).toThrow(/SESSION_SECRET minimal 32 karakter/);
     expect(() => parseEnv({ ...valid, APP_PASSWORD_HASH: Buffer.from("plain").toString("base64") })).toThrow(/hash-password/);
+  });
+});
+
+describe("receiptsEnv", () => {
+  it("default model scan: lite dulu (kuota model utama sering habis), flash sebagai cadangan", () => {
+    expect(receiptsEnv({ BLOB_READ_WRITE_TOKEN: "x" }).geminiModels).toEqual(["gemini-flash-lite-latest", "gemini-flash-latest"]);
+    expect(receiptsEnv({ BLOB_READ_WRITE_TOKEN: "x", GEMINI_MODEL: "a, b" }).geminiModels).toEqual(["a", "b"]);
   });
 });

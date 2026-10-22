@@ -9,6 +9,8 @@ describe("toReceiptScan", () => {
     expect(scan({ amount: 125_500 }).amount).toBe(125_500);
     expect(scan({ amount: "Rp 125.500" }).amount).toBe(125_500);
     expect(scan({ amount: "125.500,00" }).amount).toBe(125_500);
+    expect(scan({ amount: "8,000,000.00" }).amount).toBe(8_000_000);
+    expect(scan({ amount: "Rp 54,000" }).amount).toBe(54_000);
   });
 
   it("nominal tidak masuk akal → null", () => {
@@ -27,6 +29,8 @@ describe("toReceiptScan", () => {
     expect(scan({ time: "14:30" }).time).toBe("14:30");
     expect(scan({ time: "14.30" }).time).toBe("14:30");
     expect(scan({ time: "9:05" }).time).toBe("09:05");
+    expect(scan({ time: "20:23:52" }).time).toBe("20:23");
+    expect(scan({ time: "20.23.52" }).time).toBe("20:23");
     for (const time of ["25:00", "2:30 PM", "jam dua", 1430, null]) expect(scan({ time }).time).toBeNull();
   });
 

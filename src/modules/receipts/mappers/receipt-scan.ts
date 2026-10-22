@@ -6,7 +6,10 @@ function toAmount(value: unknown): number | null {
   let amount: number | null = null;
   if (typeof value === "number") amount = value;
   else if (typeof value === "string") {
-    const digits = value.replace(/[^\d.,]/g, "").replace(/,\d{1,2}$/, "").replace(/[.,]/g, "");
+    const cleaned = value.replace(/[^\d.,]/g, "");
+    // Format bank/Inggris "8,000,000.00" (koma = ribuan, titik = desimal); selain itu format Indonesia "125.500,00".
+    const english = /^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(cleaned);
+    const digits = (english ? cleaned.replace(/\.\d{1,2}$/, "") : cleaned.replace(/,\d{1,2}$/, "")).replace(/[.,]/g, "");
     amount = digits ? Number(digits) : null;
   }
   return amount !== null && Number.isInteger(amount) && amount > 0 && amount <= MAX_RECEIPT_AMOUNT ? amount : null;
@@ -17,10 +20,10 @@ function toDate(value: unknown, projectYear: number): string | null {
   return Math.abs(Number(value.slice(0, 4)) - projectYear) <= 1 ? value : null;
 }
 
-/** Gemini diminta 24 jam; yang ada huruf (AM/PM, teks) ditolak, bukan ditebak. */
+/** Gemini diminta 24 jam; yang ada huruf (AM/PM, teks) ditolak, bukan ditebak. Detik ("20:23:52") dibuang. */
 function toTime(value: unknown): string | null {
   if (typeof value !== "string" || /[a-z]/i.test(value)) return null;
-  const time = normalizeTime(value.trim());
+  const time = normalizeTime(value.trim().replace(/^(\d{1,2}[:.]\d{2})[:.]\d{2}$/, "$1"));
   return isTime(time) ? time : null;
 }
 

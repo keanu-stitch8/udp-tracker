@@ -117,11 +117,12 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
       setAmount(scan.amount);
       filled.add("amount");
     }
-    if (scan.date && dateIsDefault) {
+    // Baru: hanya bila belum diubah pengguna. Ubah: bon menimpa tanggal/jam tersimpan (mis. jam lama = waktu input), ditandai "cek lagi".
+    if (scan.date && (dateIsDefault || initial)) {
       setDate(scan.date);
       filled.add("date");
     }
-    if (scan.time && timeIsDefault) {
+    if (scan.time && (timeIsDefault || initial)) {
       setTime(scan.time);
       filled.add("time");
     }
