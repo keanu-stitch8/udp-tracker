@@ -35,7 +35,7 @@ describe("uploadReceipt", () => {
     expect(pathname).toMatch(new RegExp(`^receipts/${projectId}/[0-9a-f-]{36}\\.jpg$`));
     expect(contentType).toBe("image/jpeg");
     expect(result.attachment).toEqual({ pathname, blobUrl: `https://store.private.blob.vercel-storage.com/${pathname}`, mimeType: "image/jpeg", sizeBytes: 10_000 });
-    expect(result.scan).toEqual({ ok: true, scan: { amount: 54_000, date: "2026-10-21", time: "14:05", merchant: "Tol Cipularang", categoryHint: "Tol", confident: true } });
+    expect(result.scan).toEqual({ ok: true, scan: { amount: 54_000, adminFee: null, date: "2026-10-21", time: "14:05", merchant: "Tol Cipularang", categoryHint: "Tol", confident: true } });
 
     const { prompt, model, file } = vi.mocked(generateJson).mock.calls[0][0];
     expect(model).toBe("gemini-uji");

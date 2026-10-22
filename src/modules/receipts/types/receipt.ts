@@ -11,6 +11,8 @@ export interface ReceiptScan {
   /** "HH:mm" 24 jam. */
   time: string | null;
   amount: number | null;
+  /** Biaya admin pada bukti transfer ("BIAYA Rp 2,500.00"); tidak termasuk di amount. */
+  adminFee: number | null;
   merchant: string | null;
   categoryHint: string | null;
   confident: boolean;

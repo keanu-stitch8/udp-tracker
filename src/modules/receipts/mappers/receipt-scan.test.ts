@@ -34,6 +34,13 @@ describe("toReceiptScan", () => {
     for (const time of ["25:00", "2:30 PM", "jam dua", 1430, null]) expect(scan({ time }).time).toBeNull();
   });
 
+  it("biaya admin transfer: angka/format bank, 0–1 jt; selain itu null", () => {
+    expect(scan({ adminFee: 2_500 }).adminFee).toBe(2_500);
+    expect(scan({ adminFee: "Rp 2,500.00" }).adminFee).toBe(2_500);
+    expect(scan({ adminFee: "6.500" }).adminFee).toBe(6_500);
+    for (const adminFee of [0, -1, 1_000_001, "x", null, undefined]) expect(scan({ adminFee }).adminFee).toBeNull();
+  });
+
   it("categoryHint harus salah satu kategori proyek (ejaan proyek)", () => {
     expect(scan({ categoryHint: "tol" }).categoryHint).toBe("Tol");
     expect(scan({ categoryHint: "Parkir" }).categoryHint).toBeNull();
@@ -53,7 +60,7 @@ describe("toReceiptScan", () => {
 
   it("input aneh → semua null", () => {
     for (const raw of [null, "teks", [1, 2], 42]) {
-      expect(toReceiptScan(raw, refs)).toEqual({ date: null, time: null, amount: null, merchant: null, categoryHint: null, confident: false });
+      expect(toReceiptScan(raw, refs)).toEqual({ date: null, time: null, amount: null, adminFee: null, merchant: null, categoryHint: null, confident: false });
     }
   });
 });

@@ -32,6 +32,11 @@ const scanSchema = z.object({
     .nullish()
     .transform((value) => value ?? null),
   amount: z.number().nullable(),
+  // Hasil scan lama tersimpan tanpa adminFee.
+  adminFee: z
+    .number()
+    .nullish()
+    .transform((value) => value ?? null),
   merchant: z.string().nullable(),
   categoryHint: z.string().nullable(),
   confident: z.boolean(),

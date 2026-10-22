@@ -2,17 +2,17 @@
 import { isIsoDate, isTime, normalizeTime } from "@/modules/shared/lib/date";
 import { MAX_RECEIPT_AMOUNT, type ReceiptScan } from "../types/receipt";
 
-function toAmount(value: unknown): number | null {
+function toAmount(value: unknown, max = MAX_RECEIPT_AMOUNT): number | null {
   let amount: number | null = null;
   if (typeof value === "number") amount = value;
   else if (typeof value === "string") {
-    const cleaned = value.replace(/[^\d.,]/g, "");
+    const cleaned = value.replace(/[^\d.,]/g, "").replace(/^[.,]+/, ""); // "Rp. 2,500" → "2,500"
     // Format bank/Inggris "8,000,000.00" (koma = ribuan, titik = desimal); selain itu format Indonesia "125.500,00".
     const english = /^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(cleaned);
     const digits = (english ? cleaned.replace(/\.\d{1,2}$/, "") : cleaned.replace(/,\d{1,2}$/, "")).replace(/[.,]/g, "");
     amount = digits ? Number(digits) : null;
   }
-  return amount !== null && Number.isInteger(amount) && amount > 0 && amount <= MAX_RECEIPT_AMOUNT ? amount : null;
+  return amount !== null && Number.isInteger(amount) && amount > 0 && amount <= max ? amount : null;
 }
 
 function toDate(value: unknown, projectYear: number): string | null {
@@ -39,6 +39,8 @@ export function toReceiptScan(raw: unknown, refs: { projectYear: number; categor
     date: toDate(r.date, refs.projectYear),
     time: toTime(r.time),
     amount,
+    // Batas sama dengan validasi biaya admin transaksi.
+    adminFee: toAmount(r.adminFee, 1_000_000),
     merchant: toText(r.merchant, 100),
     categoryHint: refs.categoryNames.find((name) => name.toLowerCase() === hint) ?? null,
     confident: r.confident === true && amount !== null,

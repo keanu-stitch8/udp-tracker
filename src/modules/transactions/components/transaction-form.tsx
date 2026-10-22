@@ -33,7 +33,7 @@ import type { TransactionView } from "../types/transaction";
 const TYPE_LABELS: Record<TransactionType, string> = { expense: "Pengeluaran", income: "Pemasukan", transfer: "Transfer" };
 const ADMIN_FEE_PRESETS = [0, 2_500, 6_500];
 
-type OcrField = "amount" | "date" | "time" | "categoryId" | "merchant";
+type OcrField = "amount" | "date" | "time" | "adminFee" | "categoryId" | "merchant";
 const SCAN_FAILED: Record<Exclude<ScanResult, { ok: true }>["reason"], string> = {
   busy: "Gemini sedang sibuk. Coba scan lagi sebentar, atau isi manual.",
   quota: "Kuota scan habis, isi manual.",
@@ -125,6 +125,11 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
     if (scan.time && (timeIsDefault || initial)) {
       setTime(scan.time);
       filled.add("time");
+    }
+    // Disimpan juga saat jenis belum Transfer: dipakai begitu jenis diganti ke Transfer (bukti transfer bank).
+    if (scan.adminFee !== null && (!adminFee || initial)) {
+      setAdminFee(scan.adminFee);
+      filled.add("adminFee");
     }
     if (scan.merchant && !merchant.trim()) {
       setMerchant(scan.merchant);
@@ -327,15 +332,33 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
               {errorOf("toWalletId") && <FieldError>{errorOf("toWalletId")}</FieldError>}
             </Field>
             <Field data-invalid={errorOf("adminFee") ? true : undefined}>
-              <FieldLabel htmlFor="adminFee">Biaya admin</FieldLabel>
+              <FieldLabel htmlFor="adminFee">
+                Biaya admin <CheckAgain show={ocrFields.has("adminFee")} />
+              </FieldLabel>
               <div className="flex flex-wrap gap-2">
                 {ADMIN_FEE_PRESETS.map((fee) => (
-                  <Toggle key={fee} pressed={adminFee === fee} onPressedChange={() => setAdminFee(fee)} className="h-10 px-3">
+                  <Toggle
+                    key={fee}
+                    pressed={adminFee === fee}
+                    onPressedChange={() => {
+                      setAdminFee(fee);
+                      touched("adminFee");
+                    }}
+                    className="h-10 px-3"
+                  >
                     {fee === 0 ? "Gratis" : new Intl.NumberFormat("id-ID").format(fee)}
                   </Toggle>
                 ))}
               </div>
-              <MoneyInput id="adminFee" className="h-11" value={adminFee} onChange={setAdminFee} />
+              <MoneyInput
+                id="adminFee"
+                className="h-11"
+                value={adminFee}
+                onChange={(value) => {
+                  setAdminFee(value);
+                  touched("adminFee");
+                }}
+              />
               {errorOf("adminFee") && <FieldError>{errorOf("adminFee")}</FieldError>}
             </Field>
           </>
