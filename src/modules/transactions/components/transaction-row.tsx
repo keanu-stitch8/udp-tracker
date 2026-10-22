@@ -29,7 +29,7 @@ export function TransactionRow({ view, href }: { view: TransactionView; href?: s
       </div>
       <div className="shrink-0 text-right">
         <p className={cn(AMOUNT, "text-sm", view.type === "income" && "text-green-700", view.type === "expense" && "text-destructive")}>{amount}</p>
-        {isTransfer && view.adminFee > 0 && <p className="text-xs text-muted-foreground">admin {formatRupiah(view.adminFee)}</p>}
+        {view.type !== "income" && view.adminFee > 0 && <p className="text-xs text-muted-foreground">admin {formatRupiah(view.adminFee)}</p>}
       </div>
     </div>
   );

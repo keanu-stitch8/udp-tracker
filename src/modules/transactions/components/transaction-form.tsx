@@ -31,7 +31,7 @@ import type { TransactionReference } from "../queries/views";
 import type { TransactionView } from "../types/transaction";
 
 const TYPE_LABELS: Record<TransactionType, string> = { expense: "Pengeluaran", income: "Pemasukan", transfer: "Transfer" };
-const ADMIN_FEE_PRESETS = [0, 2_500, 6_500];
+const ADMIN_FEE_PRESETS = [0, 2_000, 2_500, 6_500];
 
 type OcrField = "amount" | "date" | "time" | "adminFee" | "categoryId" | "merchant";
 const SCAN_FAILED: Record<Exclude<ScanResult, { ok: true }>["reason"], string> = {
@@ -84,6 +84,8 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const [walletId, setWalletId] = useState(initial?.walletId ?? defaultWalletId);
   const [toWalletId, setToWalletId] = useState<string | null>(initial?.toWalletId ?? null);
   const [adminFee, setAdminFee] = useState<number | null>(initial?.adminFee ?? 0);
+  // Pengeluaran: field biaya admin dibuka lewat tombol, atau otomatis bila nilainya > 0 (scan/data tersimpan).
+  const [adminOpen, setAdminOpen] = useState(false);
   const [vehicleId, setVehicleId] = useState<string | null>(initial?.vehicleId ?? null);
   const [merchant, setMerchant] = useState(initial?.merchant ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -91,9 +93,11 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const [ocrFields, setOcrFields] = useState<ReadonlySet<OcrField>>(new Set());
   const touched = (field: OcrField) => setOcrFields((current) => (current.has(field) ? new Set([...current].filter((f) => f !== field)) : current));
 
-  const categories = reference.categories.filter((c) => c.kind === type);
+  // Biaya Admin diisi lewat kolom biaya admin; kategorinya hanya muncul untuk transaksi lama yang memakainya.
+  const categories = reference.categories.filter((c) => c.kind === type && (!c.isAdminFee || c.id === initial?.categoryId));
   const category = reference.categories.find((c) => c.id === categoryId);
   const showVehicle = type !== "transfer" && !!category?.isVehicleRelated && reference.vehicles.length > 0;
+  const showAdminFee = type === "transfer" || (type === "expense" && (adminOpen || (adminFee ?? 0) > 0));
   const outsidePeriod = date < reference.project.startDate || date > reference.project.endDate;
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fieldErrors : {};
@@ -126,7 +130,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
       setTime(scan.time);
       filled.add("time");
     }
-    // Disimpan juga saat jenis belum Transfer: dipakai begitu jenis diganti ke Transfer (bukti transfer bank).
+    // Disimpan juga saat jenis Pemasukan: dipakai begitu jenis diganti ke Pengeluaran/Transfer (bukti transfer bank/QRIS).
     if (scan.adminFee !== null && (!adminFee || initial)) {
       setAdminFee(scan.adminFee);
       filled.add("adminFee");
@@ -168,7 +172,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
         categoryId: type === "transfer" ? null : categoryId,
         walletId,
         toWalletId: type === "transfer" ? toWalletId : null,
-        adminFee: type === "transfer" ? (adminFee ?? 0) : 0,
+        adminFee: type === "income" ? 0 : (adminFee ?? 0),
         vehicleId: showVehicle ? vehicleId : null,
         merchant,
         note,
@@ -325,43 +329,29 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
         </Field>
 
         {type === "transfer" && (
-          <>
-            <Field data-invalid={errorOf("toWalletId") ? true : undefined}>
-              <FieldLabel>Ke dompet</FieldLabel>
-              <WalletChips wallets={reference.wallets.filter((w) => w.id !== walletId)} value={toWalletId ?? ""} onChange={setToWalletId} />
-              {errorOf("toWalletId") && <FieldError>{errorOf("toWalletId")}</FieldError>}
-            </Field>
-            <Field data-invalid={errorOf("adminFee") ? true : undefined}>
-              <FieldLabel htmlFor="adminFee">
-                Biaya admin <CheckAgain show={ocrFields.has("adminFee")} />
-              </FieldLabel>
-              <div className="flex flex-wrap gap-2">
-                {ADMIN_FEE_PRESETS.map((fee) => (
-                  <Toggle
-                    key={fee}
-                    pressed={adminFee === fee}
-                    onPressedChange={() => {
-                      setAdminFee(fee);
-                      touched("adminFee");
-                    }}
-                    className="h-10 px-3"
-                  >
-                    {fee === 0 ? "Gratis" : new Intl.NumberFormat("id-ID").format(fee)}
-                  </Toggle>
-                ))}
-              </div>
-              <MoneyInput
-                id="adminFee"
-                className="h-11"
-                value={adminFee}
-                onChange={(value) => {
-                  setAdminFee(value);
-                  touched("adminFee");
-                }}
-              />
-              {errorOf("adminFee") && <FieldError>{errorOf("adminFee")}</FieldError>}
-            </Field>
-          </>
+          <Field data-invalid={errorOf("toWalletId") ? true : undefined}>
+            <FieldLabel>Ke dompet</FieldLabel>
+            <WalletChips wallets={reference.wallets.filter((w) => w.id !== walletId)} value={toWalletId ?? ""} onChange={setToWalletId} />
+            {errorOf("toWalletId") && <FieldError>{errorOf("toWalletId")}</FieldError>}
+          </Field>
+        )}
+
+        {showAdminFee ? (
+          <AdminFeeField
+            value={adminFee}
+            error={errorOf("adminFee")}
+            checkAgain={ocrFields.has("adminFee")}
+            onChange={(value) => {
+              setAdminFee(value);
+              touched("adminFee");
+            }}
+          />
+        ) : (
+          type === "expense" && (
+            <Button type="button" variant="outline" className="self-start" onClick={() => setAdminOpen(true)}>
+              + Biaya admin
+            </Button>
+          )
         )}
 
         {showVehicle && (
@@ -417,6 +407,25 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
         </Button>
       )}
     </form>
+  );
+}
+
+function AdminFeeField({ value, error, checkAgain, onChange }: { value: number | null; error?: string; checkAgain: boolean; onChange: (value: number | null) => void }) {
+  return (
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor="adminFee">
+        Biaya admin <CheckAgain show={checkAgain} />
+      </FieldLabel>
+      <div className="flex flex-wrap gap-2">
+        {ADMIN_FEE_PRESETS.map((fee) => (
+          <Toggle key={fee} pressed={value === fee} onPressedChange={() => onChange(fee)} className="h-10 px-3">
+            {fee === 0 ? "Gratis" : new Intl.NumberFormat("id-ID").format(fee)}
+          </Toggle>
+        ))}
+      </div>
+      <MoneyInput id="adminFee" className="h-11" value={value} onChange={onChange} />
+      {error && <FieldError>{error}</FieldError>}
+    </Field>
   );
 }
 
