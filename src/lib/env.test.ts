@@ -21,7 +21,7 @@ describe("parseEnv", () => {
 
 describe("receiptsEnv", () => {
   it("default model scan: lite dulu (kuota model utama sering habis), flash sebagai cadangan", () => {
-    expect(receiptsEnv({ BLOB_READ_WRITE_TOKEN: "x" }).geminiModels).toEqual(["gemini-flash-lite-latest", "gemini-flash-latest"]);
+    expect(receiptsEnv({ BLOB_READ_WRITE_TOKEN: "x" }).geminiModels).toEqual(["gemini-flash-lite-latest"]);
     expect(receiptsEnv({ BLOB_READ_WRITE_TOKEN: "x", GEMINI_MODEL: "a, b" }).geminiModels).toEqual(["a", "b"]);
   });
 });

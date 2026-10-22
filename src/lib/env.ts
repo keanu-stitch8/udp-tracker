@@ -40,7 +40,7 @@ export interface ReceiptsEnv {
 }
 
 // Lite dulu: kuota/"high demand" model utama sering habis (2026-10-22, keputusan pengguna); flash jadi cadangan.
-const DEFAULT_GEMINI_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
+const DEFAULT_GEMINI_MODELS = ["gemini-flash-lite-latest"];
 
 /** Env Rencana 3 dibaca terpisah agar app tetap jalan tanpa Blob/Gemini. SDK Blob membaca token sendiri dari process.env. */
 export function receiptsEnv(source: Record<string, string | undefined> = process.env): ReceiptsEnv {
