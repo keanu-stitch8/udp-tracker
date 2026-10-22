@@ -15,6 +15,14 @@ describe("expenseEntries", () => {
     const entries = expenseEntries(transactions, categories.filter((c) => !c.isAdminFee));
     expect(entries[0]).toMatchObject({ transactionId: "tf1", categoryId: null, amount: 6_500 });
   });
+  it("expense + biaya admin → dua entri: nominal di kategorinya, fee di kategori admin", () => {
+    const laundry = tx({ id: "laundry", type: "expense", date: "2026-10-21", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
+    expect(expenseEntries([laundry], categories).map((e) => [e.transactionId, e.categoryId, e.walletId, e.amount])).toEqual([
+      ["laundry", "makan-siang", "rekening", 16_500],
+      ["laundry", "admin", "rekening", 2_000],
+    ]);
+    expect(ledgerTotals(wallets, categories, [...transactions, laundry]).totalExpense).toBe(1_556_500 + 18_500);
+  });
 });
 
 describe("ledgerTotals", () => {

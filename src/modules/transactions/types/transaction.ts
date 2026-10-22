@@ -30,7 +30,7 @@ export interface TransactionView extends Transaction {
   attachments: Attachment[];
 }
 
-/** Satu baris pengeluaran: transaksi expense, atau biaya admin dari transfer (kategori isAdminFee). */
+/** Satu baris pengeluaran: nominal transaksi expense, atau biaya admin expense/transfer (kategori isAdminFee). */
 export interface ExpenseEntry {
   transactionId: string;
   date: string;

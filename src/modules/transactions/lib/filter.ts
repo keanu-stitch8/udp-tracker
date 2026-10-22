@@ -30,7 +30,7 @@ export interface DayGroup {
   expenseTotal: number;
 }
 
-/** `views` sudah urut terbaru dulu (toTransactionViews). Subtotal = pengeluaran + biaya admin transfer. */
+/** `views` sudah urut terbaru dulu (toTransactionViews). Subtotal = pengeluaran + biaya admin (pengeluaran & transfer). */
 export function groupByDate(views: TransactionView[]): DayGroup[] {
   const groups: DayGroup[] = [];
   for (const view of views) {
@@ -40,7 +40,7 @@ export function groupByDate(views: TransactionView[]): DayGroup[] {
       groups.push(group);
     }
     group.items.push(view);
-    group.expenseTotal += view.type === "expense" ? view.amount : view.type === "transfer" ? view.adminFee : 0;
+    group.expenseTotal += (view.type === "expense" ? view.amount : 0) + (view.type === "income" ? 0 : view.adminFee);
   }
   return groups;
 }

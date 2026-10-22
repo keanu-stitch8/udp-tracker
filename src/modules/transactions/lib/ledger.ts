@@ -6,14 +6,13 @@ import { sum } from "@/modules/shared/lib/money";
 import type { Wallet } from "@/modules/wallets/types/wallet";
 import type { ExpenseEntry, LedgerTotals, Transaction, TransactionView } from "../types/transaction";
 
-/** Semua pengeluaran: transaksi expense + biaya admin transfer (kategori isAdminFee; bukan baris transaksi kedua). */
+/** Semua pengeluaran: nominal expense + biaya admin expense/transfer (kategori isAdminFee; bukan baris transaksi kedua). */
 export function expenseEntries(transactions: Transaction[], categories: Category[]): ExpenseEntry[] {
   const adminCategoryId = categories.find((c) => c.isAdminFee)?.id ?? null;
   const entries: ExpenseEntry[] = [];
   for (const t of transactions) {
-    if (t.type === "expense") {
-      entries.push({ transactionId: t.id, date: t.date, categoryId: t.categoryId, walletId: t.walletId, amount: t.amount });
-    } else if (t.type === "transfer" && t.adminFee > 0) {
+    if (t.type === "expense") entries.push({ transactionId: t.id, date: t.date, categoryId: t.categoryId, walletId: t.walletId, amount: t.amount });
+    if (t.type !== "income" && t.adminFee > 0) {
       entries.push({ transactionId: t.id, date: t.date, categoryId: adminCategoryId, walletId: t.walletId, amount: t.adminFee });
     }
   }

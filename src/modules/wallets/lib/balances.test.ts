@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { transactions, wallets } from "@tests/helpers/ledger-fixture";
+import { transactions, tx, wallets } from "@tests/helpers/ledger-fixture";
 import { balanceAt, dailyBalances, walletBalances } from "./balances";
 
 describe("walletBalances", () => {
@@ -9,6 +9,13 @@ describe("walletBalances", () => {
       cash: 100_000 + 1_000_000 - 600_000 - 900_000,
       flazz1: 200_000 - 50_000,
     });
+  });
+  it("pengeluaran dengan biaya admin mengurangi nominal + admin", () => {
+    const withFee = [...transactions, tx({ type: "expense", date: "2026-10-21", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" })];
+    const expected = 5_000_000 - 1_000_000 - 6_500 - 18_500;
+    expect(walletBalances(wallets, withFee).get("rekening")).toBe(expected);
+    const rekening = wallets.find((w) => w.id === "rekening")!;
+    expect(dailyBalances(rekening, withFee).at(-1)).toEqual({ date: "2026-10-21", balance: expected });
   });
   it("upTo membatasi sampai tanggal itu (inklusif)", () => {
     expect(walletBalances(wallets, transactions, "2026-10-19").get("cash")).toBe(1_100_000);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categories, transactions, wallets } from "@tests/helpers/ledger-fixture";
+import { categories, transactions, tx, wallets } from "@tests/helpers/ledger-fixture";
 import { EMPTY_FILTERS, filterTransactions, groupByDate } from "./filter";
 import { toTransactionViews } from "./ledger";
 
@@ -32,5 +32,10 @@ describe("groupByDate", () => {
       ["2026-10-20", 2, 1_500_000],
       ["2026-10-19", 3, 6_500],
     ]);
+  });
+  it("subtotal mencakup biaya admin pengeluaran", () => {
+    const fee = tx({ type: "expense", date: "2026-10-21", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
+    const withFee = toTransactionViews([...transactions, fee], { wallets, categories, vehicles: [] });
+    expect(groupByDate(withFee)[0]).toMatchObject({ date: "2026-10-21", expenseTotal: 50_000 + 18_500 });
   });
 });
