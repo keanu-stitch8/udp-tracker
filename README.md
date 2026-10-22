@@ -35,6 +35,13 @@ Buka http://localhost:3051. Untuk mencoba di HP pada WiFi yang sama, buka `http:
 
 > Repo `github.com/Logging-Stuff/RetroUI` (di-link template shadcn.io) sudah diambil alih pihak lain. Jangan di-clone. Sumber sah: `github.com/neobrutalism/neobrutalism`.
 
+## SOP biaya admin
+
+1. Satu bukti transfer = satu transaksi.
+2. Nominal = jumlah yang diterima penerima, bukan total yang terpotong dari rekening.
+3. Biaya admin diisi di kolom **Biaya admin** pada transaksi itu (Pengeluaran atau Transfer). Jangan digabung ke nominal, jangan dicatat sebagai transaksi terpisah.
+4. Pakai Scan bon: fee terisi otomatis. Cek angkanya.
+
 ## Deploy (Vercel + Neon)
 
 1. Push ke GitHub, lalu import ke Vercel.

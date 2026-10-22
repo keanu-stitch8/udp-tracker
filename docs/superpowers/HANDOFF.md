@@ -17,20 +17,12 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Jam transaksi (`…/2026-10-21-05-jam-transaksi.md`) | ✅ di `main`. Kolom `transactions.time` wajib (`HH:mm` WIB, 24 jam, tanpa label WIB di UI); migrasi 0004 sudah di Neon (jam data lama = `created_at` WIB). Scan membaca jam; penyesuaian cek saldo = 23:59; `TimeInput` teks (bukan `type="time"` yang bisa AM/PM) |
 | Rencana 4 Ekspor + PWA (`…/2026-10-22-06-ekspor.md`, addendum spec `2026-10-22-ekspor-design.md`) | ✅ di `main`, uji nyata lulus 2026-10-22 (proyek asli: 6 foto ke Drive, Sheet 4 tab). Lainnya → Ekspor laporan |
 | Scan bon lanjutan (2026-10-22) | ✅ di `main`: default model lite, scan di form Ubah menimpa tanggal/jam, jam berdetik, nominal format bank, `adminFee` dari bukti transfer (BIAYA / BI FAST) |
-| Biaya admin konsisten (spec `docs/superpowers/specs/2026-10-22-biaya-admin-design.md`) | ⏳ **berikutnya**: spec disetujui pengguna, rencana + implementasi belum dibuat |
-| Deploy Vercel (`sin1`) | ⏳ setelah biaya admin |
+| Biaya admin konsisten (spec `docs/superpowers/specs/2026-10-22-biaya-admin-design.md`, rencana `…/2026-10-22-07-biaya-admin.md`) | ✅ di `main`: expense punya `adminFee` (dua entri di `expenseEntries`), kategori Biaya Admin otomatis (tidak bisa dipilih untuk transaksi baru), filter/jumlah kategori menghitung `adminFee > 0`, preset 0/2.000/2.500/6.500, scan fee sesuai angka tertulis (uji nyata QRIS 16.500 + 2.000 lulus), kolom Biaya admin di tab Detail, SOP di README |
+| Deploy Vercel (`sin1`) | ⏳ **berikutnya** |
 
 **Langkah berikutnya (chat baru mulai di sini):**
 
-1. **Biaya admin konsisten** — baca spec `docs/superpowers/specs/2026-10-22-biaya-admin-design.md` (sudah disetujui), lalu writing-plans → executing-plans inline, commit per task langsung ke `main`. Urutan task yang disarankan:
-   1. Perhitungan murni: `expenseEntries` (expense + admin → dua entri), `walletBalances` (expense kurangi `amount + adminFee`), `groupByDate` (subtotal termasuk admin expense). Tes di `ledger.test.ts`, `balances.test.ts`, `filter.test.ts`.
-   2. Aturan: `planTransaction` simpan `adminFee` untuk expense; income > 0 ditolak; **membuat** expense berkategori `isAdminFee` ditolak ("Isi di kolom Biaya admin pada transaksi yang terkena biaya."), ubah transaksi lama tetap boleh (cek pemanggil di `commands/save-transaction.ts`).
-   3. Visibilitas: filter Kategori Biaya Admin (`lib/filter.ts`) dan `usedCount` (`budgets/queries/category-settings.ts`) menghitung transaksi `adminFee > 0` + expense lama berkategori Biaya Admin.
-   4. UI: form Pengeluaran tombol "+ Biaya admin" (terbuka otomatis bila > 0), kategori Biaya Admin disembunyikan dari pilihan (kecuali transaksi lama yang sedang diubah), preset `ADMIN_FEE_PRESETS` jadi 0/2.000/2.500/6.500; `TransactionRow` tampilkan "admin Rp X" untuk expense juga.
-   5. Scan: prompt `receipt-prompt.ts` — fee sesuai angka tertulis ("Fee: Rp2.000,00" QRIS = 2000), BI FAST = 2.500 hanya bila angka tidak tertulis, nominal = jumlah transfer bukan "Total Transfer". Uji nyata pakai `/Users/riski/Downloads/WhatsApp Image 2026-10-15 at 16.38.38.jpeg` (QRIS 16.500 + fee 2.000).
-   6. Ekspor tab Detail: kolom **Biaya admin** setelah Keluar (Keluar transfer kosong), saldo berjalan kurangi keduanya; tes `exports/lib/report.test.ts`.
-   7. README: bagian **SOP biaya admin** (isi persis dari spec). Update HANDOFF.
-   - Data lama TIDAK dimigrasi (mis. "Akomodasi 18.500 Refund Laundry Lucky" = 16.500 + fee 2.000) — pengguna mengoreksi sendiri; boleh tawarkan daftar kandidat.
+1. **Data lama biaya admin** (opsional): pengeluaran yang nominalnya sudah termasuk fee (mis. "Akomodasi 18.500 Refund Laundry Lucky" = 16.500 + fee 2.000) dikoreksi pengguna sendiri; tidak ada migrasi.
 2. **Deploy Vercel** (lihat paragraf di bawah).
 3. Riwayat: PR #1–#11 sudah merged; trip `per_vehicle` (PR #6); pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
