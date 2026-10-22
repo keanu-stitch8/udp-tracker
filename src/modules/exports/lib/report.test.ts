@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProjectDetail } from "@/modules/projects/types/project";
-import { categories, mealBudget, transactions, wallets } from "@tests/helpers/ledger-fixture";
+import { categories, mealBudget, transactions, tx, wallets } from "@tests/helpers/ledger-fixture";
 import type { ReportInput, ReportTab } from "../types/report";
 import { buildReport } from "./report";
 
@@ -39,14 +39,20 @@ describe("buildReport", () => {
   it("Detail: kronologis, jam, transfer A → B, saldo berjalan gabungan, link bon", () => {
     const detail = tab("Detail");
     expect(detail.freezeRows).toBe(1);
-    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Kategori", "Toko/Keterangan", "Dompet", "Mobil", "Masuk", "Keluar", "Saldo berjalan", "Bon 1"]);
+    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Kategori", "Toko/Keterangan", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Bon 1"]);
     const rows = values(detail).slice(1);
-    expect(rows.map((r) => r[10])).toEqual([5_200_000, 5_300_000, 5_293_500, 4_693_500, 3_793_500, 3_743_500]);
+    expect(rows.map((r) => r[11])).toEqual([5_200_000, 5_300_000, 5_293_500, 4_693_500, 3_793_500, 3_743_500]);
     expect(rows[0].slice(0, 9)).toEqual([1, "19 Okt 2026", "09:00", "Masuk", "udp", null, "rekening", null, 5_000_000]);
-    expect(rows[2].slice(3, 10)).toEqual(["Transfer", "Transfer", null, "rekening → cash", null, null, 6_500]);
+    expect(rows[2].slice(3, 11)).toEqual(["Transfer", "Transfer", null, "rekening → cash", null, null, null, 6_500]);
     expect(rows[5][7]).toBe("Mobil 1");
-    expect(detail.rows[4][11]).toEqual({ value: "Bon 1", link: "https://drive.google.com/file/d/bon1/view" });
+    expect(detail.rows[4][12]).toEqual({ value: "Bon 1", link: "https://drive.google.com/file/d/bon1/view" });
     expect(detail.rows[1][8]).toMatchObject({ money: true });
+  });
+
+  it("Detail: pengeluaran dengan biaya admin → Keluar + Biaya admin, saldo berjalan kurangi keduanya", () => {
+    const fee = tx({ type: "expense", date: "2026-10-22", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
+    const detail = buildReport({ ...input, transactions: [...transactions, fee] }).find((t) => t.title === "Detail")!;
+    expect(values(detail).at(-1)!.slice(9, 12)).toEqual([16_500, 2_000, 3_743_500 - 18_500]);
   });
 
   it("Harian: kolom kategori pengeluaran yang terpakai + total", () => {

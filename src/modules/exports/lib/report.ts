@@ -70,8 +70,9 @@ function detailTab({ wallets, categories, transactions, project, receipts }: Rep
   const rows = chronological.map((t, index) => {
     const isTransfer = t.type === "transfer";
     const income = t.type === "income" ? t.amount : null;
-    const expense = t.type === "expense" ? t.amount : isTransfer && t.adminFee > 0 ? t.adminFee : null;
-    running += (income ?? 0) - (expense ?? 0);
+    const expense = t.type === "expense" ? t.amount : null;
+    const adminFee = t.type !== "income" && t.adminFee > 0 ? t.adminFee : null;
+    running += (income ?? 0) - (expense ?? 0) - (adminFee ?? 0);
     const receiptCells = Array.from({ length: maxReceipts }, (_, i) => {
       const list = receiptsOf.get(t.id) ?? [];
       if (i >= list.length) return text(null);
@@ -89,6 +90,7 @@ function detailTab({ wallets, categories, transactions, project, receipts }: Rep
       text(t.vehicleId ? (vehicleName.get(t.vehicleId) ?? null) : null),
       money(income),
       money(expense),
+      money(adminFee),
       money(running),
       ...receiptCells,
     ];
@@ -96,7 +98,7 @@ function detailTab({ wallets, categories, transactions, project, receipts }: Rep
   const receiptHeaders = Array.from({ length: maxReceipts }, (_, i) => `Bon ${i + 1}`);
   return {
     title: "Detail",
-    rows: [header("No", "Tanggal", "Jam", "Jenis", "Kategori", "Toko/Keterangan", "Dompet", "Mobil", "Masuk", "Keluar", "Saldo berjalan", ...receiptHeaders), ...rows],
+    rows: [header("No", "Tanggal", "Jam", "Jenis", "Kategori", "Toko/Keterangan", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", ...receiptHeaders), ...rows],
     freezeRows: 1,
   };
 }
