@@ -3,8 +3,10 @@ import { z } from "zod";
 import type { Db } from "@/db/types";
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { parseOrThrow } from "@/lib/validation";
+import { revokeHoldingsOfUser } from "@/modules/wallets/api/holders-repo";
 import { deleteMembershipsOfUser, replacePmDivisions } from "../api/access-repo";
 import { countActiveRoots, selectUser, updateUserRow, type UserRow } from "../api/users-repo";
+import type { Actor } from "../types/user";
 import { rootInputSchema } from "../types/user-input";
 
 // Pengguna = status akun + flag Root. Penugasan (PM per divisi, anggota per proyek) diatur di Divisi dan Anggota proyek.
@@ -37,13 +39,14 @@ export async function setUserRoot(db: Db, id: string, input: unknown): Promise<v
   await updateUserRow(db, id, { isRoot });
 }
 
-/** Tolak akun menunggu / cabut akses akun aktif: status ditolak, Root, peran PM, dan keanggotaan proyek dihapus. */
-export async function rejectUser(db: Db, id: string): Promise<void> {
+/** Tolak akun menunggu / cabut akses akun aktif: status ditolak, Root, peran PM, dan keanggotaan proyek dihapus; pegangan dompet dicabut (riwayat tetap). */
+export async function rejectUser(db: Db, actor: Actor, id: string): Promise<void> {
   const user = await findUserOrThrow(db, id);
   await assertNotLastRoot(db, user);
   await db.transaction(async (tx) => {
     await updateUserRow(tx, id, { status: "rejected", isRoot: false });
     await replacePmDivisions(tx, id, []);
     await deleteMembershipsOfUser(tx, id);
+    await revokeHoldingsOfUser(tx, id, { by: actor.id, reason: "rejected" });
   });
 }

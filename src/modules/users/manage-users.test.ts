@@ -41,7 +41,7 @@ describe("kelola pengguna", () => {
     await setDivisionPms(db, umum, { userIds: [user.id] });
     await db.insert(projectMembers).values({ projectId: project.id, userId: user.id });
 
-    await rejectUser(db, user.id);
+    await rejectUser(db, testRoot, user.id);
     expect(await find(user.id)).toMatchObject({ status: "rejected", isRoot: false, pmDivisionIds: [] });
     expect(await db.select().from(projectMembers)).toHaveLength(0);
     await approveUser(db, user.id);
@@ -51,13 +51,13 @@ describe("kelola pengguna", () => {
   it("Root terakhir tidak bisa dicabut Root-nya atau ditolak; Root hanya untuk akun aktif", async () => {
     const root = await createTestUser(db, { email: "root@x.id", isRoot: true });
     expect(await setUserRoot(db, root.id, { isRoot: false }).catch((e) => e)).toBeInstanceOf(ConflictError);
-    expect(await rejectUser(db, root.id).catch((e) => e)).toBeInstanceOf(ConflictError);
+    expect(await rejectUser(db, testRoot, root.id).catch((e) => e)).toBeInstanceOf(ConflictError);
     const pending = await createTestUser(db, { email: "p@x.id", status: "pending" });
     expect(await setUserRoot(db, pending.id, { isRoot: true }).catch((e) => e)).toBeInstanceOf(ConflictError);
     expect(await setUserRoot(db, root.id, {}).catch((e) => e)).toBeInstanceOf(ValidationError);
     const second = await createTestUser(db, { email: "root2@x.id", isRoot: true });
     await setUserRoot(db, root.id, { isRoot: false });
-    expect(await rejectUser(db, second.id).catch((e) => e)).toBeInstanceOf(ConflictError);
+    expect(await rejectUser(db, testRoot, second.id).catch((e) => e)).toBeInstanceOf(ConflictError);
   });
 
   it("pool user aktif urut nama, tanpa pending/ditolak", async () => {

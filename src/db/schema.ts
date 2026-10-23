@@ -1,8 +1,8 @@
 // Skema lengkap (spec §3.1). Kolom TS camelCase → kolom DB snake_case (casing: "snake_case").
 import { sql } from "drizzle-orm";
-import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, time, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, time, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 // Import relatif (bukan "@/"): drizzle-kit memuat file ini di luar resolver tsconfig paths.
-import { BUDGET_BASES, CATEGORY_KINDS, PROJECT_STATUSES, TRANSACTION_TYPES, USER_STATUSES, WALLET_KINDS } from "../modules/shared/types/enums";
+import { BUDGET_BASES, CATEGORY_KINDS, HOLDER_REVOKE_REASONS, PROJECT_STATUSES, TRANSACTION_TYPES, USER_STATUSES, WALLET_KINDS } from "../modules/shared/types/enums";
 
 export const projectStatus = pgEnum("project_status", PROJECT_STATUSES);
 export const walletKind = pgEnum("wallet_kind", WALLET_KINDS);
@@ -10,6 +10,7 @@ export const categoryKind = pgEnum("category_kind", CATEGORY_KINDS);
 export const budgetBasis = pgEnum("budget_basis", BUDGET_BASES);
 export const transactionType = pgEnum("transaction_type", TRANSACTION_TYPES);
 export const userStatus = pgEnum("user_status", USER_STATUSES);
+export const holderRevokeReason = pgEnum("holder_revoke_reason", HOLDER_REVOKE_REASONS);
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -265,18 +266,28 @@ export const projectMembers = pgTable(
 
 // Undangan PM untuk email yang belum pernah login; berubah jadi project_members saat login pertama.
 // Pemegang dompet (spec pemegang dompet): anggota hanya bisa mencatat di dompet yang dia pegang.
+// Satu baris = satu periode pegangan; tidak pernah dihapus, hanya dicabut (`revoked_at`) agar pertanggungjawaban tetap tercatat.
 export const walletHolders = pgTable(
   "wallet_holders",
   {
+    id: uuid().primaryKey().defaultRandom(),
     walletId: uuid()
       .notNull()
       .references(() => wallets.id, { onDelete: "cascade" }),
     userId: uuid()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    /** Ditugaskan pada. */
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    assignedBy: uuid().references((): AnyPgColumn => users.id, { onDelete: "set null" }),
+    revokedAt: timestamp({ withTimezone: true }),
+    revokedBy: uuid().references((): AnyPgColumn => users.id, { onDelete: "set null" }),
+    revokeReason: holderRevokeReason(),
   },
-  (t) => [primaryKey({ columns: [t.walletId, t.userId] }), index("wallet_holders_user_idx").on(t.userId)],
+  (t) => [
+    uniqueIndex("wallet_holders_active_idx").on(t.walletId, t.userId).where(sql`${t.revokedAt} is null`),
+    index("wallet_holders_user_idx").on(t.userId),
+  ],
 );
 
 export const projectInvitations = pgTable(

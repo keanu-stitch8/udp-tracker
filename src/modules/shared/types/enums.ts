@@ -16,3 +16,7 @@ export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 
 export const USER_STATUSES = ["pending", "active", "rejected"] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
+
+/** Alasan pegangan dompet berakhir (spec pemegang dompet): dicabut PM, dikeluarkan dari proyek, akun ditolak. */
+export const HOLDER_REVOKE_REASONS = ["revoked", "removed", "rejected"] as const;
+export type HolderRevokeReason = (typeof HOLDER_REVOKE_REASONS)[number];

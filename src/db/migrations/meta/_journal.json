@@ -85,6 +85,13 @@
       "when": 1792754657242,
       "tag": "0011_pemegang_dompet",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792756928727,
+      "tag": "0012_riwayat_pemegang",
+      "breakpoints": true
     }
   ]
 }

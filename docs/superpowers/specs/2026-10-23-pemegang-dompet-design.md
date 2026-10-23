@@ -10,7 +10,7 @@ Anggota hanya bisa mencatat dan mengubah transaksi di dompet yang dia pegang. Ro
 
 | Tabel | Kolom | Catatan |
 |---|---|---|
-| `wallet_holders` | `wallet_id` → `wallets` (cascade), `user_id` → `users` (cascade), `created_at`; PK (`wallet_id`, `user_id`) | Satu dompet bisa dipegang beberapa orang; satu orang bisa memegang beberapa dompet. |
+| `wallet_holders` | `id`, `wallet_id` → `wallets` (cascade), `user_id` → `users` (cascade), `created_at` (ditugaskan), `assigned_by`, `revoked_at`, `revoked_by` (→ `users`, set null), `revoke_reason` (`revoked` \| `removed` \| `rejected`); unik (`wallet_id`, `user_id`) untuk baris aktif | Satu baris = satu periode pegangan. **Tidak pernah dihapus**, hanya dicabut (revisi pengguna 2026-10-23, migrasi 0012): pertanggungjawaban siapa memegang uang tetap tercatat. Satu dompet bisa dipegang beberapa orang. |
 
 `wallets.holder` (teks bebas) tetap ada sebagai keterangan untuk pemegang tanpa akun (mis. sopir); tidak memberi hak apa pun.
 
@@ -30,12 +30,13 @@ Cakupan dompet (`walletScope`): Root/PM → `null` (semua); anggota → daftar d
 - Di luar cakupan → 403 `ForbiddenError` "Dompet ini bukan peganganmu. Minta PM mengubahnya."
 - Anggota tanpa dompet = hanya lihat.
 - Penegakan di server (command transaksi & cek saldo menerima cakupan dari route). UI hanya menyesuaikan tampilan.
-- Pemegang dipilih dari anggota proyek (`project_members`). Anggota dikeluarkan dari proyek → pegangan dompetnya di proyek itu ikut dihapus.
+- Pemegang dipilih dari anggota proyek (`project_members`). Hak mencatat hanya dari pegangan aktif (`revoked_at` kosong).
+- Pegangan berakhir dengan info siapa dan kenapa: PM menekan Cabut (`revoked`), anggota dikeluarkan dari proyek (`removed`), akun ditolak (`rejected`). Ditugaskan lagi = baris baru.
 - Hanya peran `manage` (Root/PM) yang mengatur pemegang.
 
 ## UI
 
-- **Detail dompet** (Root/PM): bagian "Pemegang": daftar nama + tombol hapus, tombol "+" membuka `UserPicker` berisi anggota proyek yang belum memegang dompet itu.
+- **Detail dompet**: kartu "Pemegang": pemegang aktif ("Sejak 23 Okt 2026, oleh Riski") + tombol Cabut (Root/PM), tombol "+ Pemegang" membuka `UserPicker` berisi anggota proyek; di bawahnya "Pernah memegang" ("20 Okt 2026 – 22 Okt 2026 · dikeluarkan dari proyek oleh Riski").
 - **Daftar dompet**: nama pemegang di bawah nama dompet.
 - **Anggota tanpa dompet pegangan**: tombol "+" di bottom nav disembunyikan; baris transaksi (daftar, beranda, kalender) tidak bisa diklik; halaman `/transaksi/baru` menampilkan alert "Kamu belum memegang dompet. Minta PM menugaskan dompet." tanpa form.
 - **Anggota dengan dompet pegangan**: "+" tampil; baris transaksi di luar cakupan tidak bisa diklik; membuka URL edit transaksi di luar cakupan → alert, tanpa form.

@@ -5,7 +5,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { parseOrThrow } from "@/lib/validation";
 import { insertProjectMembers } from "@/modules/users/api/access-repo";
 import { selectUserByEmail, updateUserRow } from "@/modules/users/api/users-repo";
-import { deleteHoldingsInProject } from "@/modules/wallets/api/holders-repo";
+import { revokeHoldingsInProject } from "@/modules/wallets/api/holders-repo";
 import type { Actor } from "@/modules/users/types/user";
 import { deleteInvitation, deleteProjectMember, insertInvitation } from "../api/members-repo";
 import { memberInputSchema } from "../types/member-input";
@@ -30,12 +30,12 @@ export async function addMemberByEmail(db: Db, actor: Actor, projectId: string, 
   return { result: "member" };
 }
 
-/** Keluarkan anggota beserta pegangan dompetnya di proyek ini (spec pemegang dompet). */
-export async function removeMember(db: Db, projectId: string, userId: string): Promise<void> {
+/** Keluarkan anggota; pegangan dompetnya di proyek ini dicabut, riwayatnya tetap (spec pemegang dompet). */
+export async function removeMember(db: Db, actor: Actor, projectId: string, userId: string): Promise<void> {
   if (!z.uuid().safeParse(userId).success) throw new NotFoundError("Anggota tidak ditemukan.");
   await db.transaction(async (tx) => {
     if (!(await deleteProjectMember(tx, projectId, userId))) throw new NotFoundError("Anggota tidak ditemukan.");
-    await deleteHoldingsInProject(tx, projectId, userId);
+    await revokeHoldingsInProject(tx, projectId, userId, { by: actor.id, reason: "removed" });
   });
 }
 

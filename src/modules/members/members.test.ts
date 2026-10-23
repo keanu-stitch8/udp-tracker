@@ -51,10 +51,10 @@ describe("anggota proyek", () => {
     const member = await createTestUser(db, { email: "a@x.id" });
     await addMemberByEmail(db, pm, projectId, { email: "a@x.id" });
     await addMemberByEmail(db, pm, projectId, { email: "tamu@x.id" });
-    await removeMember(db, projectId, member.id);
+    await removeMember(db, pm, projectId, member.id);
     await cancelInvitation(db, projectId, "Tamu@x.id");
     expect(await listProjectMembers(db, projectId)).toMatchObject({ members: [], invitations: [] });
-    await expect(removeMember(db, projectId, member.id)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(removeMember(db, pm, projectId, member.id)).rejects.toBeInstanceOf(NotFoundError);
     await expect(cancelInvitation(db, projectId, "tamu@x.id")).rejects.toBeInstanceOf(NotFoundError);
   });
 });

@@ -2,19 +2,25 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { CARD_TITLE } from "@/components/app/typography";
+import { CARD_TITLE, LABEL } from "@/components/app/typography";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { useMembers } from "@/modules/members/hooks/use-members";
 import { UserPicker } from "@/modules/users/components/user-picker";
 import { useSetWalletHolders } from "../hooks/use-wallets";
+import { describeActiveHolder, describeRevokedHolder } from "../lib/holder-history";
 import type { WalletDetail } from "../queries/wallets";
 
-/** Pemegang dompet (spec pemegang dompet): anggota yang boleh mencatat di dompet ini. Root/PM mengatur, dipilih dari anggota proyek. */
+/**
+ * Pemegang dompet (spec pemegang dompet): anggota yang boleh mencatat di dompet ini. Root/PM mengatur, dipilih dari anggota proyek.
+ * Pegangan yang dicabut tetap tampil di "Pernah memegang" untuk pertanggungjawaban.
+ */
 export function WalletHolders({ detail, canManage }: { detail: WalletDetail; canManage: boolean }) {
   const { wallet } = detail;
   const holderIds = wallet.holders.map((h) => h.id);
+  const activeRecords = detail.holderHistory.filter((h) => !h.revokedAt);
+  const pastRecords = detail.holderHistory.filter((h) => h.revokedAt);
   const save = useSetWalletHolders(detail.projectId, wallet.id);
   const [picking, setPicking] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
@@ -42,11 +48,11 @@ export function WalletHolders({ detail, canManage }: { detail: WalletDetail; can
         )}
       </CardHeader>
       <CardContent>
-        {wallet.holders.length === 0 && <p className="text-sm text-muted-foreground">Belum ada pemegang.</p>}
+        {activeRecords.length === 0 && <p className="text-sm text-muted-foreground">Belum ada pemegang.</p>}
         <ItemGroup className="gap-2">
-          {wallet.holders.map((holder) => (
+          {activeRecords.map((holder) => (
             <Item key={holder.id} variant="outline" size="sm">
-              {confirmRemove === holder.id ? (
+              {confirmRemove === holder.userId ? (
                 <div className="flex w-full items-center gap-2 text-sm">
                   <span className="mr-auto">Cabut {holder.name} dari {wallet.name}?</span>
                   <Button
@@ -55,7 +61,7 @@ export function WalletHolders({ detail, canManage }: { detail: WalletDetail; can
                     disabled={save.isPending}
                     onClick={() =>
                       update(
-                        holderIds.filter((id) => id !== holder.id),
+                        holderIds.filter((id) => id !== holder.userId),
                         "Pemegang dicabut.",
                         () => setConfirmRemove(null),
                       )
@@ -71,10 +77,11 @@ export function WalletHolders({ detail, canManage }: { detail: WalletDetail; can
                 <>
                   <ItemContent className="min-w-0">
                     <ItemTitle className="w-full truncate">{holder.name}</ItemTitle>
+                    <ItemDescription className="truncate">{describeActiveHolder(holder)}</ItemDescription>
                   </ItemContent>
                   {canManage && (
                     <ItemActions>
-                      <Button size="sm" variant="ghost" disabled={detail.locked} onClick={() => setConfirmRemove(holder.id)}>
+                      <Button size="sm" variant="ghost" disabled={detail.locked} onClick={() => setConfirmRemove(holder.userId)}>
                         Cabut
                       </Button>
                     </ItemActions>
@@ -84,6 +91,19 @@ export function WalletHolders({ detail, canManage }: { detail: WalletDetail; can
             </Item>
           ))}
         </ItemGroup>
+        {pastRecords.length > 0 && (
+          <div className="mt-4 flex flex-col gap-2">
+            <p className={LABEL}>Pernah memegang</p>
+            <ul className="flex flex-col gap-2">
+              {pastRecords.map((record) => (
+                <li key={record.id} className="text-sm">
+                  <p className="font-medium">{record.name}</p>
+                  <p className="text-xs text-muted-foreground">{describeRevokedHolder(record)}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
       {canManage && (
         <HolderPicker

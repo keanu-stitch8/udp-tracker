@@ -1,6 +1,6 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
-import { divisionPms, projectInvitations, projectMembers, projects, walletHolders } from "@/db/schema";
+import { divisionPms, projectInvitations, projectMembers, projects } from "@/db/schema";
 import type { Db } from "@/db/types";
 
 // Tabel hak akses: PM per divisi, anggota per proyek, undangan per email.
@@ -51,10 +51,8 @@ export async function insertProjectMembers(db: Db, values: (typeof projectMember
   if (values.length) await db.insert(projectMembers).values(values).onConflictDoNothing();
 }
 
-/** Keanggotaan semua proyek beserta pegangan dompetnya. */
 export async function deleteMembershipsOfUser(db: Db, userId: string): Promise<void> {
   await db.delete(projectMembers).where(eq(projectMembers.userId, userId));
-  await db.delete(walletHolders).where(eq(walletHolders.userId, userId));
 }
 
 export function selectInvitationsByEmail(db: Db, email: string): Promise<(typeof projectInvitations.$inferSelect)[]> {
