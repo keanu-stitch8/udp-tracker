@@ -5,7 +5,7 @@ import { getCalendarMonth, getDayDetail } from "@/modules/calendar/queries/calen
 import { getDashboardSummary } from "@/modules/dashboard/queries/summary";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
-import { createBudget } from "@/modules/budgets/commands/save-budget";
+import { createBudget, updateBudget } from "@/modules/budgets/commands/save-budget";
 import { createTestDb, createTestUser, testDivisionId, testRoot } from "@tests/helpers/test-db";
 import { insertTransaction } from "./api/transactions-repo";
 import { createTransaction, deleteTransaction, restoreTransaction, updateTransaction } from "./commands/save-transaction";
@@ -54,7 +54,7 @@ describe("ringkasan beranda", () => {
     });
     expect(summary).not.toHaveProperty("budgets");
     expect(summary.attention.map((a) => a.label)).toEqual(["3 pengeluaran belum ada bon", "Cash minus Rp 500.000", "Flazz Mobil 1 minus Rp 50.000"]);
-    expect(summary.groups.map((g) => [g.name, g.amount, g.categories.map((c) => c.name)])).toEqual([
+    expect(summary.udp.groups.map((g) => [g.name, g.amount, g.categories.map((c) => c.name)])).toEqual([
       ["Meal", 1_500_000, ["Makan Malam", "Makan Siang"]],
       ["Transportation", 50_000, ["Tol"]],
       ["Lain-lain", 6_500, ["Biaya Admin"]],
@@ -76,11 +76,21 @@ describe("kalender", () => {
       ["Makan Malam", 900_000],
       ["Makan Siang", 600_000],
     ]);
-    expect(day.budgets.map((b) => [b.name, b.limit, b.used])).toEqual([["Pagu Makan", 1_350_000, 1_500_000]]);
-    // Anggota (tanpa budgetSecret): pagu tidak dikirim sama sekali (keputusan pengguna sampai Rilis 5).
+    expect(day.budgets.map((b) => [b.name, b.limit, b.used, b.managementLimit])).toEqual([["Pagu Makan", 1_350_000, 1_500_000, 1_350_000]]);
+    // Tanpa tarif karyawan, pagu tidak dikirim ke anggota (angka management tidak bocor; keputusan pengguna Rilis 7).
     expect((await getDayDetail(db, projectId, "2026-10-20", { budgetSecret: false })).budgets).toEqual([]);
     expect(day.transactions).toHaveLength(2);
     await expect(getCalendarMonth(db, projectId, "2026-13")).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("dua pagu: anggota hanya menerima pagu karyawan, Root/PM juga batas management", async () => {
+    await seedSample();
+    const [budget] = (await getDayDetail(db, projectId, "2026-10-20", { budgetSecret: true })).budgets;
+    await updateBudget(db, projectId, budget.budgetId, { name: "Pagu Makan", rate: 150_000, employeeRate: 100_000, basis: "per_pax_per_day", categoryIds: [ref.category("Makan Siang"), ref.category("Makan Malam")] });
+    expect((await getDayDetail(db, projectId, "2026-10-20", { budgetSecret: true })).budgets).toMatchObject([{ limit: 900_000, managementLimit: 1_350_000, used: 1_500_000 }]);
+    const member = await getDayDetail(db, projectId, "2026-10-20", { budgetSecret: false });
+    expect(member.budgets).toEqual([{ budgetId: budget.budgetId, name: "Pagu Makan", limit: 900_000, used: 1_500_000 }]);
+    expect(JSON.stringify(member)).not.toMatch(/1350000|150000\b/);
   });
 });
 
