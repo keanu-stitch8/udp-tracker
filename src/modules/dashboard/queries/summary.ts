@@ -13,6 +13,7 @@ import type { WalletBalance } from "@/modules/wallets/types/wallet";
 import { attentionItems, type AttentionItem, type LatestCheck } from "../lib/attention";
 import { groupShares, type GroupShare } from "../lib/category-share";
 import { elapsedDays, projectProgress, type ProjectProgress } from "../lib/progress";
+import { recentlyAdded } from "../lib/recent";
 
 /** Data beranda. Sengaja tanpa pagu: rahasia management, tidak dikirim ke browser. */
 export interface DashboardSummary {
@@ -57,6 +58,6 @@ export const getDashboardSummary = cache(async (db: Db, projectId: string): Prom
     attention: attentionItems({ missingReceipts: views.filter((v) => isMissingReceipt(v, adminCategoryId)).length, wallets, latestChecks }),
     groups: groupShares(entries, ledger.categories, ledger.groups),
     wallets,
-    recent: views.slice(0, 5),
+    recent: recentlyAdded(views, 5),
   };
 });
