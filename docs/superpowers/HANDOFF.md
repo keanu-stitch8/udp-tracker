@@ -1,4 +1,4 @@
-# Handoff — UDP Tracker (per 2026-10-23)
+# Handoff — UDP Tracker (per 2026-10-23, setelah deploy)
 
 Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
@@ -23,16 +23,27 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 | Scan bon timeout (2026-10-22) | ✅ di `main` (`03357bf`): `thinkingLevel` `minimal` (bukan `low`: 35–90+ detik saat Gemini ramai → timeout), model terakhir memakai sisa jatah scan 55 detik |
 | Beranda baru (spec `…/specs/2026-10-22-beranda-design.md`, rencana `…/plans/2026-10-22-beranda.md`) | ✅ di `main` (`0610b77`): **tanpa pagu** (rahasia management, juga tidak dikirim ke browser), progres hari, 4 kartu angka berikon warna (token `tile-green`/`tile-pink`), "Perlu ditindaklanjuti" (tanpa bon, selisih cek saldo, dompet minus, reimburse; kartu hilang bila kosong), pengeluaran per grup. Filter `/transaksi?bon=belum` (chip "Tanpa bon ×") |
 | Grup kategori (spec `…/specs/2026-10-22-grup-kategori-design.md`, rencana ringkas `…/plans/2026-10-22-grup-kategori.md`) | ✅ di `main` (`0610b77`), **migrasi 0006 sudah di Neon**: tabel `category_groups`, `categories.group_id` wajib untuk pengeluaran (CHECK). Grup bawaan mengikuti RAB: Akomodasi, Meal, Operasional, Transportation, Lain-lain; Parkir dipecah Parkir Perjalanan/Harian untuk proyek baru. Hapus grup berisi → pilih grup tujuan. Picker, filter, beranda, ekspor (Rekap per grup, kolom Grup di Detail) bergrup. Kategori proyek asli sudah dipindah pengguna |
-| Deploy Vercel (`sin1`) | ⏳ **berikutnya** (cek dulu apakah push ke `main` sudah auto-deploy) |
+| Deploy Vercel (`sin1`) | ✅ live 2026-10-23: **https://udp-tracker-qy6b.vercel.app** (Hobby, repo GitHub ter-link → push ke `main` = deploy production). `vercel.json` region `sin1` (terbukti `x-vercel-id: sin1`). Smoke test curl lulus (login 200, manifest 200, API tanpa sesi 401) |
+| Akses multi-divisi (spec `docs/superpowers/specs/2026-10-23-akses-multi-divisi-design.md`) | 📝 spec disetujui per bagian 2026-10-23: divisi, login Google (Root/PM/anggota, undangan email, persetujuan), penegakan akses `projectRoute`, ekspor per user, jejak penginput, dua tarif pagu. 5 rilis berurutan (§10) |
+| Rilis 1: perbaikan beranda | ✅ selesai, **belum di-commit**: nominal `StatTile` satu baris (`@container` + `cqi`), "Perlu ditindaklanjuti" pakai `Item` NeoBrutalism (`item` di `ui.config.json`), grup pengeluaran A–Z (`sortCategoriesForPicker`, "Tanpa kategori" paling bawah). Verifikasi penuh lulus |
+| Rilis 2: Divisi (rencana `docs/superpowers/plans/2026-10-23-rilis-2-divisi.md`) | ✅ selesai, **belum di-commit**: tabel `divisions`, `projects.division_id` wajib (migrasi 0007, proyek lama → "Umum"; sudah diterapkan di branch `dev`, production ikut saat deploy), modul `src/modules/divisions`, `/api/divisions`, halaman `/lainnya/divisi`, pemilih proyek dikelompokkan per divisi, pilihan divisi di form proyek baru & pengaturan proyek. Verifikasi penuh + E2E curl lulus. Setelah deploy: ganti nama "Umum" → MKK di UI |
 
 **Langkah berikutnya (chat baru mulai di sini):**
 
-1. **Cek deploy**: DB production sudah migrasi 0006. Versi lama app (kalau ter-deploy) tidak bisa menambah kategori pengeluaran/proyek baru sampai kode `0610b77` live.
-2. **Data lama biaya admin** (opsional): pengeluaran yang nominalnya sudah termasuk fee (mis. "Akomodasi 18.500 Refund Laundry Lucky" = 16.500 + fee 2.000) dikoreksi pengguna sendiri; tidak ada migrasi.
-3. **Deploy Vercel** (lihat paragraf di bawah).
+1. **Rilis 3 (login Google + akun + hak akses)**: tulis rencana dari spec §2–§6, lalu eksekusi inline. Rilis 1 & 2 sudah di `main` (deploy production menjalankan migrasi 0007; pengguna lalu mengganti nama "Umum" → MKK). Pertanyaan terbuka dari pengguna: "Transaksi terakhir" di beranda (sekarang urut tanggal+jam transaksi) — tunggu jawaban maksudnya.
+2. **Google ekspor di production**: belum dihubungkan (redirect `https://udp-tracker-qy6b.vercel.app/api/auth/google/callback`). Karena Rilis 3 membuat koneksi per user dan menghapus token lama, cukup lakukan setelah Rilis 3, kecuali butuh ekspor dari production sebelum itu.
+3. **Data lama biaya admin** (opsional): dikoreksi pengguna sendiri, tidak ada migrasi.
 4. Riwayat: PR #1–#11 sudah merged; trip `per_vehicle` (PR #6); pengguna mengisi "Jumlah hari" = 6 untuk Operasional Harian di proyek aslinya (data asli, jangan diubah tanpa izin).
 
-**Deploy Vercel (langkah terakhir):** env produksi = semua isi `.env.local` (kecuali `NEON_BRANCH`), tambah redirect URI `https://<domain-vercel>/api/auth/google/callback` di OAuth client **milik UDP Tracker** (client baru, bukan client dashboard), lalu hubungkan Google sekali dari domain produksi. Migrasi DB: pengguna menjalankan `npm run db:migrate` (Claude Code menolak menyentuh Neon production).
+**Bekal Rilis 3 (hasil pemetaan kode 2026-10-23, jangan dicari ulang):**
+- Sesi: `src/lib/session.ts`, token = base64url(JSON `{exp}`) + HMAC (Web Crypto, dipakai `proxy.ts` & route). Rilis 3 menambah `uid` ke payload. `proxy.ts` punya `PUBLIC_PATHS` (login, logout, callback Google).
+- Login password: `src/modules/auth/services/login.ts` (argon2 + `login_attempts`, 5 gagal/15 menit per IP), route `api/auth/login`, form `modules/auth/components/login-form.tsx`, `env.ts` memvalidasi `APP_PASSWORD_HASH` (base64). Semua ini dibuang/diganti.
+- Hapus proyek memakai konfirmasi password (`deleteProject(db, id, input, { ip, passwordHash })`, `modules/projects/components/delete-project.tsx`) → ganti ketik ulang nama proyek.
+- Google ekspor: `modules/google/services/google-oauth.ts` (scope `drive.file openid email`, `prompt: consent`, `completeOAuth` simpan refresh token terenkripsi), `api/credentials-repo.ts` = satu baris `id = "default"` di `google_credentials` → jadi per user. Route `api/auth/google/start|callback`, `api/google` (GET status, DELETE putuskan), `oauth-state.ts` (cookie state path `/api/auth/google`). `redirectUri(origin)` bisa di-override `GOOGLE_OAUTH_REDIRECT_URI`.
+- Pembungkus route: `src/lib/http.ts` `route(handler, { public })` + `requireSession()`. 29 route di `src/app/api/projects/[projectId]/**` → semua pindah ke `projectRoute`.
+- Proyek aktif: `modules/projects/queries/projects.ts` `getActiveProject` (cookie `ACTIVE_PROJECT_COOKIE` → `pickActiveProject`).
+
+**Deploy Vercel (catatan):** env production = isi `.env.local` kecuali `NEON_BRANCH`. `APP_PASSWORD_HASH` disimpan **base64** (diawali `JGFy`, 132 karakter), bukan `$argon2…`; salah tempel → "Password salah." (hash tetap valid, tapi beda). Ubah env → wajib Redeploy. Script `vercel-build` = `db:migrate && next build`, jadi migrasi baru jalan otomatis tiap deploy (butuh `DATABASE_URL_UNPOOLED` di env Vercel). URL per-branch/per-deploy (`…-git-main-udp-tracker.vercel.app`) dilindungi Vercel Authentication (minta login Vercel); pakai domain production.
 
 ## Dokumen kunci
 
@@ -42,7 +53,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 
 ## Lingkungan
 
-- Neon project `calm-lake-03611185`, branch `production`, region Singapura. Sudah di-link (`neon.ts`, `.neon/`). `.env.local` berisi `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, `APP_PASSWORD_HASH`, `SESSION_SECRET` (dibuat pengguna). Migrasi: `npm run db:migrate` (0000–0006 sudah diterapkan). Claude Code menolak menjalankan `db:migrate` ke Neon production; minta pengguna menjalankan `! npm run db:migrate`.
+- Neon project `calm-lake-03611185`, region Singapura. Branch `production` = app live; branch **`dev`** (`br-muddy-cherry-aza5nazr`, dibuat 2026-10-23 dari production, tanpa expiry) = `.env.local` untuk `npm run dev` dan migrasi lokal. Cadangan env yang mengarah ke production: `.env.local.production` (gitignored). Production bermigrasi otomatis saat deploy (`vercel-build`). Sudah di-link (`neon.ts`, `.neon/`). `.env.local` berisi `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, `APP_PASSWORD_HASH`, `SESSION_SECRET` (dibuat pengguna). Migrasi: `npm run db:migrate` (0000–0006 sudah diterapkan). Claude Code menolak menjalankan `db:migrate` ke Neon production; minta pengguna menjalankan `! npm run db:migrate`.
 - Pengguna menjalankan sendiri `npm run dev` di port **3051** (laptop: localhost:3051, HP: `http://<IP-laptop>:3051`). Jangan matikan proses itu.
 - Data asli di Neon: 1 proyek "Q4 Hero & Editorial Feature Videos - Part 1".
 
@@ -67,6 +78,7 @@ Baca ini dulu di chat baru, lalu spec dan rencana yang ditautkan di bawah.
 - Superpowers: brainstorming → spec → writing-plans → executing-plans (inline), TDD per task. Rencana boleh ringkas (daftar tugas + file + tes) bila dieksekusi di sesi yang sama.
 - **Jangan auto-commit** (pengguna 2026-10-22): biarkan perubahan uncommitted sampai pengguna bilang "commit". Pesan commit diakhiri `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Commit langsung ke `main` lalu push, tanpa branch/PR** (sama seperti repo dashboard; keputusan pengguna 2026-10-21). Deploy hanya kalau pekerjaan sudah beres. Kalau Vercel sudah tersambung ke GitHub, push ke `main` = deploy, jadi cek dulu.
+- **Prettier** tidak punya config di repo: jangan `prettier --write` tanpa `--print-width 180` (default 80 membungkus semua baris). Lebih aman edit tanpa formatter.
 - Kode di dokumen rencana bisa disalin otomatis per task dengan skrip ekstraktor (cocokkan baris "`path`:" + blok kode). Skrip itu ada di scratchpad sesi lama, jadi buat ulang bila perlu.
 - **Gerbang commit pakai exit code** (`npm run build > log; echo $?`), bukan `grep`. Di zsh, variabel berisi beberapa flag tidak dipecah: tulis skrip uji sebagai file bash.
 - **E2E**: buat kredensial sementara (hash argon2 + secret acak di scratchpad, bukan `.env.local`), `next start -p 3100` dengan env proses, uji via curl. Untuk uji browser pakai **`127.0.0.1:3100`**, bukan `localhost`, karena cookie tidak dibedakan per port dan login uji akan menimpa sesi pengguna di localhost:3051. Hapus proyek "E2E %" dan `login_attempts` uji dari Neon setelahnya.
