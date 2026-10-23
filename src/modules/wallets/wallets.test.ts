@@ -73,11 +73,11 @@ describe("cek saldo", () => {
     await createTransaction(db, projectId, { type: "transfer", date: "2026-10-20", time: "09:00", amount: 500_000, walletId: ref.wallet("Rekening"), toWalletId: flazz }, null);
     await createTransaction(db, projectId, { type: "expense", date: "2026-10-22", time: "09:00", amount: 30_000, walletId: flazz, categoryId: ref.category("Tol"), vehicleId: ref.vehicle("Mobil 1") }, null);
 
-    const check = await createBalanceCheck(db, projectId, flazz, { date: "2026-10-21", actualBalance: 420_000 });
+    const check = await createBalanceCheck(db, projectId, flazz, { date: "2026-10-21", actualBalance: 420_000 }, null);
     expect(check).toMatchObject({ walletId: flazz, date: "2026-10-21", computedBalance: 500_000, actualBalance: 420_000, difference: -80_000, adjustmentId: null });
 
     const user = await createTestUser(db, { email: "riski@example.com" });
-    const adjustment = await adjustBalanceCheck(db, projectId, check.id, {}, user.id);
+    const adjustment = await adjustBalanceCheck(db, projectId, check.id, {}, { userId: user.id, scope: null });
     expect(adjustment).toMatchObject({
       createdBy: user.id,
       updatedBy: user.id,
@@ -108,7 +108,7 @@ describe("cek saldo", () => {
 
   it("lebih → pemasukan Lainnya; kategori pilihan divalidasi; saldo cocok → 409", async () => {
     const cash = ref.wallet("Cash");
-    const plus = await createBalanceCheck(db, projectId, cash, { date: "2026-10-20", actualBalance: 25_000, note: "uang receh" });
+    const plus = await createBalanceCheck(db, projectId, cash, { date: "2026-10-20", actualBalance: 25_000, note: "uang receh" }, null);
     expect(plus).toMatchObject({ difference: 25_000, note: "uang receh" });
 
     const wrong = await adjustBalanceCheck(db, projectId, plus.id, { categoryId: ref.category("Sarapan") }, null).catch((e) => e);
@@ -116,18 +116,18 @@ describe("cek saldo", () => {
 
     expect(await adjustBalanceCheck(db, projectId, plus.id, {}, null)).toMatchObject({ type: "income", amount: 25_000, categoryId: ref.category("Lainnya"), walletId: cash, vehicleId: null });
 
-    const even = await createBalanceCheck(db, projectId, cash, { date: "2026-10-20", actualBalance: 25_000 });
+    const even = await createBalanceCheck(db, projectId, cash, { date: "2026-10-20", actualBalance: 25_000 }, null);
     expect(even.difference).toBe(0);
     await expect(adjustBalanceCheck(db, projectId, even.id, {}, null)).rejects.toBeInstanceOf(ConflictError);
 
-    await expect(createBalanceCheck(db, projectId, cash, { date: "2026-02-30", actualBalance: -1 })).rejects.toBeInstanceOf(ValidationError);
+    await expect(createBalanceCheck(db, projectId, cash, { date: "2026-02-30", actualBalance: -1 }, null)).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("dompet/cek saldo proyek lain atau id tidak dikenal → NotFoundError", async () => {
     const other = await createProject(db, testRoot, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: [] });
     const otherCash = (await referenceOf(other.id)).wallet("Cash");
-    await expect(createBalanceCheck(db, projectId, otherCash, { date: "2026-10-20", actualBalance: 1 })).rejects.toBeInstanceOf(NotFoundError);
-    const otherCheck = await createBalanceCheck(db, other.id, otherCash, { date: "2026-11-01", actualBalance: 1 });
+    await expect(createBalanceCheck(db, projectId, otherCash, { date: "2026-10-20", actualBalance: 1 }, null)).rejects.toBeInstanceOf(NotFoundError);
+    const otherCheck = await createBalanceCheck(db, other.id, otherCash, { date: "2026-11-01", actualBalance: 1 }, null);
     await expect(adjustBalanceCheck(db, projectId, otherCheck.id, {}, null)).rejects.toBeInstanceOf(NotFoundError);
     await expect(getWalletDetail(db, projectId, "bukan-uuid")).rejects.toBeInstanceOf(NotFoundError);
   });

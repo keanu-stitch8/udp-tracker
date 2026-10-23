@@ -30,10 +30,11 @@ describe("penjaga route", () => {
     expect(handlers(await readFile("src/app/api/divisions/route.ts", "utf8"))).toEqual(["GET:route", "POST:rootRoute"]);
   });
 
-  it("route tanpa sesi hanya login, callback, dan logout", async () => {
+  // Keluar "Lihat sebagai" ikut di sini: hanya menghapus cookie, dan harus lolos dari blokir tulis mode itu.
+  it("route tanpa sesi hanya login, callback, logout, dan keluar lihat sebagai", async () => {
     const files = await routeFiles("src/app/api");
     const publicFiles: string[] = [];
     for (const file of files) if ((await readFile(file, "utf8")).includes("publicRoute(")) publicFiles.push(path.relative("src/app/api", file));
-    expect(publicFiles.sort()).toEqual(["auth/google/callback/route.ts", "auth/google/login/route.ts", "auth/logout/route.ts"]);
+    expect(publicFiles.sort()).toEqual(["auth/google/callback/route.ts", "auth/google/login/route.ts", "auth/logout/route.ts", "view-as/route.ts"]);
   });
 });

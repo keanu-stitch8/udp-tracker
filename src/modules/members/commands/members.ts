@@ -5,6 +5,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { parseOrThrow } from "@/lib/validation";
 import { insertProjectMembers } from "@/modules/users/api/access-repo";
 import { selectUserByEmail, updateUserRow } from "@/modules/users/api/users-repo";
+import { deleteHoldingsInProject } from "@/modules/wallets/api/holders-repo";
 import type { Actor } from "@/modules/users/types/user";
 import { deleteInvitation, deleteProjectMember, insertInvitation } from "../api/members-repo";
 import { memberInputSchema } from "../types/member-input";
@@ -29,9 +30,13 @@ export async function addMemberByEmail(db: Db, actor: Actor, projectId: string, 
   return { result: "member" };
 }
 
+/** Keluarkan anggota beserta pegangan dompetnya di proyek ini (spec pemegang dompet). */
 export async function removeMember(db: Db, projectId: string, userId: string): Promise<void> {
-  const removed = z.uuid().safeParse(userId).success ? await deleteProjectMember(db, projectId, userId) : 0;
-  if (!removed) throw new NotFoundError("Anggota tidak ditemukan.");
+  if (!z.uuid().safeParse(userId).success) throw new NotFoundError("Anggota tidak ditemukan.");
+  await db.transaction(async (tx) => {
+    if (!(await deleteProjectMember(tx, projectId, userId))) throw new NotFoundError("Anggota tidak ditemukan.");
+    await deleteHoldingsInProject(tx, projectId, userId);
+  });
 }
 
 export async function cancelInvitation(db: Db, projectId: string, email: string): Promise<void> {

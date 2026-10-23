@@ -1,5 +1,6 @@
 import type { ProjectStatus } from "@/modules/shared/types/enums";
 import type { Role } from "@/modules/users/lib/access";
+import type { WalletScope } from "@/modules/wallets/lib/scope";
 
 export interface Project {
   id: string;
@@ -27,4 +28,6 @@ export interface ProjectDetail extends Project {
 /** Proyek yang sedang dibuka + peran user di proyek itu (menentukan menu dan tombol yang tampil). */
 export interface ActiveProject extends ProjectDetail {
   role: Role;
+  /** Dompet yang boleh dipakai mencatat: `null` = semua (Root/PM). */
+  walletScope: WalletScope;
 }

@@ -36,7 +36,7 @@ async function seededProject(name: string) {
   const removed = await createTransaction(db, project.id, { type: "expense", date: "2026-10-21", time: "09:00", amount: 10_000, walletId: cash, categoryId: sarapan, attachments: [attachment(2)] }, null);
   await deleteTransaction(db, project.id, removed.id, null);
   await createBudget(db, project.id, { name: "Pagu Sarapan", rate: 25_000, basis: "per_pax_per_day", categoryIds: [sarapan] });
-  await createBalanceCheck(db, project.id, cash, { date: "2026-10-21", actualBalance: 0 });
+  await createBalanceCheck(db, project.id, cash, { date: "2026-10-21", actualBalance: 0 }, null);
   return { ...project, pathnames: [pathname(1), pathname(2)] };
 }
 

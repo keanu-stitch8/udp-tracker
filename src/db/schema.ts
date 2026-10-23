@@ -264,6 +264,21 @@ export const projectMembers = pgTable(
 );
 
 // Undangan PM untuk email yang belum pernah login; berubah jadi project_members saat login pertama.
+// Pemegang dompet (spec pemegang dompet): anggota hanya bisa mencatat di dompet yang dia pegang.
+export const walletHolders = pgTable(
+  "wallet_holders",
+  {
+    walletId: uuid()
+      .notNull()
+      .references(() => wallets.id, { onDelete: "cascade" }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.walletId, t.userId] }), index("wallet_holders_user_idx").on(t.userId)],
+);
+
 export const projectInvitations = pgTable(
   "project_invitations",
   {

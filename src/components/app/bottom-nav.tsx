@@ -18,12 +18,12 @@ function isActive(pathname: string, href: string) {
 }
 
 /** Membaca path aktif. Di route dinamis wajib di dalam <Suspense> (cacheComponents) — lihat AppShell. */
-export function BottomNav() {
-  return <BottomNavLinks pathname={usePathname()} />;
+export function BottomNav({ showAdd }: { showAdd: boolean }) {
+  return <BottomNavLinks pathname={usePathname()} showAdd={showAdd} />;
 }
 
-/** Tampilan nav murni; `pathname` kosong = tanpa penanda aktif (fallback Suspense). */
-export function BottomNavLinks({ pathname }: { pathname: string }) {
+/** Tampilan nav murni; `pathname` kosong = tanpa penanda aktif (fallback Suspense). `showAdd` false = tanpa tombol catat (spec pemegang dompet). */
+export function BottomNavLinks({ pathname, showAdd }: { pathname: string; showAdd: boolean }) {
   const [first, second, third, fourth] = ITEMS;
   const link = (item: (typeof ITEMS)[number]) => {
     const active = isActive(pathname, item.href) && !(item.href === "/transaksi" && pathname === "/transaksi/baru");
@@ -46,9 +46,11 @@ export function BottomNavLinks({ pathname }: { pathname: string }) {
       {link(first)}
       {link(second)}
       <div className="flex items-start justify-center">
-        <Link href="/transaksi/baru" aria-label="Catat transaksi" className={cn(buttonVariants({ size: "icon-lg" }), "-mt-6 size-14 rounded-full")}>
-          <Plus className="size-7" />
-        </Link>
+        {showAdd && (
+          <Link href="/transaksi/baru" aria-label="Catat transaksi" className={cn(buttonVariants({ size: "icon-lg" }), "-mt-6 size-14 rounded-full")}>
+            <Plus className="size-7" />
+          </Link>
+        )}
       </div>
       {link(third)}
       {link(fourth)}

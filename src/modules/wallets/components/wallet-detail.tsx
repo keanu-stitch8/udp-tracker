@@ -19,17 +19,22 @@ import { describeDifference } from "../lib/balance-check";
 import { balanceAt } from "../lib/balances";
 import { WALLET_KIND_LABELS } from "../lib/kinds";
 import { reimburseStatus } from "../lib/reimburse";
+import { inScope } from "../lib/scope";
 import type { WalletDetail } from "../queries/wallets";
 import { BalanceCheckItem } from "./balance-check-item";
 import { WalletForm } from "./wallet-form";
+import { WalletHolders } from "./wallet-holders";
+import { useWalletScope } from "./wallet-scope-provider";
 
-/** `canManage` (Root/PM): ubah & arsipkan dompet. Anggota tetap bisa cek saldo. */
+/** `canManage` (Root/PM): ubah, arsipkan, atur pemegang. Cek saldo hanya untuk dompet dalam cakupan user. */
 export function WalletDetailPanel({ projectId, walletId, today, canManage }: { projectId: string; walletId: string; today: string; canManage: boolean }) {
   const { data } = useWalletDetail(projectId, walletId);
   const save = useSaveWallet(projectId, walletId);
   const [editing, setEditing] = useState(false);
+  const scope = useWalletScope();
   if (!data) return null;
   const { wallet } = data;
+  const holds = inScope(scope, wallet.id);
 
   function toggleArchived() {
     const archived = !wallet.archived;
@@ -95,7 +100,9 @@ export function WalletDetailPanel({ projectId, walletId, today, canManage }: { p
         </Card>
       )}
 
-      <BalanceCheckForm detail={data} today={today} />
+      <WalletHolders detail={data} canManage={canManage} />
+
+      {holds && <BalanceCheckForm detail={data} today={today} />}
 
       <Card>
         <CardHeader>
@@ -105,7 +112,7 @@ export function WalletDetailPanel({ projectId, walletId, today, canManage }: { p
           {data.checks.length ? (
             <ul className="divide-y">
               {data.checks.map((check, index) => (
-                <BalanceCheckItem key={check.id} check={check} detail={data} canAdjust={index === 0} />
+                <BalanceCheckItem key={check.id} check={check} detail={data} canAdjust={holds && index === 0} />
               ))}
             </ul>
           ) : (

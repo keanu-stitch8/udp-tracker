@@ -1,6 +1,7 @@
 "use client";
 
-import { Mail } from "lucide-react";
+import { Eye, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CARD_TITLE } from "@/components/app/typography";
@@ -12,7 +13,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { ApiError } from "@/lib/api-client";
 import { UserAvatar } from "@/modules/users/components/user-avatar";
 import { UserPicker } from "@/modules/users/components/user-picker";
-import { useAddMember, useCancelInvitation, useMembers, useRemoveMember } from "../hooks/use-members";
+import { useAddMember, useCancelInvitation, useMembers, useRemoveMember, useStartViewAs } from "../hooks/use-members";
 
 type Confirm = { kind: "member"; id: string } | { kind: "invitation"; id: string } | null;
 
@@ -20,6 +21,8 @@ export function MemberSettings({ projectId, projectName }: { projectId: string; 
   const { data } = useMembers(projectId);
   const add = useAddMember(projectId);
   const remove = useRemoveMember(projectId);
+  const viewAs = useStartViewAs(projectId);
+  const router = useRouter();
   const cancel = useCancelInvitation(projectId);
   const [email, setEmail] = useState("");
   const [picking, setPicking] = useState(false);
@@ -113,6 +116,23 @@ export function MemberSettings({ projectId, projectName }: { projectId: string; 
                     <ItemDescription className="truncate">{member.email}</ItemDescription>
                   </ItemContent>
                   <ItemActions>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      aria-label={`Lihat sebagai ${member.name ?? member.email}`}
+                      disabled={viewAs.isPending}
+                      onClick={() =>
+                        viewAs.mutate(member.userId, {
+                          onSuccess: () => {
+                            router.push("/");
+                            router.refresh();
+                          },
+                          onError: (error) => toast.error(error.message),
+                        })
+                      }
+                    >
+                      <Eye /> Lihat
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => setConfirm({ kind: "member", id: member.userId })}>
                       Hapus
                     </Button>

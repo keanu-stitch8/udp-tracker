@@ -5,6 +5,8 @@ import { NotFoundError } from "@/lib/errors";
 import { safeNextPath } from "@/modules/auth/lib/safe-next";
 import { requireActiveProject } from "@/modules/projects/queries/projects";
 import { isIsoDate, nowTimeWib, todayWib } from "@/modules/shared/lib/date";
+import { canEditTransaction, canTransact, NO_WALLET_MESSAGE, OUT_OF_SCOPE_MESSAGE } from "@/modules/wallets/lib/scope";
+import { NoAccessNotice } from "../components/no-access-notice";
 import { TransactionForm } from "../components/transaction-form";
 import { getTransactionReference, getTransactionView } from "../queries/views";
 import type { TransactionView } from "../types/transaction";
@@ -32,6 +34,10 @@ export async function TransactionFormSection({ searchParams, transactionId }: { 
       throw error;
     }
   }
+
+  // Anggota tanpa dompet / transaksi di dompet orang lain: tanpa form (spec pemegang dompet).
+  if (!canTransact(project.walletScope)) return <NoAccessNotice message={NO_WALLET_MESSAGE} returnTo={returnTo} />;
+  if (initial && !canEditTransaction(project.walletScope, initial)) return <NoAccessNotice message={OUT_OF_SCOPE_MESSAGE} returnTo={returnTo} />;
 
   return (
     <TransactionForm

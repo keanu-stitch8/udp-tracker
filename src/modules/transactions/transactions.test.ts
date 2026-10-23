@@ -161,20 +161,22 @@ describe("biaya admin", () => {
   });
 });
 
+const as = (user: { id: string }) => ({ userId: user.id, scope: null });
+
 describe("jejak penginput", () => {
   it("buat mengisi penginput; ubah, hapus, pulihkan mengisi pengubah; nama di view", async () => {
     const riski = await createTestUser(db, { email: "riski@example.com", name: "Riski" });
     const arpan = await createTestUser(db, { email: "arpan@example.com" });
     const input = { type: "expense", date: "2026-10-20", time: "09:00", amount: 20_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Tol") };
 
-    const created = await createTransaction(db, projectId, input, riski.id);
+    const created = await createTransaction(db, projectId, input, as(riski));
     expect(created).toMatchObject({ createdBy: riski.id, updatedBy: riski.id });
 
-    expect(await updateTransaction(db, projectId, created.id, { ...input, amount: 25_000 }, arpan.id)).toMatchObject({ createdBy: riski.id, updatedBy: arpan.id });
+    expect(await updateTransaction(db, projectId, created.id, { ...input, amount: 25_000 }, as(arpan))).toMatchObject({ createdBy: riski.id, updatedBy: arpan.id });
     expect(await getTransactionView(db, projectId, created.id)).toMatchObject({ createdByName: "Riski", updatedByName: "arpan@example.com" });
 
-    await deleteTransaction(db, projectId, created.id, arpan.id);
-    expect(await restoreTransaction(db, projectId, created.id, riski.id)).toMatchObject({ createdBy: riski.id, updatedBy: riski.id });
+    await deleteTransaction(db, projectId, created.id, as(arpan));
+    expect(await restoreTransaction(db, projectId, created.id, as(riski))).toMatchObject({ createdBy: riski.id, updatedBy: riski.id });
   });
 
   it("data lama tanpa jejak → nama kosong", async () => {

@@ -3,11 +3,12 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { env } from "@/lib/env";
 import { AppError } from "@/lib/errors";
-import { publicRoute, requireUser } from "@/lib/http";
+import { assertNotViewingAs, publicRoute, requireUser } from "@/lib/http";
 import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/session";
 import { googleErrorMessage } from "@/modules/google/lib/google-errors";
 import { exportPageUrl, loginPageUrl, OAUTH_STATE_COOKIE, readOAuthState } from "@/modules/google/lib/oauth-state";
 import { completeOAuth, googleProfileFromCode } from "@/modules/google/services/google-oauth";
+import { VIEW_AS_COOKIE } from "@/modules/users/lib/view-as";
 import { signInGoogleUser } from "@/modules/users/services/sign-in";
 
 const errorMessage = (error: unknown) => (error instanceof AppError ? error.message : googleErrorMessage(error));
@@ -29,6 +30,8 @@ export const GET = publicRoute(async (request) => {
   const db = getDb();
   if (state.purpose === "connect") {
     try {
+      // Token Google milik pemilik sesi, jangan tersimpan atas nama anggota yang sedang "dilihat".
+      await assertNotViewingAs();
       const user = await requireUser();
       await completeOAuth(db, user.id, code, url.origin);
     } catch (error) {
@@ -52,5 +55,6 @@ export const GET = publicRoute(async (request) => {
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
+  store.delete(VIEW_AS_COOKIE);
   return NextResponse.redirect(new URL(state.next, url.origin));
 });

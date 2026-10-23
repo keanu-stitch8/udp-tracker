@@ -78,6 +78,13 @@
       "when": 1792750949520,
       "tag": "0010_jejak_penginput",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792754657242,
+      "tag": "0011_pemegang_dompet",
+      "breakpoints": true
     }
   ]
 }

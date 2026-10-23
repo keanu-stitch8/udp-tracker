@@ -26,6 +26,8 @@ import { ReceiptPicker, type ReceiptItem } from "@/modules/receipts/components/r
 import type { ScanResult } from "@/modules/receipts/types/receipt";
 import { formatDateLong } from "@/modules/shared/lib/date";
 import type { TransactionType } from "@/modules/shared/types/enums";
+import { useWalletScope } from "@/modules/wallets/components/wallet-scope-provider";
+import { inScope } from "@/modules/wallets/lib/scope";
 import { ledgerKeys } from "../hooks/keys";
 import { restoreTransactionRequest, useDeleteTransaction, useSaveTransaction } from "../hooks/use-transactions";
 import { auditLine } from "../lib/audit";
@@ -75,8 +77,12 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const queryClient = useQueryClient();
   const locked = reference.project.status === "done";
 
+  // Dompet asal hanya yang dipegang (anggota); tujuan transfer tetap semua (spec pemegang dompet).
+  const scope = useWalletScope();
+  const sourceWallets = reference.wallets.filter((w) => inScope(scope, w.id));
   // Dompet Reimburse tidak pernah jadi default: talangan harus dipilih sadar.
-  const defaultWalletId = reference.lastWalletId ?? (reference.wallets.find((w) => w.kind !== "reimburse") ?? reference.wallets[0])?.id ?? "";
+  const lastWalletId = reference.lastWalletId && inScope(scope, reference.lastWalletId) ? reference.lastWalletId : null;
+  const defaultWalletId = lastWalletId ?? (sourceWallets.find((w) => w.kind !== "reimburse") ?? sourceWallets[0])?.id ?? "";
   const [type, setType] = useState<TransactionType>(initial?.type ?? "expense");
   const [amount, setAmount] = useState<number | null>(initial?.amount ?? null);
   // Ikut default terbaru dari server sampai diubah pengguna/scan (state form dipertahankan saat halaman dibuka lagi).
@@ -161,7 +167,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   function chooseVehicle(id: string | null) {
     setVehicleId(id);
     // Tol dibayar pakai Flazz mobil itu (spec §5) → pilih otomatis dompet Flazz-nya.
-    const flazz = reference.wallets.find((w) => w.kind === "flazz" && w.vehicleId === id);
+    const flazz = sourceWallets.find((w) => w.kind === "flazz" && w.vehicleId === id);
     if (id && flazz && category?.name.toLowerCase() === "tol") setWalletId(flazz.id);
   }
 
@@ -356,7 +362,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
 
         <Field data-invalid={errorOf("walletId") ? true : undefined}>
           <FieldLabel>{type === "transfer" ? "Dari dompet" : type === "income" ? "Masuk ke dompet" : "Dompet"}</FieldLabel>
-          <WalletChips wallets={reference.wallets} value={walletId} onChange={setWalletId} />
+          <WalletChips wallets={sourceWallets} value={walletId} onChange={setWalletId} />
           {errorOf("walletId") && <FieldError>{errorOf("walletId")}</FieldError>}
         </Field>
 

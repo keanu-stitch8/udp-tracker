@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api-client";
 import { ledgerKeys } from "@/modules/transactions/hooks/keys";
 import { useLedgerMutation } from "@/modules/transactions/hooks/use-ledger-mutation";
@@ -31,6 +32,15 @@ export function useCreateBalanceCheck(projectId: string, walletId: string) {
   return useLedgerMutation(projectId, (input: BalanceCheckInput) =>
     apiFetch<BalanceCheck>(`${base(projectId)}/wallets/${walletId}/balance-checks`, { method: "POST", json: input }),
   );
+}
+
+/** Pemegang memengaruhi cakupan anggota (tombol catat, baris transaksi) → refresh route juga. */
+export function useSetWalletHolders(projectId: string, walletId: string) {
+  const router = useRouter();
+  return useLedgerMutation(projectId, async (userIds: string[]) => {
+    await apiFetch<void>(`${base(projectId)}/wallets/${walletId}/holders`, { method: "PUT", json: { userIds } });
+    router.refresh();
+  });
 }
 
 export function useAdjustBalanceCheck(projectId: string) {

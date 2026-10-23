@@ -73,7 +73,7 @@ function WalletLinks({ wallets }: { wallets: WalletListItem[] }) {
           <Link href={`/lainnya/dompet/${wallet.id}`} className="flex min-h-14 items-center gap-3 px-4 py-2">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{wallet.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{[WALLET_KIND_LABELS[wallet.kind], wallet.vehicleName, wallet.holder].filter(Boolean).join(" · ")}</p>
+              <p className="truncate text-xs text-muted-foreground">{[WALLET_KIND_LABELS[wallet.kind], wallet.vehicleName, wallet.holder, ...wallet.holders.map((h) => h.name)].filter(Boolean).join(" · ")}</p>
             </div>
             {wallet.kind === "reimburse" ? (
               <span className="shrink-0 text-right text-sm font-medium">{reimburseStatus(wallet.balance)}</span>

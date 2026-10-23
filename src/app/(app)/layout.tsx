@@ -2,8 +2,10 @@ import { Suspense } from "react";
 import { AppHeader } from "@/components/app/app-header";
 import { AppShell } from "@/components/app/app-shell";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BottomNavSection } from "@/modules/menu";
 import { ProjectHeaderSection } from "@/modules/projects";
-import { AccountGateSection } from "@/modules/users";
+import { AccountGateSection, ViewAsBannerSection } from "@/modules/users";
+import { WalletScopeSection } from "@/modules/wallets";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,9 +15,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <AppHeader projectHeader={<ProjectHeaderSection />} />
         </Suspense>
       }
+      nav={<BottomNavSection />}
     >
+      <Suspense fallback={null}>
+        <ViewAsBannerSection />
+      </Suspense>
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-        <AccountGateSection>{children}</AccountGateSection>
+        <AccountGateSection>
+          <WalletScopeSection>{children}</WalletScopeSection>
+        </AccountGateSection>
       </Suspense>
     </AppShell>
   );

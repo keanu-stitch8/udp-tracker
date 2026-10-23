@@ -54,8 +54,8 @@ Root/PM bisa melihat app persis seperti anggota tertentu, untuk mengecek hak dom
 
 ## API
 
-- `GET /api/projects/[projectId]/wallets/[walletId]/holders` (`view`), `PUT …/holders` (`manage`) body `{ userIds: string[] }` — ganti seluruh daftar; setiap id harus anggota proyek.
-- `TransactionReference` menambah `scope: string[] | null`; respons daftar dompet menambah `holders: { id, name }[]`.
+- `PUT /api/projects/[projectId]/wallets/[walletId]/holders` (`manage`) body `{ userIds: string[] }` — ganti seluruh daftar; setiap id harus anggota proyek. Daftar & detail dompet menambah `holders: { id, name }[]`.
+- Cakupan untuk tampilan: `ActiveProject.walletScope`, diteruskan ke klien lewat `WalletScopeProvider` di layout (baris transaksi, form, cek saldo); bottom nav lewat `BottomNavSection`.
 
 ## Pengujian
 

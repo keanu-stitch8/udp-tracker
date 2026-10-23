@@ -15,6 +15,7 @@ export function UserPicker({
   open,
   title,
   description,
+  emptyText = "Semua pengguna aktif sudah ditambahkan.",
   options,
   onPick,
   onClose,
@@ -22,6 +23,8 @@ export function UserPicker({
   open: boolean;
   title: string;
   description?: string;
+  /** Pesan bila semua pilihan sudah terpakai. */
+  emptyText?: string;
   options: UserOption[];
   onPick: (user: UserOption) => void;
   onClose: () => void;
@@ -33,13 +36,13 @@ export function UserPicker({
           <DrawerTitle className={CARD_TITLE}>{title}</DrawerTitle>
           {description && <DrawerDescription>{description}</DrawerDescription>}
         </DrawerHeader>
-        {open && <PickerList options={options} onPick={onPick} />}
+        {open && <PickerList options={options} emptyText={emptyText} onPick={onPick} />}
       </DrawerContent>
     </Drawer>
   );
 }
 
-function PickerList({ options, onPick }: { options: UserOption[]; onPick: (user: UserOption) => void }) {
+function PickerList({ options, emptyText, onPick }: { options: UserOption[]; emptyText: string; onPick: (user: UserOption) => void }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const shown = q ? options.filter((u) => `${u.name ?? ""} ${u.email}`.toLowerCase().includes(q)) : options;
@@ -47,7 +50,7 @@ function PickerList({ options, onPick }: { options: UserOption[]; onPick: (user:
     <div className="flex flex-col gap-3 px-4 pb-6">
       <Input aria-label="Cari nama atau email" placeholder="Cari nama atau email" className="h-10" value={query} onChange={(e) => setQuery(e.target.value)} />
       <ItemGroup className="max-h-[50dvh] gap-2 overflow-y-auto">
-        {shown.length === 0 && <p className="text-sm text-muted-foreground">{options.length ? "Tidak ada yang cocok." : "Semua pengguna aktif sudah ditambahkan."}</p>}
+        {shown.length === 0 && <p className="text-sm text-muted-foreground">{options.length ? "Tidak ada yang cocok." : emptyText}</p>}
         {shown.map((user) => (
           <Item key={user.id} variant="outline" size="sm" className="bg-card">
             <ItemMedia>

@@ -5,7 +5,9 @@ import { NotFoundError } from "@/lib/errors";
 import type { Category } from "@/modules/budgets/types/category";
 import type { Vehicle } from "@/modules/projects/types/project";
 import { getLedger } from "@/modules/transactions/queries/ledger";
+import type { Person } from "@/modules/users/types/user-list";
 import { selectBalanceChecks } from "../api/balance-checks-repo";
+import { selectProjectWalletHolders } from "../api/holders-repo";
 import { dailyBalances, walletBalances, type BalancePoint } from "../lib/balances";
 import { toBalanceCheck } from "../mappers/balance-check";
 import type { BalanceCheck } from "../types/balance-check";
@@ -13,6 +15,8 @@ import type { WalletBalance } from "../types/wallet";
 
 export interface WalletListItem extends WalletBalance {
   vehicleName: string | null;
+  /** Anggota yang boleh mencatat di dompet ini (spec pemegang dompet). */
+  holders: Person[];
 }
 
 export interface WalletList {
@@ -24,7 +28,7 @@ export interface WalletList {
 }
 
 export const getWalletList = cache(async (db: Db, projectId: string): Promise<WalletList> => {
-  const ledger = await getLedger(db, projectId);
+  const [ledger, holderRows] = await Promise.all([getLedger(db, projectId), selectProjectWalletHolders(db, projectId)]);
   const balances = walletBalances(ledger.wallets, ledger.transactions);
   const vehicleNames = new Map(ledger.project.vehicles.map((v) => [v.id, v.name]));
   return {
@@ -35,6 +39,7 @@ export const getWalletList = cache(async (db: Db, projectId: string): Promise<Wa
       ...w,
       balance: balances.get(w.id) ?? w.openingBalance,
       vehicleName: w.vehicleId ? (vehicleNames.get(w.vehicleId) ?? null) : null,
+      holders: holderRows.filter((h) => h.walletId === w.id).map((h) => ({ id: h.userId, name: h.name ?? h.email })),
     })),
   };
 });

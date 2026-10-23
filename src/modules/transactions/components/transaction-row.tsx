@@ -1,12 +1,18 @@
+"use client";
+
 import { Paperclip } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/app/category-icon";
 import { AMOUNT } from "@/components/app/typography";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/modules/shared/lib/money";
+import { useWalletScope } from "@/modules/wallets/components/wallet-scope-provider";
+import { canEditTransaction } from "@/modules/wallets/lib/scope";
 import type { TransactionView } from "../types/transaction";
 
+/** `href` diabaikan bila dompet asal di luar cakupan user (spec pemegang dompet): baris tampil tanpa link. */
 export function TransactionRow({ view, href }: { view: TransactionView; href?: string }) {
+  const scope = useWalletScope();
   const isTransfer = view.type === "transfer";
   const title = isTransfer ? `${view.walletName} → ${view.toWalletName}` : (view.categoryName ?? "—");
   const detail = [view.time, view.merchant, isTransfer ? "Transfer" : view.walletName, view.vehicleName].filter(Boolean).join(" · ");
@@ -35,7 +41,7 @@ export function TransactionRow({ view, href }: { view: TransactionView; href?: s
     </div>
   );
 
-  return href ? (
+  return href && canEditTransaction(scope, view) ? (
     <Link href={href} className="block">
       {content}
     </Link>

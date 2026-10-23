@@ -4,9 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import type { Db } from "@/db/types";
 import { can } from "@/modules/users/lib/access";
-import { getCurrentUser } from "@/modules/users/queries/current-user";
+import { getCurrentUser, getViewAs } from "@/modules/users/queries/current-user";
 import { accessibleProjectIds, projectRole } from "@/modules/users/services/project-role";
 import type { CurrentUser } from "@/modules/users/types/user";
+import { walletScope } from "@/modules/wallets/services/wallet-scope";
 import { selectProjects } from "../api/projects-repo";
 import { selectVehicles } from "../api/vehicles-repo";
 import { ACTIVE_PROJECT_COOKIE, pickActiveProject } from "../lib/active-project";
@@ -42,11 +43,14 @@ export const canCreateProjects = cache(async (db: Db, user: CurrentUser): Promis
 export const getActiveProject = cache(async (db: Db): Promise<ActiveProject | null> => {
   const user = await getCurrentUser(db);
   if (!user) return null;
-  const cookieId = (await cookies()).get(ACTIVE_PROJECT_COOKIE)?.value;
+  // Lihat sebagai: proyek dikunci ke proyek tempat mode itu dimulai.
+  const cookieId = (await getViewAs(db))?.projectId ?? (await cookies()).get(ACTIVE_PROJECT_COOKIE)?.value;
   const active = pickActiveProject(await listProjectsFor(db, user), cookieId);
   if (!active) return null;
   const role = await projectRole(db, user, active.id);
-  return role ? { ...(await getProjectDetail(db, active.id)), role } : null;
+  if (!role) return null;
+  const [detail, scope] = await Promise.all([getProjectDetail(db, active.id), walletScope(db, role, user.id, active.id)]);
+  return { ...detail, role, walletScope: scope };
 });
 
 /** Halaman yang butuh proyek: tanpa proyek → buat proyek (bila boleh) atau daftar proyek dengan empty state. */
