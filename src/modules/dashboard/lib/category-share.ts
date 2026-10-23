@@ -1,3 +1,4 @@
+import { sortCategoriesForPicker } from "@/modules/budgets/lib/category-order";
 import type { Category } from "@/modules/budgets/types/category";
 import type { CategoryGroup } from "@/modules/budgets/types/category-group";
 import { sum } from "@/modules/shared/lib/money";
@@ -44,7 +45,7 @@ export interface GroupShare {
   categories: CategoryShare[];
 }
 
-/** Pengeluaran per grup kategori (struktur RAB), terbesar dulu, dengan rincian kategori. */
+/** Pengeluaran per grup kategori (struktur RAB), grup A–Z ("Lain-lain" di akhir, "Tanpa kategori" paling bawah), dengan rincian kategori. */
 export function groupShares(entries: ExpenseEntry[], categories: Category[], groups: CategoryGroup[]): GroupShare[] {
   const total = sum(entries.map((e) => e.amount));
   const groupOf = new Map(categories.map((c) => [c.id, c.groupId]));
@@ -54,11 +55,10 @@ export function groupShares(entries: ExpenseEntry[], categories: Category[], gro
     const key = groupOf.get(share.key) ?? "none";
     byGroup.set(key, [...(byGroup.get(key) ?? []), share]);
   }
-  return [...byGroup]
-    .map(([key, items]) => {
-      const amount = sum(items.map((c) => c.amount));
-      return { key, name: names.get(key) ?? "Tanpa kategori", amount, share: total > 0 ? Math.round((amount / total) * 100) : 0, categories: items };
-    })
-    .sort((a, b) => b.amount - a.amount);
+  const shares = [...byGroup].map(([key, items]) => {
+    const amount = sum(items.map((c) => c.amount));
+    return { key, name: names.get(key) ?? "Tanpa kategori", amount, share: total > 0 ? Math.round((amount / total) * 100) : 0, categories: items };
+  });
+  return [...sortCategoriesForPicker(shares.filter((g) => g.key !== "none")), ...shares.filter((g) => g.key === "none")];
 }
 

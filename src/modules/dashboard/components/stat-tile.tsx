@@ -10,9 +10,10 @@ export function StatTile({ label, value, icon: Icon, tone }: { label: string; va
       <span className={cn("absolute top-0 right-0 flex size-10 items-center justify-center border-b-2 border-l-2", tone)}>
         <Icon className="size-5" aria-hidden />
       </span>
-      <CardContent className="py-3 pr-12">
-        <p className={`${LABEL} text-muted-foreground`}>{label}</p>
-        <p className={`${AMOUNT} text-lg`}>{value}</p>
+      {/* Hanya label yang memberi ruang kotak ikon; nominal di bawah kotak ikon (mt-3), selebar kartu, tetap satu baris (font mengecil di kartu sempit). */}
+      <CardContent className="@container py-3">
+        <p className={`${LABEL} pr-10 text-muted-foreground`}>{label}</p>
+        <p className={`${AMOUNT} mt-3 text-[min(1.125rem,11.5cqi)] whitespace-nowrap`}>{value}</p>
       </CardContent>
     </Card>
   );

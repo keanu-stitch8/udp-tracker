@@ -24,7 +24,7 @@ describe("categoryShares", () => {
 });
 
 describe("groupShares", () => {
-  it("total per grup terbesar dulu, rincian kategori di dalamnya; tanpa kategori → grup Tanpa kategori", () => {
+  it("grup urut A–Z (Lain-lain di akhir), rincian kategori terbesar dulu; tanpa kategori → grup Tanpa kategori paling bawah", () => {
     const withNone = [...entries, { transactionId: "x", date: "2026-10-20", categoryId: null, walletId: "cash", amount: 1_000 }];
     expect(groupShares(withNone, categories, groups).map((g) => [g.name, g.amount, g.share, g.categories.map((c) => c.key)])).toEqual([
       ["Meal", 1_500_000, 96, ["makan-malam", "makan-siang"]],
@@ -33,5 +33,9 @@ describe("groupShares", () => {
       ["Tanpa kategori", 1_000, 0, ["none"]],
     ]);
   });
+  it("urutan grup tidak ikut nominal", () => {
+    const entry = (categoryId: string, amount: number) => ({ transactionId: categoryId, date: "2026-10-20", categoryId, walletId: "cash", amount });
+    const names = groupShares([entry("tol", 2_000_000), entry("admin", 500_000), entry("makan-siang", 1_000)], categories, groups).map((g) => g.name);
+    expect(names).toEqual(["Meal", "Transportation", "Lain-lain"]);
+  });
 });
-
