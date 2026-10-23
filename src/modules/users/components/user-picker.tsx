@@ -1,10 +1,12 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { CARD_TITLE } from "@/components/app/typography";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item";
 import type { UserOption } from "../types/user-list";
 import { UserAvatar } from "./user-avatar";
 
@@ -47,14 +49,19 @@ function PickerList({ options, onPick }: { options: UserOption[]; onPick: (user:
       <ItemGroup className="max-h-[50dvh] gap-2 overflow-y-auto">
         {shown.length === 0 && <p className="text-sm text-muted-foreground">{options.length ? "Tidak ada yang cocok." : "Semua pengguna aktif sudah ditambahkan."}</p>}
         {shown.map((user) => (
-          <Item key={user.id} variant="outline" size="sm" className="bg-card" render={<button type="button" onClick={() => onPick(user)} />}>
+          <Item key={user.id} variant="outline" size="sm" className="bg-card">
             <ItemMedia>
               <UserAvatar name={user.name} email={user.email} imageUrl={user.imageUrl} className="size-8" />
             </ItemMedia>
-            <ItemContent className="min-w-0 text-left">
+            <ItemContent className="min-w-0">
               <ItemTitle className="w-full truncate">{user.name ?? user.email}</ItemTitle>
               {user.name && <ItemDescription className="truncate">{user.email}</ItemDescription>}
             </ItemContent>
+            <ItemActions>
+              <Button size="icon-lg" aria-label={`Tambahkan ${user.name ?? user.email}`} onClick={() => onPick(user)}>
+                <Plus className="size-6" strokeWidth={3} />
+              </Button>
+            </ItemActions>
           </Item>
         ))}
       </ItemGroup>
