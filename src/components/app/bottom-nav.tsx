@@ -42,7 +42,7 @@ export function BottomNavLinks({ pathname }: { pathname: string }) {
   };
 
   return (
-    <nav aria-label="Navigasi utama" className="fixed inset-x-0 bottom-0 z-40 mx-auto grid max-w-[480px] grid-cols-5 border-t-2 border-x-2 bg-card pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label="Navigasi utama" className="fixed inset-x-0 bottom-0 z-40 mx-auto grid max-w-[480px] grid-cols-5 border-t-2 bg-card pb-[env(safe-area-inset-bottom)]">
       {link(first)}
       {link(second)}
       <div className="flex items-start justify-center">
