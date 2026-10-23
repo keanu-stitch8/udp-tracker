@@ -1,8 +1,9 @@
 // Pagu (spec §3.3): nilai = tarif × basis × hari; kelebihan pemakaian = lebih pagu (overBy).
+// Dua pagu (spec akses §8): pagu karyawan = pagu yang sama dengan tarif karyawan; anggota hanya menerima versi ini.
 import { sum } from "@/modules/shared/lib/money";
 import type { BudgetBasis } from "@/modules/shared/types/enums";
 import type { ExpenseEntry } from "@/modules/transactions/types/transaction";
-import type { Budget, BudgetTotal, BudgetUsage, DailyBudgetUsage } from "../types/budget";
+import type { Budget, BudgetTotal, BudgetUsage, DailyBudgetUsage, DualBudgetTotal } from "../types/budget";
 
 export interface BudgetContext {
   pax: number;
@@ -49,6 +50,16 @@ export function budgetLimit(budget: BudgetRule, ctx: BudgetContext): number {
   return daily === null ? budget.rate : daily * budgetDays(budget, ctx);
 }
 
+/** Tarif karyawan diisi dan beda dari tarif management → ada dua pagu. */
+export function hasEmployeeRate(budget: Pick<Budget, "rate" | "employeeRate">): boolean {
+  return budget.employeeRate !== null && budget.employeeRate !== budget.rate;
+}
+
+/** Pagu versi karyawan: tarif karyawan (bila ada) menggantikan tarif management, yang tidak ikut terbawa. */
+export function asEmployeeBudget<T extends Budget>(budget: T): T {
+  return { ...budget, rate: budget.employeeRate ?? budget.rate, employeeRate: null };
+}
+
 const usedBy = (budget: Budget, entries: ExpenseEntry[]) => {
   const ids = new Set(budget.categoryIds);
   return sum(entries.filter((e) => e.categoryId !== null && ids.has(e.categoryId)).map((e) => e.amount));
@@ -74,6 +85,20 @@ export function totalBudgetUsage(budgets: Budget[], ctx: BudgetContext, entries:
   const covered = new Set(budgets.flatMap((b) => b.categoryIds));
   const used = sum(entries.filter((e) => e.categoryId !== null && covered.has(e.categoryId)).map((e) => e.amount));
   return { limit, used, remaining: Math.max(limit - used, 0), overBy: Math.max(used - limit, 0) };
+}
+
+/** Total pagu karyawan vs management; pemakaian sama, cadangan = selisih batas. */
+export function dualBudgetTotal(budgets: Budget[], ctx: BudgetContext, entries: ExpenseEntry[]): DualBudgetTotal {
+  const management = totalBudgetUsage(budgets, ctx, entries);
+  const employee = totalBudgetUsage(budgets.map(asEmployeeBudget), ctx, entries);
+  return {
+    employeeLimit: employee.limit,
+    managementLimit: management.limit,
+    reserve: management.limit - employee.limit,
+    used: management.used,
+    overEmployee: employee.overBy,
+    overManagement: management.overBy,
+  };
 }
 
 export function dailyBudgetUsage(budget: Budget, ctx: BudgetContext, entries: ExpenseEntry[], date: string): DailyBudgetUsage | null {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { categories, mealBudget, transactions } from "@tests/helpers/ledger-fixture";
 import { expenseEntries } from "@/modules/transactions/lib/ledger";
-import { budgetContextOf, budgetLimit, budgetUsage, dailyBudgetUsage, dailyLimit, totalBudgetUsage, usesDays } from "./budget";
+import { asEmployeeBudget, budgetContextOf, budgetLimit, budgetUsage, dailyBudgetUsage, dailyLimit, dualBudgetTotal, totalBudgetUsage, usesDays } from "./budget";
 
 const ctx = { pax: 9, vehicleCount: 2, days: 6 };
 const entries = expenseEntries(transactions, categories);
@@ -52,5 +52,22 @@ describe("pagu", () => {
     expect(dailyBudgetUsage(mealBudget, ctx, entries, "2026-10-20")).toEqual({ budgetId: "pagu-makan", name: "Pagu Makan", limit: 1_350_000, used: 1_500_000 });
     expect(dailyBudgetUsage(mealBudget, ctx, entries, "2026-10-21")).toMatchObject({ used: 0 });
     expect(dailyBudgetUsage({ ...mealBudget, basis: "lump_sum" }, ctx, entries, "2026-10-20")).toBeNull();
+  });
+  it("pagu karyawan: tarif karyawan menggantikan tarif management; kosong = sama", () => {
+    expect(asEmployeeBudget({ ...mealBudget, employeeRate: 100_000 })).toMatchObject({ rate: 100_000, employeeRate: null, basis: "per_pax_per_day" });
+    expect(asEmployeeBudget(mealBudget).rate).toBe(150_000);
+  });
+  it("dua pagu: cadangan = management − karyawan; kelebihan atas pagu karyawan tertutup cadangan", () => {
+    const small = { pax: 1, vehicleCount: 0, days: 1 };
+    // Pakai 1.500.000 (makan); karyawan 1.000.000, management 1.500.000 → lebih 500.000, tertutup.
+    expect(dualBudgetTotal([{ ...mealBudget, rate: 1_500_000, employeeRate: 1_000_000 }], small, entries)).toEqual({
+      employeeLimit: 1_000_000,
+      managementLimit: 1_500_000,
+      reserve: 500_000,
+      used: 1_500_000,
+      overEmployee: 500_000,
+      overManagement: 0,
+    });
+    expect(dualBudgetTotal([mealBudget], small, entries)).toMatchObject({ employeeLimit: 150_000, managementLimit: 150_000, reserve: 0, overEmployee: 1_350_000, overManagement: 1_350_000 });
   });
 });

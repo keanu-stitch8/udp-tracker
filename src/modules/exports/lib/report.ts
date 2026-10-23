@@ -1,5 +1,5 @@
 // Isi laporan ekspor (spec §6.2 + addendum 2026-10-22). Murni: dari data buku kas → baris 4 tab, tanpa Google.
-import { budgetContextOf, budgetUsage, dailyBudgetUsage, totalBudgetUsage } from "@/modules/budgets/lib/budget";
+import { asEmployeeBudget, budgetContextOf, budgetUsage, dailyBudgetUsage, dualBudgetTotal, totalBudgetUsage } from "@/modules/budgets/lib/budget";
 import { limitFormula } from "@/modules/budgets/lib/basis";
 import { groupCategories } from "@/modules/budgets/lib/category-groups";
 import { addDays, daysInclusive, formatDateLong, nowTimeWib, todayWib } from "@/modules/shared/lib/date";
@@ -143,21 +143,26 @@ function budgetTab({ project, budgets, categories, transactions }: ReportInput):
   const ctx = budgetContextOf(project);
   const entries = expenseEntries(transactions, categories);
   const total = totalBudgetUsage(budgets, ctx, entries);
+  const dual = dualBudgetTotal(budgets, ctx, entries);
+  // Rumus = tarif management; Sisa dihitung dari pagu management.
   const rows: ReportCell[][] = [
-    header("Pagu", "Rumus", "Nilai pagu", "Realisasi", "Sisa", "Lebih pagu"),
+    header("Pagu", "Rumus", "Pagu karyawan", "Pagu management", "Realisasi", "Sisa", "Lebih pagu karyawan", "Lebih pagu management"),
     ...budgets.map((b) => {
       const u = budgetUsage(b, ctx, entries);
-      return [text(b.name), text(limitFormula(b, ctx)), money(u.limit), money(u.used), money(u.remaining), money(u.overBy)];
+      const e = budgetUsage(asEmployeeBudget(b), ctx, entries);
+      return [text(b.name), text(limitFormula(b, ctx)), money(e.limit), money(u.limit), money(u.used), money(u.remaining), money(e.overBy), money(u.overBy)];
     }),
-    [bold("Total pagu"), text(null), money(total.limit), money(total.used), money(total.remaining), money(total.overBy)],
+    [bold("Total pagu"), text(null), money(dual.employeeLimit), money(total.limit), money(total.used), money(total.remaining), money(dual.overEmployee), money(total.overBy)],
+    [bold("Cadangan"), text("Pagu management − pagu karyawan"), money(dual.reserve)],
   ];
   const days = Array.from({ length: daysInclusive(project.startDate, project.endDate) }, (_, i) => addDays(project.startDate, i));
   for (const b of budgets) {
     if (!dailyBudgetUsage(b, ctx, entries, project.startDate)) continue;
-    rows.push([], [bold(`Rincian harian: ${b.name}`)], header("Tanggal", "Batas harian", "Realisasi", "Selisih"));
+    rows.push([], [bold(`Rincian harian: ${b.name}`)], header("Tanggal", "Batas karyawan", "Batas management", "Realisasi", "Selisih karyawan"));
     for (const date of days) {
       const u = dailyBudgetUsage(b, ctx, entries, date)!;
-      rows.push([text(formatDateLong(date)), money(u.limit), money(u.used), money(u.limit - u.used)]);
+      const e = dailyBudgetUsage(asEmployeeBudget(b), ctx, entries, date)!;
+      rows.push([text(formatDateLong(date)), money(e.limit), money(u.limit), money(u.used), money(e.limit - u.used)]);
     }
   }
   return { title: "Pagu", rows, freezeRows: 1 };

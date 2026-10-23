@@ -4,6 +4,13 @@ import { BUDGET_BASES } from "@/modules/shared/types/enums";
 export const budgetInputSchema = z.object({
   name: z.string().trim().min(1, "Nama pagu wajib diisi.").max(60, "Maksimal 60 karakter."),
   rate: z.number({ error: "Tarif wajib diisi." }).int("Tarif harus bilangan bulat.").min(0, "Tarif tidak boleh negatif.").max(1_000_000_000, "Tarif terlalu besar."),
+  employeeRate: z
+    .number({ error: "Tarif karyawan harus angka." })
+    .int("Tarif harus bilangan bulat.")
+    .min(0, "Tarif tidak boleh negatif.")
+    .max(1_000_000_000, "Tarif terlalu besar.")
+    .nullish()
+    .transform((value) => value ?? null),
   basis: z.enum(BUDGET_BASES, "Pilih cara hitung."),
   days: z
     .number({ error: "Jumlah hari harus angka." })

@@ -131,14 +131,16 @@ export const budgets = pgTable(
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     name: text().notNull(),
+    // Tarif management (rahasia); `employeeRate` = tarif karyawan, null = sama dengan tarif management.
     rate: integer().notNull(),
+    employeeRate: integer(),
     basis: budgetBasis().notNull(),
     // Jumlah hari khusus pagu (mis. 6 hari kerja); null = ikut periode proyek.
     days: integer(),
     note: text(),
     ...timestamps,
   },
-  (t) => [index("budgets_project_idx").on(t.projectId), check("budgets_rate_nonnegative", sql`${t.rate} >= 0`), check("budgets_days_positive", sql`${t.days} >= 1`)],
+  (t) => [index("budgets_project_idx").on(t.projectId), check("budgets_rate_nonnegative", sql`${t.rate} >= 0`), check("budgets_employee_rate_nonnegative", sql`${t.employeeRate} >= 0`), check("budgets_days_positive", sql`${t.days} >= 1`)],
 );
 
 export const budgetCategories = pgTable(

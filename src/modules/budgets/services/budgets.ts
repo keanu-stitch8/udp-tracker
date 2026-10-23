@@ -11,17 +11,19 @@ import { budgetInputSchema } from "../types/budget-input";
 export interface BudgetValues {
   name: string;
   rate: number;
+  employeeRate: number | null;
   basis: BudgetRow["basis"];
   days: number | null;
   note: string | null;
   categoryIds: string[];
 }
 
-/** Validasi pagu: nama unik di proyek, kategori = pengeluaran milik proyek. */
+/** Validasi pagu: nama unik di proyek, kategori = pengeluaran milik proyek, tarif karyawan ≤ tarif management. */
 export function planBudget(input: unknown, refs: { categories: Category[]; otherBudgetNames: string[] }): BudgetValues {
   const v = parseOrThrow(budgetInputSchema, input);
   const errors: FieldErrors = {};
   if (refs.otherBudgetNames.some((n) => n.toLowerCase() === v.name.toLowerCase())) errors.name = ["Nama pagu sudah dipakai."];
+  if (v.employeeRate !== null && v.employeeRate > v.rate) errors.employeeRate = ["Tarif karyawan tidak boleh lebih dari tarif management."];
   const byId = new Map(refs.categories.map((c) => [c.id, c]));
   const picked = v.categoryIds.map((id) => byId.get(id));
   if (picked.some((c) => !c)) errors.categoryIds = ["Kategori tidak ditemukan di proyek ini."];

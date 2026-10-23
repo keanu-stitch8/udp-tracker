@@ -58,6 +58,22 @@ describe("pengaturan pagu", () => {
     expect((error as ValidationError).fieldErrors).toMatchObject({ days: ["Minimal 1 hari."] });
   });
 
+  it("tarif karyawan opsional: batas karyawan, cadangan; tidak boleh melebihi tarif management", async () => {
+    const snack = await categoryId("Snack & Air Minum");
+    const created = await createBudget(db, projectId, { name: "Snack", rate: 30_000, employeeRate: 20_000, basis: "per_day", categoryIds: [snack] });
+    expect(created).toMatchObject({ rate: 30_000, employeeRate: 20_000 });
+    const settings = await getBudgetSettings(db, projectId);
+    expect(settings.budgets.map((b) => [b.limit, b.employeeLimit, b.employeeFormula])).toEqual([[180_000, 120_000, "Rp 20.000 × 6 hari"]]);
+    expect(settings.total).toMatchObject({ employeeLimit: 120_000, managementLimit: 180_000, reserve: 60_000 });
+
+    const plain = await updateBudget(db, projectId, created.id, { ...created, employeeRate: null });
+    expect(plain.employeeRate).toBeNull();
+    expect((await getBudgetSettings(db, projectId)).budgets[0].employeeLimit).toBe(180_000);
+
+    const error = await updateBudget(db, projectId, created.id, { ...created, employeeRate: 40_000 }).catch((e) => e);
+    expect((error as ValidationError).fieldErrors).toMatchObject({ employeeRate: ["Tarif karyawan tidak boleh lebih dari tarif management."] });
+  });
+
   it("validasi: nama unik, kategori pengeluaran milik proyek", async () => {
     await createBudget(db, projectId, { name: "Pagu Makan", rate: 1, basis: "per_day", categoryIds: [await categoryId("Makan Siang")] });
     const udp = (await db.select().from(categories).where(and(eq(categories.projectId, projectId), eq(categories.name, "UDP Kantor"))))[0].id;

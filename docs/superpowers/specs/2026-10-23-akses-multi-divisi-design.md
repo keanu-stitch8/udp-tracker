@@ -132,7 +132,8 @@ Di luar proyek:
 
 - Form pagu: *Tarif management* (wajib, kolom `rate` yang sudah ada) dan *Tarif karyawan* (opsional). Hanya terlihat oleh peran dengan `budgetSecret`; anggota tidak membuka pengaturan pagu.
 - Perhitungan pagu memakai tarif efektif per peran:
-  - Anggota: `employee_rate ?? rate`. "Lebih pagu" dihitung dari angka ini.
+  - Anggota: `employee_rate`. Pagu tanpa tarif karyawan **tidak dikirim** ke anggota (revisi pengguna Rilis 7: fallback ke `rate` membocorkan angka management). "Lebih pagu" dihitung dari angka ini.
+  - Root/PM: pagu karyawan = `employee_rate ?? rate`.
   - Root/PM: keduanya. Ditampilkan pagu karyawan, pagu management, dan **cadangan** = total management − total karyawan, serta apakah kelebihan atas pagu karyawan masih tertutup cadangan.
 - Kalender dan halaman Pagu mengikuti aturan yang sama. Beranda tetap tanpa pagu.
 

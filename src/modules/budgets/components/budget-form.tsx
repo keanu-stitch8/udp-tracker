@@ -29,6 +29,8 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
   const save = useSaveBudget(settings.projectId, initial?.id);
   const [name, setName] = useState(initial?.name ?? "");
   const [rate, setRate] = useState<number | null>(initial?.rate ?? null);
+  // Kosong = sama dengan tarif management.
+  const [employeeRate, setEmployeeRate] = useState<number | null>(initial?.employeeRate ?? null);
   const [basis, setBasis] = useState<BudgetBasis>(initial?.basis ?? "per_pax_per_day");
   // Kosong = ikut periode proyek.
   const [days, setDays] = useState(initial?.days ? String(initial.days) : "");
@@ -40,6 +42,7 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
   const tripBased = basis === "per_vehicle";
   const customDays = (dayBased || tripBased) && days ? Number(days) : null;
   const preview = { rate: rate ?? 0, basis, days: customDays };
+  const employeePreview = employeeRate !== null && employeeRate !== preview.rate ? { ...preview, rate: employeeRate } : null;
   const toggleCategory = (id: string) => setCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
   return (
@@ -48,7 +51,7 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
       onSubmit={(event) => {
         event.preventDefault();
         save.mutate(
-          { name, rate: rate ?? 0, basis, days: customDays, categoryIds, note: initial?.note ?? null },
+          { name, rate: rate ?? 0, employeeRate, basis, days: customDays, categoryIds, note: initial?.note ?? null },
           {
             onSuccess: () => {
               toast.success(initial ? "Pagu diperbarui." : "Pagu ditambahkan.");
@@ -66,16 +69,22 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field data-invalid={errorOf("rate") ? true : undefined}>
-            <FieldLabel htmlFor="budget-rate">Tarif</FieldLabel>
+            <FieldLabel htmlFor="budget-rate">Tarif management</FieldLabel>
             <MoneyInput id="budget-rate" className="h-10" value={rate} onChange={setRate} />
             {errorOf("rate") && <FieldError>{errorOf("rate")}</FieldError>}
           </Field>
-          <Field data-invalid={errorOf("basis") ? true : undefined}>
-            <FieldLabel htmlFor="budget-basis">Dihitung</FieldLabel>
-            <AppSelect id="budget-basis" value={basis} items={BUDGET_BASES.map((b) => ({ value: b, label: BASIS_LABELS[b] }))} onChange={setBasis} />
-            {errorOf("basis") && <FieldError>{errorOf("basis")}</FieldError>}
+          <Field data-invalid={errorOf("employeeRate") ? true : undefined}>
+            <FieldLabel htmlFor="budget-employee-rate">Tarif karyawan</FieldLabel>
+            <MoneyInput id="budget-employee-rate" className="h-10" value={employeeRate} onChange={setEmployeeRate} />
+            {errorOf("employeeRate") && <FieldError>{errorOf("employeeRate")}</FieldError>}
           </Field>
         </div>
+        <p className="-mt-2 text-xs text-muted-foreground">Tarif karyawan opsional. Anggota proyek hanya melihat pagu yang tarif karyawannya diisi; kosong = pagu ini tidak terlihat oleh anggota.</p>
+        <Field data-invalid={errorOf("basis") ? true : undefined}>
+          <FieldLabel htmlFor="budget-basis">Dihitung</FieldLabel>
+          <AppSelect id="budget-basis" value={basis} items={BUDGET_BASES.map((b) => ({ value: b, label: BASIS_LABELS[b] }))} onChange={setBasis} />
+          {errorOf("basis") && <FieldError>{errorOf("basis")}</FieldError>}
+        </Field>
         {(dayBased || tripBased) && (
           <Field data-invalid={errorOf("days") ? true : undefined}>
             <FieldLabel htmlFor="budget-days">{tripBased ? "Jumlah trip" : "Jumlah hari"}</FieldLabel>
@@ -94,7 +103,13 @@ export function BudgetForm({ settings, initial, onDone }: BudgetFormProps) {
             {errorOf("days") && <FieldError>{errorOf("days")}</FieldError>}
           </Field>
         )}
+        {employeePreview && (
+          <p className="text-sm">
+            Karyawan: {limitFormula(employeePreview, settings.context)} = <span className={AMOUNT}>{formatRupiah(budgetLimit(employeePreview, settings.context))}</span>
+          </p>
+        )}
         <p className="text-sm">
+          {employeePreview && "Management: "}
           {limitFormula(preview, settings.context)} = <span className={AMOUNT}>{formatRupiah(budgetLimit(preview, settings.context))}</span>
         </p>
         <Field data-invalid={errorOf("categoryIds") ? true : undefined}>

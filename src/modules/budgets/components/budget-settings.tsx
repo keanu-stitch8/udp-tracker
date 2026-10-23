@@ -11,7 +11,10 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { useBudgetSettings, useDeleteBudget } from "../hooks/use-budgets";
 import { BASIS_LABELS } from "../lib/basis";
+import { hasEmployeeRate } from "../lib/budget";
 import { BudgetForm } from "./budget-form";
+import { BudgetTotalCard } from "./budget-total-card";
+import { OverBudgetNote } from "./over-budget-note";
 
 type Editing = { kind: "new" } | { kind: "edit"; id: string } | null;
 
@@ -50,6 +53,8 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
         </Button>
       )}
 
+      {data.budgets.length > 0 && <BudgetTotalCard total={data.total} />}
+
       {!data.budgets.length && editing?.kind !== "new" && (
         <p className="border-2 border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada pagu. Tambahkan pagu sesuai anggaran proyek, mis. makan per orang per hari.</p>
       )}
@@ -69,6 +74,7 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
             <CardHeader>
               <CardTitle className={CARD_TITLE}>{budget.name}</CardTitle>
               <CardDescription>
+                {hasEmployeeRate(budget) && `Karyawan ${formatRupiah(budget.employeeRate!)} · management `}
                 {formatRupiah(budget.rate)} {BASIS_LABELS[budget.basis]}
               </CardDescription>
               <CardAction>
@@ -78,14 +84,19 @@ export function BudgetSettingsList({ projectId }: { projectId: string }) {
               </CardAction>
             </CardHeader>
             <CardContent className="flex flex-col gap-2 text-sm">
+              {hasEmployeeRate(budget) && (
+                <p>
+                  Karyawan: {budget.employeeFormula} = <span className={AMOUNT}>{formatRupiah(budget.employeeLimit)}</span>
+                </p>
+              )}
               <p>
+                {hasEmployeeRate(budget) && "Management: "}
                 {budget.formula} = <span className={AMOUNT}>{formatRupiah(budget.limit)}</span>
               </p>
-              <BudgetBar used={budget.used} limit={budget.limit} />
-              <p className="text-muted-foreground">
-                Terpakai {formatRupiah(budget.used)}
-                {budget.overBy > 0 && <span className="text-destructive"> · lebih pagu {formatRupiah(budget.overBy)}</span>}
-              </p>
+              <BudgetBar used={budget.used} limit={budget.employeeLimit} />
+              <p className="text-muted-foreground">Terpakai {formatRupiah(budget.used)}</p>
+              {budget.employeeRate === null && <p className="text-muted-foreground">Tidak terlihat oleh anggota (tarif karyawan kosong).</p>}
+              <OverBudgetNote used={budget.used} limit={budget.employeeLimit} managementLimit={budget.limit} />
               <div className="flex flex-wrap gap-1">
                 {budget.categoryIds.map((id) => (
                   <Badge key={id} variant="outline">

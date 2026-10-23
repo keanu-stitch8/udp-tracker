@@ -7,6 +7,7 @@ import { AMOUNT } from "@/components/app/typography";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { OverBudgetNote } from "@/modules/budgets/components/over-budget-note";
 import { formatRupiah } from "@/modules/shared/lib/money";
 import { TransactionRow } from "@/modules/transactions/components/transaction-row";
 import { useDayDetail } from "../hooks/use-calendar";
@@ -32,7 +33,12 @@ export function DayDetailPanel({ projectId, date, onNavigate }: { projectId: str
             </span>
           </div>
           <BudgetBar used={budget.used} limit={budget.limit} />
-          {budget.used > budget.limit && <p className="text-destructive">Lebih pagu {formatRupiah(budget.used - budget.limit)}</p>}
+          {budget.managementLimit !== undefined && budget.managementLimit !== budget.limit && (
+            <p className="text-muted-foreground">
+              Pagu management {formatRupiah(budget.managementLimit)} · cadangan {formatRupiah(budget.managementLimit - budget.limit)}
+            </p>
+          )}
+          <OverBudgetNote used={budget.used} limit={budget.limit} managementLimit={budget.managementLimit} />
         </div>
       ))}
 

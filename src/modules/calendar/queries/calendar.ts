@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { Db } from "@/db/types";
 import { ValidationError } from "@/lib/errors";
-import { budgetContextOf, dailyBudgetUsage } from "@/modules/budgets/lib/budget";
+import { asEmployeeBudget, budgetContextOf, dailyBudgetUsage, dailyLimit } from "@/modules/budgets/lib/budget";
 import type { DailyBudgetUsage } from "@/modules/budgets/types/budget";
 import { isIsoDate } from "@/modules/shared/lib/date";
 import { sum } from "@/modules/shared/lib/money";
@@ -32,7 +32,10 @@ export interface DayDetail {
   transactions: TransactionView[];
 }
 
-/** Tanpa `budgetSecret` pagu tidak dikirim sama sekali (sampai tarif karyawan ada di Rilis 5, pagu = tarif management). */
+/**
+ * Pagu harian = pagu karyawan; batas management hanya ikut untuk peran `budgetSecret` (spec akses §8).
+ * Anggota hanya menerima pagu yang tarif karyawannya diisi — tanpa itu pagu karyawan = angka management.
+ */
 export const getDayDetail = cache(async (db: Db, projectId: string, date: string, access: { budgetSecret: boolean }): Promise<DayDetail> => {
   if (!isIsoDate(date)) throw new ValidationError({ date: ["Tanggal tidak valid."] });
   const ledger = await getLedger(db, projectId);
@@ -48,7 +51,12 @@ export const getDayDetail = cache(async (db: Db, projectId: string, date: string
         return { categoryId, name: category?.name ?? "Biaya admin", icon: category?.icon ?? "landmark", total };
       })
       .sort((a, b) => b.total - a.total),
-    budgets: access.budgetSecret ? ledger.budgets.map((b) => dailyBudgetUsage(b, ctx, entries, date)).filter((b): b is DailyBudgetUsage => b !== null) : [],
+    budgets: ledger.budgets.flatMap((b): DailyBudgetUsage[] => {
+      if (!access.budgetSecret && b.employeeRate === null) return [];
+      const usage = dailyBudgetUsage(asEmployeeBudget(b), ctx, entries, date);
+      if (!usage) return [];
+      return [access.budgetSecret ? { ...usage, managementLimit: dailyLimit(b, ctx)! } : usage];
+    }),
     transactions: toTransactionViews(
       ledger.transactions.filter((t) => t.date === date),
       refsOf(ledger),

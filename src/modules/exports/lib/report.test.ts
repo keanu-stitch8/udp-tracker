@@ -77,12 +77,20 @@ describe("buildReport", () => {
     expect(daily.at(-1)).toEqual(["Total", 900_000, 600_000, 50_000, 6_500, 1_556_500]);
   });
 
-  it("Pagu: rumus, nilai, realisasi, sisa, lebih pagu, total, rincian harian", () => {
+  it("Pagu: rumus, pagu karyawan & management, realisasi, sisa, lebih pagu, total, cadangan, rincian harian", () => {
     const budget = tab("Pagu");
-    expect(values(budget)[0]).toEqual(["Pagu", "Rumus", "Nilai pagu", "Realisasi", "Sisa", "Lebih pagu"]);
-    expect(rowOf(budget, "Pagu Makan")).toEqual(["Pagu Makan", "Rp 150.000 × 9 orang × 6 hari", 8_100_000, 1_500_000, 6_600_000, 0]);
-    expect(rowOf(budget, "Total pagu")).toEqual(["Total pagu", null, 8_100_000, 1_500_000, 6_600_000, 0]);
-    expect(rowOf(budget, "20 Okt 2026")).toEqual(["20 Okt 2026", 1_350_000, 1_500_000, -150_000]);
+    expect(values(budget)[0]).toEqual(["Pagu", "Rumus", "Pagu karyawan", "Pagu management", "Realisasi", "Sisa", "Lebih pagu karyawan", "Lebih pagu management"]);
+    expect(rowOf(budget, "Pagu Makan")).toEqual(["Pagu Makan", "Rp 150.000 × 9 orang × 6 hari", 8_100_000, 8_100_000, 1_500_000, 6_600_000, 0, 0]);
+    expect(rowOf(budget, "Total pagu")).toEqual(["Total pagu", null, 8_100_000, 8_100_000, 1_500_000, 6_600_000, 0, 0]);
+    expect(rowOf(budget, "Cadangan")).toEqual(["Cadangan", "Pagu management − pagu karyawan", 0]);
+    expect(rowOf(budget, "20 Okt 2026")).toEqual(["20 Okt 2026", 1_350_000, 1_350_000, 1_500_000, -150_000]);
+  });
+
+  it("Pagu dengan tarif karyawan: batas karyawan lebih kecil, cadangan = selisih", () => {
+    const dual = buildReport({ ...input, budgets: [{ ...mealBudget, employeeRate: 100_000 }] }).find((t) => t.title === "Pagu")!;
+    expect(rowOf(dual, "Pagu Makan")).toEqual(["Pagu Makan", "Rp 150.000 × 9 orang × 6 hari", 5_400_000, 8_100_000, 1_500_000, 6_600_000, 0, 0]);
+    expect(rowOf(dual, "Cadangan")).toEqual(["Cadangan", "Pagu management − pagu karyawan", 2_700_000]);
+    expect(rowOf(dual, "20 Okt 2026")).toEqual(["20 Okt 2026", 900_000, 1_350_000, 1_500_000, -600_000]);
   });
 
   it("Rekap: info proyek, UDP masuk, pengeluaran per grup (subtotal + kategori), saldo dompet, sisa", () => {

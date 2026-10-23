@@ -79,6 +79,7 @@ export const mealBudget: Budget = {
   id: "pagu-makan",
   name: "Pagu Makan",
   rate: 150_000,
+  employeeRate: null,
   basis: "per_pax_per_day",
   days: null,
   note: null,
