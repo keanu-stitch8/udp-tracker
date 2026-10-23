@@ -16,6 +16,7 @@ const LAINNYA: Record<string, string> = {
   "/lainnya/divisi": "Divisi",
   "/lainnya/anggota": "Anggota proyek",
   "/lainnya/pengguna": "Pengguna",
+  "/lainnya/profil": "Profil",
 };
 
 /** `from` = query `?dari=`: form transaksi kembali ke halaman asalnya (sama dengan tujuan setelah simpan). */
@@ -25,6 +26,11 @@ export function subPageOf(pathname: string, from: string | null): SubPage | null
   if (pathname.startsWith("/transaksi/")) return { title: "Ubah transaksi", back: backTo("/transaksi") };
   if (LAINNYA[pathname]) return { title: LAINNYA[pathname], back: "/lainnya" };
   if (pathname.startsWith("/lainnya/dompet/")) return { title: "Detail dompet", back: "/lainnya/dompet" };
+  if (pathname.startsWith("/lainnya/profil/")) {
+    // /lainnya/profil/[userId] (dibuka dari Anggota/Pengguna → ?dari=) atau /lainnya/profil/[userId]/[projectId].
+    const [userId, projectId] = pathname.slice("/lainnya/profil/".length).split("/");
+    return projectId ? { title: "Riwayat proyek", back: `/lainnya/profil/${userId}` } : { title: "Riwayat", back: backTo("/lainnya") };
+  }
   if (pathname === "/proyek") return { title: "Proyek", back: "/" };
   if (pathname === "/proyek/baru") return { title: "Proyek baru", back: "/proyek" };
   return null;

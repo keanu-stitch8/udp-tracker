@@ -34,13 +34,14 @@ const LINKS: MenuLink[] = [
 export function MenuLinks({ user, access }: { user: CurrentUser; access: MenuAccess }) {
   return (
     <>
-      <div className="flex items-center gap-3 border-2 bg-card p-3 shadow-md">
+      <Link href="/lainnya/profil" className="flex items-center gap-3 border-2 bg-card p-3 shadow-md">
         <UserAvatar name={user.name} email={user.email} imageUrl={user.imageUrl} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{user.name ?? user.email}</p>
-          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          <p className="truncate text-xs text-muted-foreground">{user.email} · Profil & riwayat</p>
         </div>
-      </div>
+        <ChevronRight className="size-4 shrink-0" />
+      </Link>
       <ul className="flex flex-col divide-y-2 border-2 bg-card shadow-md">
         {LINKS.filter((link) => link.show(access)).map(({ href, label, icon: Icon }) => (
           <li key={href}>

@@ -1,11 +1,12 @@
 "use client";
 
 import { Eye, Mail } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CARD_TITLE } from "@/components/app/typography";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -133,6 +134,9 @@ export function MemberSettings({ projectId, projectName }: { projectId: string; 
                     >
                       <Eye /> Lihat
                     </Button>
+                    <Link href={`/lainnya/profil/${member.userId}?dari=/lainnya/anggota`} className={buttonVariants({ size: "sm", variant: "outline" })}>
+                      Riwayat
+                    </Link>
                     <Button size="sm" variant="ghost" onClick={() => setConfirm({ kind: "member", id: member.userId })}>
                       Hapus
                     </Button>

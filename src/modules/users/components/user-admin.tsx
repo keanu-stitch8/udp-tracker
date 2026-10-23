@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemFooter, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDivisions } from "@/modules/divisions/hooks/use-divisions";
@@ -98,6 +99,9 @@ export function UserAdmin() {
                 </>
               ) : (
                 <>
+                  <Link href={`/lainnya/profil/${user.id}?dari=/lainnya/pengguna`} className={buttonVariants({ size: "sm", variant: "ghost" })}>
+                    Riwayat
+                  </Link>
                   {user.status !== "rejected" && (
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setConfirmReject(user.id)}>
                       {user.status === "active" ? "Cabut akses" : "Tolak"}
