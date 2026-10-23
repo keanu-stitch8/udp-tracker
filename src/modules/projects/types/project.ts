@@ -2,6 +2,7 @@ import type { ProjectStatus } from "@/modules/shared/types/enums";
 
 export interface Project {
   id: string;
+  divisionId: string;
   name: string;
   location: string;
   startDate: string;

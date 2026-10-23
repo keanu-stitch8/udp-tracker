@@ -4,6 +4,7 @@ import { pickActiveProject } from "./active-project";
 
 const project = (id: string, status: Project["status"]): Project => ({
   id,
+  divisionId: "d1",
   name: id,
   location: "",
   startDate: "2026-10-20",

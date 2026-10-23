@@ -4,17 +4,21 @@ import { FolderPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CARD_TITLE } from "@/components/app/typography";
+import { CARD_TITLE, LABEL } from "@/components/app/typography";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { useDivisions } from "@/modules/divisions/hooks/use-divisions";
 import { formatDateLong } from "@/modules/shared/lib/date";
 import { useActivateProject, useProjects } from "../hooks/use-projects";
+import { groupProjectsByDivision } from "../lib/group-by-division";
+import type { Project } from "../types/project";
 
 export function ProjectList({ activeProjectId }: { activeProjectId: string | null }) {
   const router = useRouter();
   const { data: projects = [] } = useProjects();
+  const { data: divisions = [] } = useDivisions();
   const activate = useActivateProject();
 
   if (!projects.length) {
@@ -36,47 +40,54 @@ export function ProjectList({ activeProjectId }: { activeProjectId: string | nul
     );
   }
 
+  const renderProject = (project: Project) => {
+    const isActive = project.id === activeProjectId;
+    return (
+      <li key={project.id}>
+        <Card>
+          <CardHeader>
+            <CardTitle className={CARD_TITLE}>{project.name}</CardTitle>
+            <CardDescription>
+              {formatDateLong(project.startDate)} – {formatDateLong(project.endDate)}
+              {project.location ? ` · ${project.location}` : ""}
+              {project.status === "done" ? " · Selesai" : ""}
+            </CardDescription>
+            <CardAction>
+              {isActive ? (
+                <Badge>Aktif</Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={activate.isPending}
+                  onClick={() =>
+                    activate.mutate(project.id, {
+                      onSuccess: () => {
+                        router.push("/");
+                        router.refresh();
+                      },
+                      onError: (error) => toast.error(error.message),
+                    })
+                  }
+                >
+                  Pakai
+                </Button>
+              )}
+            </CardAction>
+          </CardHeader>
+        </Card>
+      </li>
+    );
+  };
+
   return (
-    <ul className="flex flex-col gap-3">
-      {projects.map((project) => {
-        const isActive = project.id === activeProjectId;
-        return (
-          <li key={project.id}>
-            <Card>
-              <CardHeader>
-                <CardTitle className={CARD_TITLE}>{project.name}</CardTitle>
-                <CardDescription>
-                  {formatDateLong(project.startDate)} – {formatDateLong(project.endDate)}
-                  {project.location ? ` · ${project.location}` : ""}
-                  {project.status === "done" ? " · Selesai" : ""}
-                </CardDescription>
-                <CardAction>
-                  {isActive ? (
-                    <Badge>Aktif</Badge>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={activate.isPending}
-                      onClick={() =>
-                        activate.mutate(project.id, {
-                          onSuccess: () => {
-                            router.push("/");
-                            router.refresh();
-                          },
-                          onError: (error) => toast.error(error.message),
-                        })
-                      }
-                    >
-                      Pakai
-                    </Button>
-                  )}
-                </CardAction>
-              </CardHeader>
-            </Card>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="flex flex-col gap-5">
+      {groupProjectsByDivision(projects, divisions).map(({ division, projects: divisionProjects }) => (
+        <section key={division.id} className="flex flex-col gap-3">
+          <h2 className={LABEL}>{division.name}</h2>
+          <ul className="flex flex-col gap-3">{divisionProjects.map(renderProject)}</ul>
+        </section>
+      ))}
+    </div>
   );
 }

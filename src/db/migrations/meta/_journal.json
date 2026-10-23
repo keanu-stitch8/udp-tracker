@@ -50,6 +50,13 @@
       "when": 1792686438979,
       "tag": "0006_grup_kategori",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792737991107,
+      "tag": "0007_divisi",
+      "breakpoints": true
     }
   ]
 }

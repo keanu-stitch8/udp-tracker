@@ -18,19 +18,33 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-export const projects = pgTable("projects", {
+// Divisi (mis. MKK, MLSC): wadah proyek. Nama diatur di UI; migrasi 0007 membuat "Umum" untuk proyek lama.
+export const divisions = pgTable("divisions", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
-  location: text().notNull().default(""),
-  startDate: date({ mode: "string" }).notNull(),
-  endDate: date({ mode: "string" }).notNull(),
-  pax: integer().notNull().default(9),
-  status: projectStatus().notNull().default("active"),
-  driveFolderId: text(),
-  sheetId: text(),
-  sheetUrl: text(),
   ...timestamps,
 });
+
+export const projects = pgTable(
+  "projects",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    divisionId: uuid()
+      .notNull()
+      .references(() => divisions.id, { onDelete: "restrict" }),
+    name: text().notNull(),
+    location: text().notNull().default(""),
+    startDate: date({ mode: "string" }).notNull(),
+    endDate: date({ mode: "string" }).notNull(),
+    pax: integer().notNull().default(9),
+    status: projectStatus().notNull().default("active"),
+    driveFolderId: text(),
+    sheetId: text(),
+    sheetUrl: text(),
+    ...timestamps,
+  },
+  (t) => [index("projects_division_idx").on(t.divisionId)],
+);
 
 export const vehicles = pgTable(
   "vehicles",

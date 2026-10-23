@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/db/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createProject } from "@/modules/projects/commands/create-project";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { createCategory, updateCategory } from "./commands/save-category";
 import { createCategoryGroup, deleteCategoryGroup, renameCategoryGroup } from "./commands/save-category-group";
 import { getCategorySettings } from "./queries/category-settings";
@@ -15,7 +15,7 @@ const fieldErrors = (error: unknown) => (error as ValidationError).fieldErrors;
 
 beforeEach(async () => {
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
 });
 
 describe("grup kategori", () => {
@@ -65,7 +65,7 @@ describe("grup kategori", () => {
     expect(fieldErrors(await createCategory(db, projectId, { kind: "expense", name: "Laundry", icon: "shirt" }).catch((e) => e))).toEqual({
       groupId: ["Pilih grup kategori."],
     });
-    const other = (await createProject(db, { name: "Lain", startDate: "2026-10-20", endDate: "2026-10-25", pax: 1, vehicles: [] })).id;
+    const other = (await createProject(db, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-10-20", endDate: "2026-10-25", pax: 1, vehicles: [] })).id;
     const foreign = (await getCategorySettings(db, other)).groups[0].id;
     expect(fieldErrors(await createCategory(db, projectId, { kind: "expense", name: "Laundry", icon: "shirt", groupId: foreign }).catch((e) => e))).toEqual({
       groupId: ["Grup tidak ditemukan."],

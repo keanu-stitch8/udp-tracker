@@ -3,7 +3,7 @@ import type { Db } from "@/db/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { putReceipt } from "./api/blob";
 import { GeminiError, generateJson } from "./api/gemini";
 import { uploadReceipt } from "./services/upload-receipt";
@@ -23,7 +23,7 @@ let projectId: string;
 beforeEach(async () => {
   vi.clearAllMocks();
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Uji Bon", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Uji Bon", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
 });
 
 describe("uploadReceipt", () => {

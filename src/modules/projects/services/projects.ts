@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Db } from "@/db/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { parseOrThrow } from "@/lib/validation";
+import { findDivisionOrThrow } from "@/modules/divisions/services/divisions";
 import { selectProject, type NewProjectRow, type ProjectRow } from "../api/projects-repo";
 import { createProjectSchema, PROJECT_END_BEFORE_START, updateProjectSchema } from "../types/project-input";
 
@@ -33,4 +34,12 @@ export function planProjectUpdate(existing: ProjectRow, input: unknown): Partial
   const end = patch.endDate ?? existing.endDate;
   if (end < start) throw new ValidationError({ endDate: [PROJECT_END_BEFORE_START] });
   return patch;
+}
+
+/** Divisi tujuan proyek harus ada; tidak ditemukan → error di field `divisionId` (form), bukan 404. */
+export async function assertDivisionExists(db: Db, divisionId: string): Promise<void> {
+  await findDivisionOrThrow(db, divisionId).catch((error) => {
+    if (error instanceof NotFoundError) throw new ValidationError({ divisionId: ["Divisi tidak ditemukan."] });
+    throw error;
+  });
 }

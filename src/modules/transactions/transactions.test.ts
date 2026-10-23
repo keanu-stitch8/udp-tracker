@@ -6,7 +6,7 @@ import { getDashboardSummary } from "@/modules/dashboard/queries/summary";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
 import { createBudget } from "@/modules/budgets/commands/save-budget";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { insertTransaction } from "./api/transactions-repo";
 import { createTransaction, deleteTransaction, restoreTransaction, updateTransaction } from "./commands/save-transaction";
 import { getLedger } from "./queries/ledger";
@@ -18,7 +18,7 @@ let ref: { wallet: (name: string) => string; category: (name: string) => string;
 
 beforeEach(async () => {
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Hero Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] })).id;
   const reference = await getTransactionReference(db, projectId);
   const find = <T extends { id: string; name: string }>(list: T[]) => (name: string) => list.find((x) => x.name === name)!.id;
   ref = { wallet: find(reference.wallets), category: find(reference.categories), vehicle: find(reference.vehicles) };
@@ -106,7 +106,7 @@ describe("mutasi transaksi", () => {
   });
 
   it("referensi proyek lain ditolak; proyek selesai dikunci", async () => {
-    const other = await createProject(db, { name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: [] });
+    const other = await createProject(db, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: [] });
     const otherCash = (await getTransactionReference(db, other.id)).wallets.find((w) => w.name === "Cash")!.id;
     await expect(
       createTransaction(db, projectId, { type: "expense", date: "2026-10-20", time: "09:00", amount: 1, walletId: otherCash, categoryId: ref.category("Sarapan") }),

@@ -4,7 +4,7 @@ import { ValidationError } from "@/lib/errors";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { createTransaction, updateTransaction } from "@/modules/transactions/commands/save-transaction";
 import { getTransactionReference, getTransactionView, listTransactionViews } from "@/modules/transactions/queries/views";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { deleteReceipts } from "./api/blob";
 
 vi.mock("./api/blob", () => ({ putReceipt: vi.fn(), readReceipt: vi.fn(), deleteReceipts: vi.fn() }));
@@ -21,7 +21,7 @@ const draft = (project = projectId, ext = "jpg") => {
 beforeEach(async () => {
   vi.clearAllMocks();
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Uji Lampiran", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Uji Lampiran", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
   const ref = await getTransactionReference(db, projectId);
   base = { type: "expense", date: "2026-10-21", time: "09:00", amount: 54_000, walletId: ref.wallets[0].id, categoryId: ref.categories.find((c) => c.name === "Tol")!.id };
 });

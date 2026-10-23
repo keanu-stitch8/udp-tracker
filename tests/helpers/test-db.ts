@@ -10,3 +10,9 @@ export async function createTestDb(): Promise<Db> {
   await migrate(db, { migrationsFolder: "src/db/migrations" });
   return db;
 }
+
+/** Id divisi bawaan ("Umum", dibuat migrasi 0007) untuk tes yang membuat proyek. */
+export async function testDivisionId(db: Db): Promise<string> {
+  const [division] = await db.select({ id: schema.divisions.id }).from(schema.divisions).limit(1);
+  return division.id;
+}

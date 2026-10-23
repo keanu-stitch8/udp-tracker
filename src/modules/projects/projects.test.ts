@@ -3,22 +3,24 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { budgets, categories, projects, wallets } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { createProject } from "./commands/create-project";
+import { createDivision } from "@/modules/divisions/commands/save-division";
 import { updateProject } from "./commands/update-project";
 import { getProjectDetail, listProjects } from "./queries/projects";
 
+const base = { name: "Hero Kudus", location: "Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] };
 let db: Db;
+let input: typeof base & { divisionId: string };
 beforeEach(async () => {
   db = await createTestDb();
+  input = { ...base, divisionId: await testDivisionId(db) };
 });
-
-const input = { name: "Hero Kudus", location: "Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] };
 
 describe("createProject", () => {
   it("menyimpan proyek beserta mobil, dompet, dan kategori; tanpa pagu bawaan", async () => {
     const project = await createProject(db, input);
-    expect(project).toMatchObject({ name: "Hero Kudus", location: "Kudus", pax: 9, status: "active", sheetUrl: null });
+    expect(project).toMatchObject({ divisionId: input.divisionId, name: "Hero Kudus", location: "Kudus", pax: 9, status: "active", sheetUrl: null });
 
     const walletRows = await db.select().from(wallets).where(eq(wallets.projectId, project.id));
     expect(walletRows.map((w) => w.name).sort()).toEqual(["Cash", "Flazz Mobil 1", "Flazz Mobil 2", "Rekening"]);
@@ -78,5 +80,23 @@ describe("updateProject", () => {
   it("body kosong → ValidationError", async () => {
     const project = await createProject(db, input);
     await expect(updateProject(db, project.id, {})).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+describe("divisi proyek", () => {
+  it("divisi wajib dan harus ada", async () => {
+    const missing = await createProject(db, { ...input, divisionId: undefined }).catch((e) => e);
+    expect(missing).toBeInstanceOf(ValidationError);
+    expect(missing.fieldErrors.divisionId).toEqual(["Pilih divisi."]);
+    const unknown = await createProject(db, { ...input, divisionId: "00000000-0000-4000-8000-000000000099" }).catch((e) => e);
+    expect(unknown.fieldErrors.divisionId).toEqual(["Divisi tidak ditemukan."]);
+    expect(await db.select().from(projects)).toHaveLength(0);
+  });
+
+  it("proyek bisa dipindah ke divisi lain", async () => {
+    const project = await createProject(db, input);
+    const mlsc = await createDivision(db, { name: "MLSC" });
+    expect(await updateProject(db, project.id, { divisionId: mlsc.id })).toMatchObject({ divisionId: mlsc.id });
+    expect((await updateProject(db, project.id, { divisionId: "00000000-0000-4000-8000-000000000099" }).catch((e) => e)).fieldErrors.divisionId).toEqual(["Divisi tidak ditemukan."]);
   });
 });

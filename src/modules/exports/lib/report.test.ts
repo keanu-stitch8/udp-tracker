@@ -6,6 +6,7 @@ import { buildReport } from "./report";
 
 const project: ProjectDetail = {
   id: "p1",
+  divisionId: "d1",
   name: "Hero Kudus",
   location: "Kudus",
   startDate: "2026-10-20",

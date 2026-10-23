@@ -9,7 +9,7 @@ import { createTransaction, deleteTransaction } from "@/modules/transactions/com
 import { getTransactionReference } from "@/modules/transactions/queries/views";
 import { deleteReceipts } from "@/modules/receipts/api/blob";
 import { createBalanceCheck } from "@/modules/wallets/commands/balance-check";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { createProject } from "./commands/create-project";
 import { deleteProject } from "./commands/delete-project";
 import { updateProject } from "./commands/update-project";
@@ -31,7 +31,7 @@ beforeEach(async () => {
 });
 
 async function seededProject(name: string) {
-  const project = await createProject(db, { ...input, name });
+  const project = await createProject(db, { ...input, divisionId: await testDivisionId(db), name });
   const ref = await getTransactionReference(db, project.id);
   const cash = ref.wallets.find((w) => w.name === "Cash")!.id;
   const sarapan = ref.categories.find((c) => c.name === "Sarapan")!.id;

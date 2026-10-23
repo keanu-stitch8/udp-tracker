@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api-client";
+import { divisionKeys } from "@/modules/divisions/hooks/keys";
 import { ledgerKeys } from "@/modules/transactions/hooks/keys";
 import { useLedgerMutation } from "@/modules/transactions/hooks/use-ledger-mutation";
 import type { ProjectSettings } from "../queries/project-settings";
@@ -15,7 +16,7 @@ export function useProjectSettings(projectId: string) {
   return useQuery({ queryKey: ledgerKeys.settings(projectId), queryFn: () => apiFetch<ProjectSettings>(`${base(projectId)}/settings`) });
 }
 
-/** Periode/jumlah orang memengaruhi pagu; nama & tanggal tampil di header (server) → refresh route juga. */
+/** Periode/jumlah orang memengaruhi pagu; nama & tanggal tampil di header (server) → refresh route juga. Pindah divisi mengubah jumlah proyek per divisi. */
 export function useUpdateProject(projectId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -24,6 +25,7 @@ export function useUpdateProject(projectId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ledgerKeys.all(projectId) });
       void queryClient.invalidateQueries({ queryKey: projectKeys.all });
+      void queryClient.invalidateQueries({ queryKey: divisionKeys.all });
       router.refresh();
     },
   });

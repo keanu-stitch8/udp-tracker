@@ -8,19 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api-client";
+import { DivisionSelect } from "@/modules/divisions/components/division-select";
 import { useResetAfterSave } from "@/lib/use-reset-after-save";
 import { addDays } from "@/modules/shared/lib/date";
 import { useCreateProject } from "../hooks/use-projects";
 
 /** Setelah proyek dibuat, kunjungan berikutnya ke /proyek/baru mulai kosong lagi. */
-export function ProjectForm({ today }: { today: string }) {
+export function ProjectForm({ today, defaultDivisionId }: { today: string; defaultDivisionId: string }) {
   const { resetKey, resetWhenHidden } = useResetAfterSave();
-  return <ProjectFormFields key={resetKey} today={today} onSaved={resetWhenHidden} />;
+  return <ProjectFormFields key={resetKey} today={today} defaultDivisionId={defaultDivisionId} onSaved={resetWhenHidden} />;
 }
 
-function ProjectFormFields({ today, onSaved }: { today: string; onSaved: () => void }) {
+function ProjectFormFields({ today, defaultDivisionId, onSaved }: { today: string; defaultDivisionId: string; onSaved: () => void }) {
   const router = useRouter();
   const create = useCreateProject();
+  const [divisionId, setDivisionId] = useState(defaultDivisionId);
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState(today);
@@ -39,7 +41,7 @@ function ProjectFormFields({ today, onSaved }: { today: string; onSaved: () => v
       onSubmit={(event) => {
         event.preventDefault();
         create.mutate(
-          { name, location, startDate, endDate, pax: Number(pax), vehicles: vehicles.filter((v) => v.trim()) },
+          { divisionId, name, location, startDate, endDate, pax: Number(pax), vehicles: vehicles.filter((v) => v.trim()) },
           {
             onSuccess: () => {
               onSaved();
@@ -51,6 +53,11 @@ function ProjectFormFields({ today, onSaved }: { today: string; onSaved: () => v
       }}
     >
       <FieldGroup>
+        <Field data-invalid={errorOf("divisionId") ? true : undefined}>
+          <FieldLabel htmlFor="divisionId">Divisi</FieldLabel>
+          <DivisionSelect id="divisionId" value={divisionId} onChange={setDivisionId} />
+          {errorOf("divisionId") && <FieldError>{errorOf("divisionId")}</FieldError>}
+        </Field>
         <Field data-invalid={errorOf("name") ? true : undefined}>
           <FieldLabel htmlFor="name">Nama proyek</FieldLabel>
           <Input id="name" placeholder="Produksi Okt 2026" value={name} onChange={(e) => setName(e.target.value)} />

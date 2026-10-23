@@ -7,14 +7,16 @@ import { insertProject } from "../api/projects-repo";
 import { insertVehicles } from "../api/vehicles-repo";
 import { buildProjectDefaults } from "../lib/seed-defaults";
 import { toProject } from "../mappers/project";
-import { parseCreateProject } from "../services/projects";
+import { assertDivisionExists, parseCreateProject } from "../services/projects";
 import type { Project } from "../types/project";
 
 /** Buat proyek + seed default (spec §3.2) dalam satu transaksi: gagal di tengah → tidak ada yang tersimpan. */
 export async function createProject(db: Db, input: unknown): Promise<Project> {
   const data = parseCreateProject(input);
+  await assertDivisionExists(db, data.divisionId);
   return db.transaction(async (tx) => {
     const project = await insertProject(tx, {
+      divisionId: data.divisionId,
       name: data.name,
       location: data.location,
       startDate: data.startDate,

@@ -4,7 +4,7 @@ import type { Db } from "@/db/types";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { createTransaction } from "@/modules/transactions/commands/save-transaction";
 import { getTransactionReference } from "@/modules/transactions/queries/views";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { exportReport } from "./commands/export-report";
 import type { ReportTab } from "./types/report";
 import type { ReportGateway } from "./types/gateway";
@@ -54,7 +54,7 @@ const now = new Date("2026-10-22T03:00:00Z");
 beforeEach(async () => {
   readFile.mockClear();
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Hero Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero Kudus", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
   const ref = await getTransactionReference(db, projectId);
   const pathname = `receipts/${projectId}/${crypto.randomUUID()}.jpg`;
   await createTransaction(db, projectId, {

@@ -7,7 +7,7 @@ import { getBudgetSettings } from "@/modules/budgets/queries/budget-settings";
 import { createTransaction } from "@/modules/transactions/commands/save-transaction";
 import { getTransactionReference } from "@/modules/transactions/queries/views";
 import { createWallet } from "@/modules/wallets/commands/save-wallet";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { createProject } from "./commands/create-project";
 import { createVehicle, deleteVehicle, updateVehicle } from "./commands/save-vehicle";
 import { updateProject } from "./commands/update-project";
@@ -19,7 +19,7 @@ const walletNames = async () => (await db.select().from(wallets).where(eq(wallet
 
 beforeEach(async () => {
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
 });
 
 describe("kelola mobil", () => {

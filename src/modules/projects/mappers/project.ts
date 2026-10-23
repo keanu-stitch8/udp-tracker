@@ -6,6 +6,7 @@ import type { Project, ProjectDetail, Vehicle } from "../types/project";
 export function toProject(row: ProjectRow): Project {
   return {
     id: row.id,
+    divisionId: row.divisionId,
     name: row.name,
     location: row.location,
     startDate: row.startDate,

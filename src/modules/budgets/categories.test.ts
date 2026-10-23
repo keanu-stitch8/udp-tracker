@@ -5,7 +5,7 @@ import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
 import { createTransaction } from "@/modules/transactions/commands/save-transaction";
 import { getTransactionReference } from "@/modules/transactions/queries/views";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { createBudget } from "./commands/save-budget";
 import { createCategory, updateCategory } from "./commands/save-category";
 import { getBudgetSettings } from "./queries/budget-settings";
@@ -18,7 +18,7 @@ const groupId = async (name: string) => (await getCategorySettings(db, projectId
 
 beforeEach(async () => {
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
 });
 
 describe("kelola kategori", () => {

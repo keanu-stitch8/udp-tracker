@@ -5,7 +5,7 @@ import type { Db } from "@/db/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
-import { createTestDb } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 import { createBudget, deleteBudget, updateBudget } from "./commands/save-budget";
 import { getBudgetSettings } from "./queries/budget-settings";
 
@@ -15,7 +15,7 @@ const categoryId = async (name: string) => (await getBudgetSettings(db, projectI
 
 beforeEach(async () => {
   db = await createTestDb();
-  projectId = (await createProject(db, { name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] })).id;
+  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 9, vehicles: ["Mobil 1", "Mobil 2"] })).id;
 });
 
 describe("pengaturan pagu", () => {

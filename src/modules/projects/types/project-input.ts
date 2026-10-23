@@ -3,6 +3,7 @@ import { z } from "zod";
 import { isoDateSchema } from "@/modules/shared/lib/date";
 import { PROJECT_STATUSES } from "@/modules/shared/types/enums";
 
+const divisionId = z.uuid("Pilih divisi.");
 const name = z.string().trim().min(1, "Nama proyek wajib diisi.").max(100, "Maksimal 100 karakter.");
 const location = z.string().trim().max(100, "Maksimal 100 karakter.");
 const pax = z.number({ error: "Jumlah orang wajib diisi." }).int("Harus bilangan bulat.").min(1, "Minimal 1 orang.").max(100, "Maksimal 100 orang.");
@@ -11,6 +12,7 @@ const END_BEFORE_START = "Tanggal selesai harus sama atau setelah tanggal mulai.
 
 export const createProjectSchema = z
   .object({
+    divisionId,
     name,
     location: location.default(""),
     startDate: isoDateSchema,
@@ -23,7 +25,7 @@ export const createProjectSchema = z
 export type CreateProjectInput = z.input<typeof createProjectSchema>;
 
 export const updateProjectSchema = z
-  .object({ name, location, startDate: isoDateSchema, endDate: isoDateSchema, pax, status: z.enum(PROJECT_STATUSES) })
+  .object({ divisionId, name, location, startDate: isoDateSchema, endDate: isoDateSchema, pax, status: z.enum(PROJECT_STATUSES) })
   .partial()
   .refine((v) => Object.keys(v).length > 0, { message: "Tidak ada perubahan." });
 

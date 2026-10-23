@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api-client";
+import { DivisionSelect } from "@/modules/divisions/components/division-select";
 import { useProjectSettings, useUpdateProject } from "../hooks/use-project-settings";
 import type { ProjectDetail } from "../types/project";
 import { DeleteProject } from "./delete-project";
@@ -68,6 +69,7 @@ export function ProjectSettingsPanel({ projectId }: { projectId: string }) {
 
 function ProjectDetailsForm({ project, locked }: { project: ProjectDetail; locked: boolean }) {
   const update = useUpdateProject(project.id);
+  const [divisionId, setDivisionId] = useState(project.divisionId);
   const [name, setName] = useState(project.name);
   const [location, setLocation] = useState(project.location);
   const [startDate, setStartDate] = useState(project.startDate);
@@ -81,10 +83,15 @@ function ProjectDetailsForm({ project, locked }: { project: ProjectDetail; locke
       className="flex flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault();
-        update.mutate({ name, location, startDate, endDate, pax: Number(pax) }, { onSuccess: () => toast.success("Pengaturan proyek disimpan.") });
+        update.mutate({ divisionId, name, location, startDate, endDate, pax: Number(pax) }, { onSuccess: () => toast.success("Pengaturan proyek disimpan.") });
       }}
     >
       <FieldGroup>
+        <Field data-invalid={errorOf("divisionId") ? true : undefined}>
+          <FieldLabel htmlFor="settings-division">Divisi</FieldLabel>
+          <DivisionSelect id="settings-division" value={divisionId} onChange={setDivisionId} />
+          {errorOf("divisionId") && <FieldError>{errorOf("divisionId")}</FieldError>}
+        </Field>
         <Field data-invalid={errorOf("name") ? true : undefined}>
           <FieldLabel htmlFor="settings-name">Nama proyek</FieldLabel>
           <Input id="settings-name" className="h-10" value={name} onChange={(e) => setName(e.target.value)} />
