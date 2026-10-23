@@ -31,7 +31,7 @@ let seq = 0;
 /** Setiap panggilan mendapat createdAt yang naik → urutan "terbaru dulu" pada tanggal sama pasti. */
 export const tx = (t: Partial<Transaction> & Pick<Transaction, "type" | "date" | "amount" | "walletId">): Transaction => {
   const n = ++seq;
-  return {
+  const base = {
     id: `t${n}`,
     time: "09:00",
     categoryId: null,
@@ -41,9 +41,12 @@ export const tx = (t: Partial<Transaction> & Pick<Transaction, "type" | "date" |
     merchant: null,
     note: null,
     balanceCheckId: null,
+    createdBy: null,
+    updatedBy: null,
     createdAt: `2026-10-21T00:00:${String(n).padStart(2, "0")}.000Z`,
     ...t,
   };
+  return { updatedAt: base.createdAt, ...base };
 };
 
 export const wallets: Wallet[] = [wallet("rekening", "bank"), wallet("cash", "cash"), wallet("flazz1", "flazz", 200_000, "mobil1")];

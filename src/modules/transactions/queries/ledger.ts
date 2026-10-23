@@ -17,6 +17,9 @@ import { toAttachment } from "@/modules/receipts/mappers/attachment";
 import type { Attachment } from "@/modules/receipts/types/attachment";
 import { selectWallets } from "@/modules/wallets/api/wallets-repo";
 import { toWallet } from "@/modules/wallets/mappers/wallet";
+import { selectUsersByIds } from "@/modules/users/api/users-repo";
+import { toPerson } from "@/modules/users/mappers/user";
+import type { Person } from "@/modules/users/types/user-list";
 import type { Wallet } from "@/modules/wallets/types/wallet";
 import { selectTransactions } from "../api/transactions-repo";
 import { toTransaction } from "../mappers/transaction";
@@ -31,6 +34,8 @@ export interface Ledger {
   budgets: Budget[];
   transactions: Transaction[];
   attachments: Attachment[];
+  /** User yang dirujuk jejak penginput transaksi. */
+  people: Person[];
 }
 
 export const getLedger = cache(async (db: Db, projectId: string): Promise<Ledger> => {
@@ -43,10 +48,14 @@ export const getLedger = cache(async (db: Db, projectId: string): Promise<Ledger
     selectTransactions(db, projectId),
     selectProjectAttachments(db, projectId),
   ]);
-  const links = await selectBudgetCategoryLinks(
-    db,
-    budgetRows.map((b) => b.id),
-  );
+  const personIds = [...new Set(transactionRows.flatMap((t) => [t.createdBy, t.updatedBy]).filter((id): id is string => id !== null))];
+  const [links, personRows] = await Promise.all([
+    selectBudgetCategoryLinks(
+      db,
+      budgetRows.map((b) => b.id),
+    ),
+    selectUsersByIds(db, personIds),
+  ]);
   return {
     project,
     wallets: walletRows.map(toWallet),
@@ -55,7 +64,8 @@ export const getLedger = cache(async (db: Db, projectId: string): Promise<Ledger
     budgets: budgetRows.map((b) => toBudget(b, links.filter((l) => l.budgetId === b.id).map((l) => l.categoryId))),
     transactions: transactionRows.map(toTransaction),
     attachments: attachmentRows.map((row) => toAttachment(row, projectId)),
+    people: personRows.map(toPerson),
   };
 });
 
-export const refsOf = (ledger: Ledger) => ({ wallets: ledger.wallets, categories: ledger.categories, vehicles: ledger.project.vehicles, attachments: ledger.attachments });
+export const refsOf = (ledger: Ledger) => ({ wallets: ledger.wallets, categories: ledger.categories, vehicles: ledger.project.vehicles, attachments: ledger.attachments, people: ledger.people });

@@ -70,7 +70,7 @@ describe("kelola mobil", () => {
       walletId: ref.wallets.find((w) => w.name === "Cash")!.id,
       categoryId: ref.categories.find((c) => c.name === "Parkir Harian")!.id,
       vehicleId: mobil1,
-    });
+    }, null);
     expect((await getProjectSettings(db, projectId)).vehicles[0].removable).toBe(false);
     await expect(deleteVehicle(db, projectId, mobil1)).rejects.toBeInstanceOf(ConflictError);
   });

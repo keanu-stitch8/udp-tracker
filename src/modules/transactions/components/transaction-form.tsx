@@ -28,6 +28,7 @@ import { formatDateLong } from "@/modules/shared/lib/date";
 import type { TransactionType } from "@/modules/shared/types/enums";
 import { ledgerKeys } from "../hooks/keys";
 import { restoreTransactionRequest, useDeleteTransaction, useSaveTransaction } from "../hooks/use-transactions";
+import { auditLine } from "../lib/audit";
 import type { TransactionReference } from "../queries/views";
 import type { TransactionView } from "../types/transaction";
 
@@ -419,6 +420,7 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
           <Trash2 /> Hapus transaksi
         </Button>
       )}
+      {initial && <p className="text-center text-sm text-muted-foreground">{auditLine(initial)}</p>}
     </form>
   );
 }

@@ -8,6 +8,12 @@ export interface UserOption {
   imageUrl: string | null;
 }
 
+/** Nama orang untuk jejak penginput: nama Google, fallback email. */
+export interface Person {
+  id: string;
+  name: string;
+}
+
 /** Baris halaman Pengguna (Root). */
 export interface UserListItem extends UserOption {
   status: UserStatus;

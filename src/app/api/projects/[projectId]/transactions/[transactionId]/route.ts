@@ -10,13 +10,13 @@ export const GET = projectRoute("view", async (_request, ctx: Ctx) => {
   return Response.json(await getTransactionView(getDb(), projectId, transactionId));
 });
 
-export const PATCH = projectRoute("transact", async (request, ctx: Ctx) => {
+export const PATCH = projectRoute("transact", async (request, ctx: Ctx, { user }) => {
   const { projectId, transactionId } = await ctx.params;
-  return Response.json(await updateTransaction(getDb(), projectId, transactionId, await readJson(request)));
+  return Response.json(await updateTransaction(getDb(), projectId, transactionId, await readJson(request), user.id));
 });
 
-export const DELETE = projectRoute("transact", async (_request, ctx: Ctx) => {
+export const DELETE = projectRoute("transact", async (_request, ctx: Ctx, { user }) => {
   const { projectId, transactionId } = await ctx.params;
-  await deleteTransaction(getDb(), projectId, transactionId);
+  await deleteTransaction(getDb(), projectId, transactionId, user.id);
   return new Response(null, { status: 204 });
 });

@@ -38,7 +38,7 @@ export async function createBalanceCheck(db: Db, projectId: string, walletId: st
 }
 
 /** "Catat selisih" (spec §3.3): satu transaksi penyesuaian aktif per cek saldo. */
-export async function adjustBalanceCheck(db: Db, projectId: string, checkId: string, input: unknown): Promise<Transaction> {
+export async function adjustBalanceCheck(db: Db, projectId: string, checkId: string, input: unknown, userId: string | null): Promise<Transaction> {
   await editableProject(db, projectId);
   const check = await findBalanceCheckOrThrow(db, projectId, checkId);
   const difference = check.actualBalance - check.computedBalance;
@@ -64,5 +64,5 @@ export async function adjustBalanceCheck(db: Db, projectId: string, checkId: str
     categories,
     vehicles: vehicleRows.map(toVehicle),
   });
-  return toTransaction(await insertTransaction(db, { ...values, projectId, balanceCheckId: check.id }));
+  return toTransaction(await insertTransaction(db, { ...values, projectId, balanceCheckId: check.id, createdBy: userId, updatedBy: userId }));
 }

@@ -8,7 +8,7 @@ export const GET = projectRoute("view", async (_request, ctx: RouteContext<"/api
   return Response.json(await listTransactionViews(getDb(), projectId));
 });
 
-export const POST = projectRoute("transact", async (request, ctx: RouteContext<"/api/projects/[projectId]/transactions">) => {
+export const POST = projectRoute("transact", async (request, ctx: RouteContext<"/api/projects/[projectId]/transactions">, { user }) => {
   const { projectId } = await ctx.params;
-  return Response.json(await createTransaction(getDb(), projectId, await readJson(request)), { status: 201 });
+  return Response.json(await createTransaction(getDb(), projectId, await readJson(request), user.id), { status: 201 });
 });

@@ -17,7 +17,11 @@ export interface Transaction {
   note: string | null;
   /** Diisi jika transaksi ini penyesuaian dari cek saldo (spec §3.3). */
   balanceCheckId: string | null;
+  /** Jejak penginput (spec akses §7); kosong untuk data lama. */
+  createdBy: string | null;
+  updatedBy: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 /** Transaksi + nama-nama referensi untuk ditampilkan. */
@@ -30,6 +34,8 @@ export interface TransactionView extends Transaction {
   /** Menyentuh dompet Reimburse: belanja talangan atau penggantiannya. */
   reimburse: boolean;
   attachments: Attachment[];
+  createdByName: string | null;
+  updatedByName: string | null;
 }
 
 /** Satu baris pengeluaran: nominal transaksi expense, atau biaya admin expense/transfer (kategori isAdminFee). */

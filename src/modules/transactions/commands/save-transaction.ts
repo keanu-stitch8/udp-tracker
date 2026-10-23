@@ -24,24 +24,26 @@ async function editableProject(db: Db, projectId: string) {
   assertProjectEditable(await findProjectOrThrow(db, projectId));
 }
 
-export async function createTransaction(db: Db, projectId: string, input: unknown): Promise<Transaction> {
+// `userId` = jejak penginput (spec akses §7); null hanya untuk tes yang tidak menguji jejak.
+
+export async function createTransaction(db: Db, projectId: string, input: unknown, userId: string | null): Promise<Transaction> {
   await editableProject(db, projectId);
   const values = planTransaction(input, await loadRefs(db, projectId));
   const attachments = planAttachments(input, projectId);
   return db.transaction(async (tx) => {
-    const row = await insertTransaction(tx, { ...values, projectId });
+    const row = await insertTransaction(tx, { ...values, projectId, createdBy: userId, updatedBy: userId });
     if (attachments) await syncAttachments(tx, row.id, attachments);
     return toTransaction(row);
   });
 }
 
-export async function updateTransaction(db: Db, projectId: string, id: string, input: unknown): Promise<Transaction> {
+export async function updateTransaction(db: Db, projectId: string, id: string, input: unknown, userId: string | null): Promise<Transaction> {
   await editableProject(db, projectId);
   const existing = await findTransactionOrThrow(db, projectId, id);
   const values = planTransaction(input, await loadRefs(db, projectId), existing);
   const attachments = planAttachments(input, projectId);
   const { row, removed } = await db.transaction(async (tx) => ({
-    row: await updateTransactionRow(tx, id, values),
+    row: await updateTransactionRow(tx, id, { ...values, updatedBy: userId }),
     removed: attachments ? await syncAttachments(tx, id, attachments) : [],
   }));
   // Setelah commit: file Blob baru dihapus bila baris DB-nya benar-benar sudah hilang.
@@ -50,14 +52,14 @@ export async function updateTransaction(db: Db, projectId: string, id: string, i
 }
 
 /** Hapus = soft delete (spec §3.4); bisa diurungkan. */
-export async function deleteTransaction(db: Db, projectId: string, id: string): Promise<void> {
+export async function deleteTransaction(db: Db, projectId: string, id: string, userId: string | null): Promise<void> {
   await editableProject(db, projectId);
   await findTransactionOrThrow(db, projectId, id);
-  await updateTransactionRow(db, id, { deletedAt: new Date() });
+  await updateTransactionRow(db, id, { deletedAt: new Date(), updatedBy: userId });
 }
 
-export async function restoreTransaction(db: Db, projectId: string, id: string): Promise<Transaction> {
+export async function restoreTransaction(db: Db, projectId: string, id: string, userId: string | null): Promise<Transaction> {
   await editableProject(db, projectId);
   await findTransactionOrThrow(db, projectId, id, { includeDeleted: true });
-  return toTransaction(await updateTransactionRow(db, id, { deletedAt: null }));
+  return toTransaction(await updateTransactionRow(db, id, { deletedAt: null, updatedBy: userId }));
 }

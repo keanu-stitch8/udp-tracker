@@ -29,12 +29,12 @@ async function seededProject(name: string) {
   const ref = await getTransactionReference(db, project.id);
   const cash = ref.wallets.find((w) => w.name === "Cash")!.id;
   const sarapan = ref.categories.find((c) => c.name === "Sarapan")!.id;
-  await createTransaction(db, project.id, { type: "expense", date: "2026-10-20", time: "09:00", amount: 50_000, walletId: cash, categoryId: sarapan });
+  await createTransaction(db, project.id, { type: "expense", date: "2026-10-20", time: "09:00", amount: 50_000, walletId: cash, categoryId: sarapan }, null);
   const pathname = (n: number) => `receipts/${project.id}/${n}0000000-0000-4000-8000-000000000000.jpg`;
   const attachment = (n: number) => ({ pathname: pathname(n), blobUrl: `https://s.private.blob.vercel-storage.com/${pathname(n)}`, mimeType: "image/jpeg", sizeBytes: 10 });
-  await createTransaction(db, project.id, { type: "expense", date: "2026-10-20", time: "09:00", amount: 20_000, walletId: cash, categoryId: sarapan, attachments: [attachment(1)] });
-  const removed = await createTransaction(db, project.id, { type: "expense", date: "2026-10-21", time: "09:00", amount: 10_000, walletId: cash, categoryId: sarapan, attachments: [attachment(2)] });
-  await deleteTransaction(db, project.id, removed.id);
+  await createTransaction(db, project.id, { type: "expense", date: "2026-10-20", time: "09:00", amount: 20_000, walletId: cash, categoryId: sarapan, attachments: [attachment(1)] }, null);
+  const removed = await createTransaction(db, project.id, { type: "expense", date: "2026-10-21", time: "09:00", amount: 10_000, walletId: cash, categoryId: sarapan, attachments: [attachment(2)] }, null);
+  await deleteTransaction(db, project.id, removed.id, null);
   await createBudget(db, project.id, { name: "Pagu Sarapan", rate: 25_000, basis: "per_pax_per_day", categoryIds: [sarapan] });
   await createBalanceCheck(db, project.id, cash, { date: "2026-10-21", actualBalance: 0 });
   return { ...project, pathnames: [pathname(1), pathname(2)] };

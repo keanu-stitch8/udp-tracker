@@ -65,7 +65,7 @@ beforeEach(async () => {
     walletId: ref.wallets[0].id,
     categoryId: ref.categories.find((c) => c.name === "Tol")!.id,
     attachments: [{ pathname, blobUrl: `https://abc.private.blob.vercel-storage.com/${pathname}`, mimeType: "image/jpeg", sizeBytes: 10, ocr: null }],
-  });
+  }, null);
 });
 
 describe("exportReport", () => {

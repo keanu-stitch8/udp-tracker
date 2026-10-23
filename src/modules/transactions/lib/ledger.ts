@@ -3,6 +3,7 @@ import type { Category } from "@/modules/budgets/types/category";
 import type { Vehicle } from "@/modules/projects/types/project";
 import type { Attachment } from "@/modules/receipts/types/attachment";
 import { sum } from "@/modules/shared/lib/money";
+import type { Person } from "@/modules/users/types/user-list";
 import type { Wallet } from "@/modules/wallets/types/wallet";
 import type { ExpenseEntry, LedgerTotals, Transaction, TransactionView } from "../types/transaction";
 
@@ -56,9 +57,10 @@ export const compareNewestFirst = (a: Transaction, b: Transaction) => b.date.loc
 
 export function toTransactionViews(
   transactions: Transaction[],
-  refs: { wallets: Wallet[]; categories: Category[]; vehicles: Vehicle[]; attachments?: Attachment[] },
+  refs: { wallets: Wallet[]; categories: Category[]; vehicles: Vehicle[]; attachments?: Attachment[]; people?: Person[] },
 ): TransactionView[] {
   const wallets = new Map(refs.wallets.map((w) => [w.id, w]));
+  const people = new Map(refs.people?.map((p) => [p.id, p.name]));
   const categories = new Map(refs.categories.map((c) => [c.id, c]));
   const vehicles = new Map(refs.vehicles.map((v) => [v.id, v]));
   return [...transactions].sort(compareNewestFirst).map((t) => {
@@ -72,6 +74,8 @@ export function toTransactionViews(
       vehicleName: t.vehicleId ? (vehicles.get(t.vehicleId)?.name ?? null) : null,
       reimburse: [t.walletId, t.toWalletId].some((id) => id && wallets.get(id)?.kind === "reimburse"),
       attachments: refs.attachments?.filter((a) => a.transactionId === t.id) ?? [],
+      createdByName: t.createdBy ? (people.get(t.createdBy) ?? null) : null,
+      updatedByName: t.updatedBy ? (people.get(t.updatedBy) ?? null) : null,
     };
   });
 }

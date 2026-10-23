@@ -64,6 +64,7 @@ export async function exportReport(db: Db, projectId: string, { gateway, readFil
     budgets: ledger.budgets,
     transactions: ledger.transactions,
     receipts: rows.map((a) => ({ transactionId: a.transactionId, driveUrl: driveUrls.get(a.id) ?? null })),
+    people: ledger.people,
     exportedAt: now,
   });
   const sheet = await gateway.createSpreadsheet(`UDP – ${saved.name} – ${today}`, folderId, tabs);

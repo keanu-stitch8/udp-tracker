@@ -3,6 +3,7 @@ import type { Category } from "@/modules/budgets/types/category";
 import type { CategoryGroup } from "@/modules/budgets/types/category-group";
 import type { ProjectDetail } from "@/modules/projects/types/project";
 import type { Transaction } from "@/modules/transactions/types/transaction";
+import type { Person } from "@/modules/users/types/user-list";
 import type { Wallet } from "@/modules/wallets/types/wallet";
 
 /** Satu sel laporan; gateway Google menerjemahkan `money` → format #,##0, `bold` → tebal, `link` → teks berlink. */
@@ -29,5 +30,7 @@ export interface ReportInput {
   transactions: Transaction[];
   /** Urutan = urutan lampiran per transaksi ("Bon 1", "Bon 2", …). */
   receipts: { transactionId: string; driveUrl: string | null }[];
+  /** Nama untuk kolom Diinput oleh / Diubah oleh. */
+  people: Person[];
   exportedAt: Date;
 }

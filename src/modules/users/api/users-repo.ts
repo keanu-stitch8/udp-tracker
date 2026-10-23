@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { users } from "@/db/schema";
 import type { Db } from "@/db/types";
 
@@ -18,6 +18,11 @@ export async function selectUserByEmail(db: Db, email: string): Promise<UserRow 
 
 export function selectUsers(db: Db): Promise<UserRow[]> {
   return db.select().from(users);
+}
+
+export function selectUsersByIds(db: Db, ids: string[]): Promise<UserRow[]> {
+  if (!ids.length) return Promise.resolve([]);
+  return db.select().from(users).where(inArray(users.id, ids));
 }
 
 export async function insertUser(db: Db, values: NewUserRow): Promise<UserRow> {

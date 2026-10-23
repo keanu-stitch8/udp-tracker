@@ -26,6 +26,7 @@ const input: ReportInput = {
   budgets: [mealBudget],
   transactions,
   receipts: [{ transactionId: "siang", driveUrl: "https://drive.google.com/file/d/bon1/view" }],
+  people: [],
   exportedAt: new Date("2026-10-21T17:40:00Z"),
 };
 
@@ -41,14 +42,14 @@ describe("buildReport", () => {
   it("Detail: kronologis, jam, grup, transfer A → B, saldo berjalan gabungan, link bon", () => {
     const detail = tab("Detail");
     expect(detail.freezeRows).toBe(1);
-    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Grup", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Bon 1"]);
+    expect(values(detail)[0]).toEqual(["No", "Tanggal", "Jam", "Jenis", "Grup", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Diinput oleh", "Diubah oleh", "Bon 1"]);
     const rows = values(detail).slice(1);
     expect(rows.map((r) => r[12])).toEqual([5_200_000, 5_300_000, 5_293_500, 4_693_500, 3_793_500, 3_743_500]);
     expect(rows[0].slice(0, 10)).toEqual([1, "19 Okt 2026", "09:00", "Masuk", "-", "udp", null, "rekening", null, 5_000_000]);
     expect(rows[2].slice(3, 12)).toEqual(["Transfer", "-", "Transfer", null, "rekening → cash", null, null, null, 6_500]);
     expect(rows[3].slice(4, 6)).toEqual(["Meal", "makan-siang"]);
     expect(rows[5][8]).toBe("Mobil 1");
-    expect(detail.rows[4][13]).toEqual({ value: "Bon 1", link: "https://drive.google.com/file/d/bon1/view" });
+    expect(detail.rows[4][15]).toEqual({ value: "Bon 1", link: "https://drive.google.com/file/d/bon1/view" });
     expect(detail.rows[1][9]).toMatchObject({ money: true });
   });
 
@@ -56,6 +57,17 @@ describe("buildReport", () => {
     const fee = tx({ type: "expense", date: "2026-10-22", amount: 16_500, adminFee: 2_000, walletId: "rekening", categoryId: "makan-siang" });
     const detail = buildReport({ ...input, transactions: [...transactions, fee] }).find((t) => t.title === "Detail")!;
     expect(values(detail).at(-1)!.slice(10, 13)).toEqual([16_500, 2_000, 3_743_500 - 18_500]);
+  });
+
+  it("Detail: kolom Diinput oleh / Diubah oleh dari nama user; data lama kosong", () => {
+    const edited = tx({ type: "expense", date: "2026-10-22", amount: 10_000, walletId: "cash", categoryId: "tol", createdBy: "u1", updatedBy: "u2" });
+    const people = [
+      { id: "u1", name: "Riski" },
+      { id: "u2", name: "arpan@example.com" },
+    ];
+    const rows = values(buildReport({ ...input, transactions: [...transactions, edited], people }).find((t) => t.title === "Detail")!);
+    expect(rows.at(-1)!.slice(13, 15)).toEqual(["Riski", "arpan@example.com"]);
+    expect(rows[1].slice(13, 15)).toEqual([null, null]);
   });
 
   it("Harian: kolom kategori pengeluaran yang terpakai, urut per grup, + total", () => {

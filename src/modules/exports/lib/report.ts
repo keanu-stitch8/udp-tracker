@@ -66,7 +66,8 @@ function recapTab({ project, wallets, categories, groups, transactions, exported
   return { title: "Rekap", rows, freezeRows: 0 };
 }
 
-function detailTab({ wallets, categories, groups, transactions, project, receipts }: ReportInput): ReportTab {
+function detailTab({ wallets, categories, groups, transactions, project, receipts, people }: ReportInput): ReportTab {
+  const personName = new Map(people.map((p) => [p.id, p.name]));
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   const groupName = new Map(groups.map((g) => [g.id, g.name]));
   const groupOf = new Map(categories.map((c) => [c.id, c.groupId ? (groupName.get(c.groupId) ?? null) : null]));
@@ -104,13 +105,15 @@ function detailTab({ wallets, categories, groups, transactions, project, receipt
       money(expense),
       money(adminFee),
       money(running),
+      text(t.createdBy ? (personName.get(t.createdBy) ?? null) : null),
+      text(t.updatedBy ? (personName.get(t.updatedBy) ?? null) : null),
       ...receiptCells,
     ];
   });
   const receiptHeaders = Array.from({ length: maxReceipts }, (_, i) => `Bon ${i + 1}`);
   return {
     title: "Detail",
-    rows: [header("No", "Tanggal", "Jam", "Jenis", "Grup", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", ...receiptHeaders), ...rows],
+    rows: [header("No", "Tanggal", "Jam", "Jenis", "Grup", "Kategori", "Berita", "Dompet", "Mobil", "Masuk", "Keluar", "Biaya admin", "Saldo berjalan", "Diinput oleh", "Diubah oleh", ...receiptHeaders), ...rows],
     freezeRows: 1,
   };
 }

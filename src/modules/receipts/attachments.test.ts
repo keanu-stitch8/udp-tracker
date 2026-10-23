@@ -29,7 +29,7 @@ beforeEach(async () => {
 describe("lampiran transaksi", () => {
   it("disimpan bersama transaksi dan tampil di view", async () => {
     const a = draft();
-    const saved = await createTransaction(db, projectId, { ...base, attachments: [{ ...a, ocr: { amount: 54_000, date: null, merchant: null, categoryHint: "Tol", confident: true } }] });
+    const saved = await createTransaction(db, projectId, { ...base, attachments: [{ ...a, ocr: { amount: 54_000, date: null, merchant: null, categoryHint: "Tol", confident: true } }] }, null);
     const view = await getTransactionView(db, projectId, saved.id);
     expect(view.attachments).toHaveLength(1);
     expect(view.attachments[0]).toMatchObject({ pathname: a.pathname, mimeType: "image/jpeg", sizeBytes: 1234 });
@@ -38,18 +38,18 @@ describe("lampiran transaksi", () => {
 
   it("ubah: tanpa field attachments → tetap; daftar kosong → dihapus termasuk blob-nya", async () => {
     const a = draft();
-    const saved = await createTransaction(db, projectId, { ...base, attachments: [a] });
-    await updateTransaction(db, projectId, saved.id, { ...base, amount: 60_000 });
+    const saved = await createTransaction(db, projectId, { ...base, attachments: [a] }, null);
+    await updateTransaction(db, projectId, saved.id, { ...base, amount: 60_000 }, null);
     expect((await getTransactionView(db, projectId, saved.id)).attachments).toHaveLength(1);
     expect(deleteReceipts).not.toHaveBeenCalled();
 
     const b = draft();
-    await updateTransaction(db, projectId, saved.id, { ...base, attachments: [b] });
+    await updateTransaction(db, projectId, saved.id, { ...base, attachments: [b] }, null);
     const view = await getTransactionView(db, projectId, saved.id);
     expect(view.attachments.map((x) => x.pathname)).toEqual([b.pathname]);
     expect(deleteReceipts).toHaveBeenCalledWith([a.pathname]);
 
-    await updateTransaction(db, projectId, saved.id, { ...base, attachments: [] });
+    await updateTransaction(db, projectId, saved.id, { ...base, attachments: [] }, null);
     expect((await getTransactionView(db, projectId, saved.id)).attachments).toEqual([]);
     expect(deleteReceipts).toHaveBeenLastCalledWith([b.pathname]);
   });
@@ -59,15 +59,15 @@ describe("lampiran transaksi", () => {
     const foreignHost = { ...draft(), blobUrl: "https://contoh.com/receipts/x.jpg" };
     const tooMany = Array.from({ length: 6 }, () => draft());
     for (const attachments of [[other], [foreignHost], tooMany]) {
-      const error = await createTransaction(db, projectId, { ...base, attachments }).catch((e) => e);
+      const error = await createTransaction(db, projectId, { ...base, attachments }, null).catch((e) => e);
       expect(error).toBeInstanceOf(ValidationError);
       expect(Object.keys(error.fieldErrors).some((key) => key.startsWith("attachments"))).toBe(true);
     }
   });
 
   it("daftar transaksi memuat lampiran per transaksi", async () => {
-    await createTransaction(db, projectId, { ...base, attachments: [draft(), draft(projectId, "pdf")] });
-    await createTransaction(db, projectId, base);
+    await createTransaction(db, projectId, { ...base, attachments: [draft(), draft(projectId, "pdf")] }, null);
+    await createTransaction(db, projectId, base, null);
     const counts = (await listTransactionViews(db, projectId)).map((v) => v.attachments.length).sort();
     expect(counts).toEqual([0, 2]);
   });

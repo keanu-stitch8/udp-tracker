@@ -191,6 +191,9 @@ export const transactions = pgTable(
     merchant: text(),
     note: text(),
     balanceCheckId: uuid().references(() => balanceChecks.id, { onDelete: "set null" }),
+    /** Jejak penginput (spec akses §7). Data lama kosong. */
+    createdBy: uuid().references((): AnyPgColumn => users.id, { onDelete: "set null" }),
+    updatedBy: uuid().references((): AnyPgColumn => users.id, { onDelete: "set null" }),
     deletedAt: timestamp({ withTimezone: true }),
     ...timestamps,
   },
