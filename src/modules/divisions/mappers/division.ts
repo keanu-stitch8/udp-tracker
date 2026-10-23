@@ -1,6 +1,6 @@
 import type { DivisionRow } from "../api/divisions-repo";
-import type { Division } from "../types/division";
+import type { Division, DivisionPm } from "../types/division";
 
-export function toDivision(row: DivisionRow, projectCount: number): Division {
-  return { id: row.id, name: row.name, projectCount };
+export function toDivision(row: DivisionRow, projectCount: number, extra: { canCreateProject: boolean; pms: DivisionPm[] } = { canCreateProject: true, pms: [] }): Division {
+  return { id: row.id, name: row.name, projectCount, ...extra };
 }

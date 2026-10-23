@@ -1,14 +1,21 @@
 import "server-only";
-import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { env } from "./env";
-import { toErrorResponse, UnauthorizedError, ValidationError } from "./errors";
-import { SESSION_COOKIE, verifySessionToken } from "./session";
+import { getDb } from "@/db/client";
+import { can, type Capability, type Role } from "@/modules/users/lib/access";
+import { getCurrentUser } from "@/modules/users/queries/current-user";
+import { projectRole } from "@/modules/users/services/project-role";
+import type { CurrentUser } from "@/modules/users/types/user";
+import { ForbiddenError, NotFoundError, toErrorResponse, UnauthorizedError, ValidationError } from "./errors";
 
-/** Pertahanan berlapis: proxy sudah menyaring, tapi setiap route tetap memeriksa sesi (spec §7). */
-export async function requireSession(): Promise<void> {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!(await verifySessionToken(token, env().SESSION_SECRET))) throw new UnauthorizedError();
+/**
+ * Pertahanan berlapis (spec akses §5): proxy hanya memeriksa tanda tangan cookie, setiap route memuat user dari DB.
+ * Tanpa sesi / user hilang → 401; akun belum aktif → 403.
+ */
+export async function requireUser(): Promise<CurrentUser> {
+  const user = await getCurrentUser(getDb());
+  if (!user) throw new UnauthorizedError();
+  if (user.status !== "active") throw new ForbiddenError("Akun belum aktif. Tunggu konfirmasi admin.");
+  return user;
 }
 
 export async function readJson(request: Request): Promise<unknown> {
@@ -19,22 +26,53 @@ export async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-export function clientIp(request: Request): string {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-}
+type Handler<C, A> = (request: Request, context: C, auth: A) => Promise<Response>;
 
-type Handler<C> = (request: Request, context: C) => Promise<Response>;
-
-/** Bungkus route handler: cek sesi (kecuali `public`) lalu ubah error menjadi respons JSON. */
-export function route<C>(handler: Handler<C>, options: { public?: boolean } = {}): Handler<C> {
-  return async (request, context) => {
+function wrap<C, A>(handler: Handler<C, A>, authorize: (context: C) => Promise<A>) {
+  return async (request: Request, context: C): Promise<Response> => {
     // Tandai dinamis di luar try: penolakan cookies() saat prerender build adalah sinyal Next, jangan diubah jadi respons error.
     await connection();
     try {
-      if (!options.public) await requireSession();
-      return await handler(request, context);
+      return await handler(request, context, await authorize(context));
     } catch (error) {
       return toErrorResponse(error);
     }
   };
+}
+
+/** Route non-proyek: user aktif wajib, lalu ubah error menjadi respons JSON. */
+export function route<C>(handler: Handler<C, { user: CurrentUser }>) {
+  return wrap(handler, async () => ({ user: await requireUser() }));
+}
+
+/** Tanpa sesi (login, logout, callback OAuth). Handler memeriksa sendiri bila perlu (`requireUser`). */
+export function publicRoute<C>(handler: Handler<C, Record<string, never>>) {
+  return wrap(handler, async () => ({}));
+}
+
+/** Route khusus Root (Pengguna, kelola Divisi). */
+export function rootRoute<C>(handler: Handler<C, { user: CurrentUser }>) {
+  return wrap(handler, async () => {
+    const user = await requireUser();
+    if (!user.isRoot) throw new ForbiddenError("Hanya Root yang bisa melakukan ini.");
+    return { user };
+  });
+}
+
+export interface ProjectAccess {
+  user: CurrentUser;
+  role: Role;
+  projectId: string;
+}
+
+/** Semua route di `api/projects/[projectId]/`: tanpa akses → 404 (keberadaan proyek tidak bocor), kurang kemampuan → 403. */
+export function projectRoute<C extends { params: Promise<{ projectId: string }> }>(capability: Capability, handler: Handler<C, ProjectAccess>) {
+  return wrap(handler, async (context: C) => {
+    const user = await requireUser();
+    const { projectId } = await context.params;
+    const role = await projectRole(getDb(), user, projectId);
+    if (!role) throw new NotFoundError("Proyek tidak ditemukan.");
+    if (!can(role, capability)) throw new ForbiddenError();
+    return { user, role, projectId };
+  });
 }

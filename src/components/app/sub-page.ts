@@ -13,6 +13,9 @@ const LAINNYA: Record<string, string> = {
   "/lainnya/pagu": "Pagu",
   "/lainnya/ekspor": "Ekspor laporan",
   "/lainnya/proyek": "Pengaturan proyek",
+  "/lainnya/divisi": "Divisi",
+  "/lainnya/anggota": "Anggota proyek",
+  "/lainnya/pengguna": "Pengguna",
 };
 
 /** `from` = query `?dari=`: form transaksi kembali ke halaman asalnya (sama dengan tujuan setelah simpan). */

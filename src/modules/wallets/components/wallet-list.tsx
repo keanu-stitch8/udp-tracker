@@ -15,7 +15,8 @@ import { reimburseStatus } from "../lib/reimburse";
 import type { WalletListItem } from "../queries/wallets";
 import { WalletForm } from "./wallet-form";
 
-export function WalletList({ projectId }: { projectId: string }) {
+/** `canManage` (Root/PM): tambah dompet. Anggota hanya melihat dan cek saldo. */
+export function WalletList({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const { data } = useWalletList(projectId);
   const [adding, setAdding] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -43,9 +44,11 @@ export function WalletList({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
       ) : (
-        <Button variant="outline" disabled={data.locked} onClick={() => setAdding(true)}>
-          + Tambah dompet
-        </Button>
+        canManage && (
+          <Button variant="outline" disabled={data.locked} onClick={() => setAdding(true)}>
+            + Tambah dompet
+          </Button>
+        )
       )}
 
       {active.length ? <WalletLinks wallets={active} /> : <p className="text-sm text-muted-foreground">Belum ada dompet aktif.</p>}

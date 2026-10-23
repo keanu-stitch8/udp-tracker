@@ -24,6 +24,12 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+export class ForbiddenError extends AppError {
+  constructor(message = "Kamu tidak punya akses untuk ini.") {
+    super(message, 403);
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message = "Data tidak ditemukan.") {
     super(message, 404);

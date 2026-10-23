@@ -13,3 +13,6 @@ export type BudgetBasis = (typeof BUDGET_BASES)[number];
 
 export const TRANSACTION_TYPES = ["expense", "income", "transfer"] as const;
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+
+export const USER_STATUSES = ["pending", "active", "rejected"] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];

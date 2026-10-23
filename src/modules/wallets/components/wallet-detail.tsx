@@ -23,7 +23,8 @@ import type { WalletDetail } from "../queries/wallets";
 import { BalanceCheckItem } from "./balance-check-item";
 import { WalletForm } from "./wallet-form";
 
-export function WalletDetailPanel({ projectId, walletId, today }: { projectId: string; walletId: string; today: string }) {
+/** `canManage` (Root/PM): ubah & arsipkan dompet. Anggota tetap bisa cek saldo. */
+export function WalletDetailPanel({ projectId, walletId, today, canManage }: { projectId: string; walletId: string; today: string; canManage: boolean }) {
   const { data } = useWalletDetail(projectId, walletId);
   const save = useSaveWallet(projectId, walletId);
   const [editing, setEditing] = useState(false);
@@ -64,11 +65,13 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
           <CardHeader>
             <CardTitle className={CARD_TITLE}>{wallet.name}</CardTitle>
             <CardDescription>{[WALLET_KIND_LABELS[wallet.kind], wallet.vehicleName, wallet.holder].filter(Boolean).join(" · ")}</CardDescription>
-            <CardAction>
-              <Button size="sm" variant="outline" disabled={data.locked} onClick={() => setEditing(true)}>
-                Ubah
-              </Button>
-            </CardAction>
+            {canManage && (
+              <CardAction>
+                <Button size="sm" variant="outline" disabled={data.locked} onClick={() => setEditing(true)}>
+                  Ubah
+                </Button>
+              </CardAction>
+            )}
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div>
@@ -82,9 +85,11 @@ export function WalletDetailPanel({ projectId, walletId, today }: { projectId: s
             </div>
             <div className="flex items-center gap-2">
               {wallet.archived && <Badge variant="outline">Diarsipkan</Badge>}
-              <Button size="sm" variant="ghost" disabled={data.locked || save.isPending} onClick={toggleArchived}>
-                {wallet.archived ? "Aktifkan lagi" : "Arsipkan dompet"}
-              </Button>
+              {canManage && (
+                <Button size="sm" variant="ghost" disabled={data.locked || save.isPending} onClick={toggleArchived}>
+                  {wallet.archived ? "Aktifkan lagi" : "Arsipkan dompet"}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

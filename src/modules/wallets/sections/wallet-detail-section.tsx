@@ -1,19 +1,19 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
 import { NotFoundError } from "@/lib/errors";
-import { getActiveProject } from "@/modules/projects/queries/projects";
+import { requireActiveProject } from "@/modules/projects/queries/projects";
 import { todayWib } from "@/modules/shared/lib/date";
 import { ledgerKeys } from "@/modules/transactions/hooks/keys";
+import { can } from "@/modules/users/lib/access";
 import { WalletDetailPanel } from "../components/wallet-detail";
 import { getWalletDetail, type WalletDetail } from "../queries/wallets";
 
 export async function WalletDetailSection({ walletId }: { walletId: Promise<string> }) {
   await connection();
   const db = getDb();
-  const project = await getActiveProject(db);
-  if (!project) redirect("/proyek/baru");
+  const project = await requireActiveProject(db);
   const id = await walletId;
   let detail: WalletDetail;
   try {
@@ -26,7 +26,7 @@ export async function WalletDetailSection({ walletId }: { walletId: Promise<stri
   queryClient.setQueryData(ledgerKeys.wallet(project.id, id), detail);
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <WalletDetailPanel projectId={project.id} walletId={id} today={todayWib()} />
+      <WalletDetailPanel projectId={project.id} walletId={id} today={todayWib()} canManage={can(project.role, "manage")} />
     </HydrationBoundary>
   );
 }

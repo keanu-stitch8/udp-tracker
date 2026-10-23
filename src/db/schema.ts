@@ -2,13 +2,14 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, time, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 // Import relatif (bukan "@/"): drizzle-kit memuat file ini di luar resolver tsconfig paths.
-import { BUDGET_BASES, CATEGORY_KINDS, PROJECT_STATUSES, TRANSACTION_TYPES, WALLET_KINDS } from "../modules/shared/types/enums";
+import { BUDGET_BASES, CATEGORY_KINDS, PROJECT_STATUSES, TRANSACTION_TYPES, USER_STATUSES, WALLET_KINDS } from "../modules/shared/types/enums";
 
 export const projectStatus = pgEnum("project_status", PROJECT_STATUSES);
 export const walletKind = pgEnum("wallet_kind", WALLET_KINDS);
 export const categoryKind = pgEnum("category_kind", CATEGORY_KINDS);
 export const budgetBasis = pgEnum("budget_basis", BUDGET_BASES);
 export const transactionType = pgEnum("transaction_type", TRANSACTION_TYPES);
+export const userStatus = pgEnum("user_status", USER_STATUSES);
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -219,20 +220,66 @@ export const attachments = pgTable(
   (t) => [index("attachments_transaction_idx").on(t.transactionId)],
 );
 
+// Akun login Google (spec akses multi-divisi §1). Email disimpan huruf kecil; status & peran dibaca tiap request.
+export const users = pgTable("users", {
+  id: uuid().primaryKey().defaultRandom(),
+  email: text().notNull().unique(),
+  name: text(),
+  imageUrl: text(),
+  status: userStatus().notNull().default("pending"),
+  isRoot: boolean().notNull().default(false),
+  lastLoginAt: timestamp({ withTimezone: true }),
+  ...timestamps,
+});
+
+export const divisionPms = pgTable(
+  "division_pms",
+  {
+    divisionId: uuid()
+      .notNull()
+      .references(() => divisions.id, { onDelete: "cascade" }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.divisionId, t.userId] }), index("division_pms_user_idx").on(t.userId)],
+);
+
+export const projectMembers = pgTable(
+  "project_members",
+  {
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    addedBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.userId] }), index("project_members_user_idx").on(t.userId)],
+);
+
+// Undangan PM untuk email yang belum pernah login; berubah jadi project_members saat login pertama.
+export const projectInvitations = pgTable(
+  "project_invitations",
+  {
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    email: text().notNull(),
+    invitedBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.email] }), index("project_invitations_email_idx").on(t.email)],
+);
+
+// Koneksi Google untuk ekspor, satu per user (file masuk ke Drive orang yang mengekspor).
 export const googleCredentials = pgTable("google_credentials", {
-  id: text().primaryKey().default("default"),
+  userId: uuid()
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
   data: text().notNull(),
   account: text(),
   ...timestamps,
 });
-
-export const loginAttempts = pgTable(
-  "login_attempts",
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    ip: text().notNull(),
-    success: boolean().notNull(),
-    attemptedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [index("login_attempts_ip_time_idx").on(t.ip, t.attemptedAt)],
-);

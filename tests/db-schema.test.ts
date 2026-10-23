@@ -6,7 +6,7 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { describe, expect, it } from "vitest";
-import { categories, categoryGroups, divisions, projects, transactions, wallets } from "@/db/schema";
+import { categories, categoryGroups, divisionPms, divisions, googleCredentials, projectMembers, projects, transactions, users, wallets } from "@/db/schema";
 import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
 
 describe("skema DB", () => {
@@ -108,5 +108,44 @@ describe("skema DB", () => {
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+
+  it("migrasi 0008–0009: token Google lama dihapus, google_credentials jadi per user", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "migr-"));
+    try {
+      await cp("src/db/migrations", dir, { recursive: true });
+      const journalPath = path.join(dir, "meta/_journal.json");
+      const journal = JSON.parse(await readFile(journalPath, "utf8")) as { entries: { tag: string }[] };
+      journal.entries = journal.entries.filter((e) => e.tag < "0008");
+      await writeFile(journalPath, JSON.stringify(journal));
+      const db = drizzle({ client: new PGlite(), casing: "snake_case" });
+      await migrate(db, { migrationsFolder: dir });
+      await db.execute(sql`insert into google_credentials (id, data, account) values ('default', 'x', 'lama@example.com')`);
+      await migrate(db, { migrationsFolder: "src/db/migrations" });
+
+      const rows = (await db.execute(sql`select count(*)::int as n from google_credentials`)) as { rows: { n: number }[] };
+      expect(rows.rows[0].n).toBe(0);
+      const tables = (await db.execute(sql`select count(*)::int as n from information_schema.tables where table_name = 'login_attempts'`)) as { rows: { n: number }[] };
+      expect(tables.rows[0].n).toBe(0);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("email user unik; hapus user meng-cascade PM, keanggotaan, dan token Google", async () => {
+    const db = await createTestDb();
+    const [user] = await db.insert(users).values({ email: "a@example.com" }).returning();
+    expect(user.status).toBe("pending");
+    await expect(db.insert(users).values({ email: "a@example.com" })).rejects.toThrow();
+    const divisionId = await testDivisionId(db);
+    const [project] = await db.insert(projects).values({ name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", divisionId }).returning();
+    await db.insert(divisionPms).values({ divisionId, userId: user.id });
+    await db.insert(projectMembers).values({ projectId: project.id, userId: user.id });
+    await db.insert(googleCredentials).values({ userId: user.id, data: "x" });
+    await expect(db.insert(googleCredentials).values({ userId: user.id, data: "y" })).rejects.toThrow();
+    await db.delete(users);
+    expect(await db.select().from(divisionPms)).toHaveLength(0);
+    expect(await db.select().from(projectMembers)).toHaveLength(0);
+    expect(await db.select().from(googleCredentials)).toHaveLength(0);
   });
 });

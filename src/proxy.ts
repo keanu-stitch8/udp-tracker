@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
-const PUBLIC_PATHS = new Set(["/login", "/api/auth/login", "/api/auth/logout", "/api/auth/google/callback"]);
+// Callback dipakai login dan hubungkan-ekspor; alur hubungkan tetap memeriksa sesi di route.
+const PUBLIC_PATHS = new Set(["/login", "/api/auth/google/login", "/api/auth/google/callback", "/api/auth/logout"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

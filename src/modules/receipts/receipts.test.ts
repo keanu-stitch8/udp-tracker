@@ -3,7 +3,7 @@ import type { Db } from "@/db/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
-import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId, testRoot } from "@tests/helpers/test-db";
 import { putReceipt } from "./api/blob";
 import { GeminiError, generateJson } from "./api/gemini";
 import { uploadReceipt } from "./services/upload-receipt";
@@ -23,7 +23,7 @@ let projectId: string;
 beforeEach(async () => {
   vi.clearAllMocks();
   db = await createTestDb();
-  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Uji Bon", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, testRoot, { divisionId: await testDivisionId(db), name: "Uji Bon", startDate: "2026-10-20", endDate: "2026-10-25", pax: 3, vehicles: ["Mobil 1"] })).id;
 });
 
 describe("uploadReceipt", () => {
@@ -98,7 +98,7 @@ describe("uploadReceipt", () => {
   });
 
   it("proyek selesai atau tidak ada → ditolak", async () => {
-    await updateProject(db, projectId, { status: "done" });
+    await updateProject(db, testRoot, projectId, { status: "done" });
     await expect(uploadReceipt(db, projectId, jpeg(), config)).rejects.toThrow(/dikunci/);
     await expect(uploadReceipt(db, crypto.randomUUID(), jpeg(), config)).rejects.toBeInstanceOf(NotFoundError);
     expect(putReceipt).not.toHaveBeenCalled();

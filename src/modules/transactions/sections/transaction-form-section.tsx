@@ -1,9 +1,9 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
 import { NotFoundError } from "@/lib/errors";
 import { safeNextPath } from "@/modules/auth/lib/safe-next";
-import { getActiveProject } from "@/modules/projects/queries/projects";
+import { requireActiveProject } from "@/modules/projects/queries/projects";
 import { isIsoDate, nowTimeWib, todayWib } from "@/modules/shared/lib/date";
 import { TransactionForm } from "../components/transaction-form";
 import { getTransactionReference, getTransactionView } from "../queries/views";
@@ -16,8 +16,7 @@ const single = (value: string | string[] | undefined) => (Array.isArray(value) ?
 export async function TransactionFormSection({ searchParams, transactionId }: { searchParams: SearchParams; transactionId?: Promise<string> }) {
   await connection();
   const db = getDb();
-  const project = await getActiveProject(db);
-  if (!project) redirect("/proyek/baru");
+  const project = await requireActiveProject(db);
 
   const params = await searchParams;
   const requestedDate = single(params.tanggal);

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDeleteDivision, useDivisions } from "../hooks/use-divisions";
 import { DivisionForm } from "./division-form";
+import { DivisionPms } from "./division-pms";
 
 type Editing = { kind: "new" } | { kind: "rename"; id: string } | null;
 
@@ -51,6 +52,11 @@ export function DivisionSettings() {
               </>
             )}
           </CardHeader>
+          {editing?.kind !== "rename" || editing.id !== division.id ? (
+            <CardContent>
+              <DivisionPms division={division} />
+            </CardContent>
+          ) : null}
           {confirmDelete === division.id && (
             <CardContent>
               <div className="flex flex-col gap-2 border-2 p-3 text-sm">

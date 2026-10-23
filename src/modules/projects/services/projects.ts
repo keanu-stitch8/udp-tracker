@@ -1,9 +1,11 @@
 import "server-only";
 import { z } from "zod";
 import type { Db } from "@/db/types";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { parseOrThrow } from "@/lib/validation";
 import { findDivisionOrThrow } from "@/modules/divisions/services/divisions";
+import { selectPmDivisionIds } from "@/modules/users/api/access-repo";
+import type { Actor } from "@/modules/users/types/user";
 import { selectProject, type NewProjectRow, type ProjectRow } from "../api/projects-repo";
 import { createProjectSchema, PROJECT_END_BEFORE_START, updateProjectSchema } from "../types/project-input";
 
@@ -42,4 +44,17 @@ export async function assertDivisionExists(db: Db, divisionId: string): Promise<
     if (error instanceof NotFoundError) throw new ValidationError({ divisionId: ["Divisi tidak ditemukan."] });
     throw error;
   });
+}
+
+/** Divisi tempat actor boleh membuat/memindahkan proyek: `"all"` untuk Root, selain itu divisi PM-nya. */
+export async function creatableDivisionIds(db: Db, actor: Actor): Promise<"all" | string[]> {
+  return actor.isRoot ? "all" : selectPmDivisionIds(db, actor.id);
+}
+
+/** Root: divisi mana pun; PM: hanya divisinya; selain itu tidak boleh membuat proyek (spec §2). */
+export async function assertCanUseDivision(db: Db, actor: Actor, divisionId: string): Promise<void> {
+  const allowed = await creatableDivisionIds(db, actor);
+  if (allowed === "all") return;
+  if (!allowed.length) throw new ForbiddenError("Hanya Root atau PM yang bisa membuat proyek.");
+  if (!allowed.includes(divisionId)) throw new ValidationError({ divisionId: ["Kamu bukan PM divisi ini."] });
 }

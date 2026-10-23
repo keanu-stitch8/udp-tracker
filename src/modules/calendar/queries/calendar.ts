@@ -32,7 +32,8 @@ export interface DayDetail {
   transactions: TransactionView[];
 }
 
-export const getDayDetail = cache(async (db: Db, projectId: string, date: string): Promise<DayDetail> => {
+/** Tanpa `budgetSecret` pagu tidak dikirim sama sekali (sampai tarif karyawan ada di Rilis 5, pagu = tarif management). */
+export const getDayDetail = cache(async (db: Db, projectId: string, date: string, access: { budgetSecret: boolean }): Promise<DayDetail> => {
   if (!isIsoDate(date)) throw new ValidationError({ date: ["Tanggal tidak valid."] });
   const ledger = await getLedger(db, projectId);
   const entries = expenseEntries(ledger.transactions, ledger.categories).filter((e) => e.date === date);
@@ -47,7 +48,7 @@ export const getDayDetail = cache(async (db: Db, projectId: string, date: string
         return { categoryId, name: category?.name ?? "Biaya admin", icon: category?.icon ?? "landmark", total };
       })
       .sort((a, b) => b.total - a.total),
-    budgets: ledger.budgets.map((b) => dailyBudgetUsage(b, ctx, entries, date)).filter((b): b is DailyBudgetUsage => b !== null),
+    budgets: access.budgetSecret ? ledger.budgets.map((b) => dailyBudgetUsage(b, ctx, entries, date)).filter((b): b is DailyBudgetUsage => b !== null) : [],
     transactions: toTransactionViews(
       ledger.transactions.filter((t) => t.date === date),
       refsOf(ledger),

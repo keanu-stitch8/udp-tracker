@@ -5,7 +5,7 @@ import { createProject } from "@/modules/projects/commands/create-project";
 import { updateProject } from "@/modules/projects/commands/update-project";
 import { createTransaction, deleteTransaction } from "@/modules/transactions/commands/save-transaction";
 import { getTransactionReference } from "@/modules/transactions/queries/views";
-import { createTestDb, testDivisionId } from "@tests/helpers/test-db";
+import { createTestDb, testDivisionId, testRoot } from "@tests/helpers/test-db";
 import { adjustBalanceCheck, createBalanceCheck } from "./commands/balance-check";
 import { createWallet, updateWallet } from "./commands/save-wallet";
 import { getWalletDetail, getWalletList } from "./queries/wallets";
@@ -22,7 +22,7 @@ async function referenceOf(id: string) {
 
 beforeEach(async () => {
   db = await createTestDb();
-  projectId = (await createProject(db, { divisionId: await testDivisionId(db), name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 4, vehicles: ["Mobil 1"] })).id;
+  projectId = (await createProject(db, testRoot, { divisionId: await testDivisionId(db), name: "Hero", startDate: "2026-10-20", endDate: "2026-10-25", pax: 4, vehicles: ["Mobil 1"] })).id;
   ref = await referenceOf(projectId);
 });
 
@@ -53,7 +53,7 @@ describe("kelola dompet", () => {
     const error2 = await createWallet(db, projectId, { kind: "cash", name: "Cash 2", vehicleId: ref.vehicle("Mobil 1") }).catch((e) => e);
     expect((error2 as ValidationError).fieldErrors).toEqual({ vehicleId: ["Hanya dompet Flazz yang terkait mobil."] });
 
-    const other = await createProject(db, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: ["Mobil X"] });
+    const other = await createProject(db, testRoot, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: ["Mobil X"] });
     const otherVehicle = (await referenceOf(other.id)).vehicle("Mobil X");
     const error3 = await createWallet(db, projectId, { kind: "flazz", name: "Flazz X", vehicleId: otherVehicle }).catch((e) => e);
     expect((error3 as ValidationError).fieldErrors).toEqual({ vehicleId: ["Mobil tidak ditemukan di proyek ini."] });
@@ -62,7 +62,7 @@ describe("kelola dompet", () => {
   });
 
   it("proyek selesai dikunci", async () => {
-    await updateProject(db, projectId, { status: "done" });
+    await updateProject(db, testRoot, projectId, { status: "done" });
     await expect(createWallet(db, projectId, { kind: "cash", name: "Cash 2" })).rejects.toBeInstanceOf(ConflictError);
   });
 });
@@ -121,7 +121,7 @@ describe("cek saldo", () => {
   });
 
   it("dompet/cek saldo proyek lain atau id tidak dikenal → NotFoundError", async () => {
-    const other = await createProject(db, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: [] });
+    const other = await createProject(db, testRoot, { divisionId: await testDivisionId(db), name: "Lain", startDate: "2026-11-01", endDate: "2026-11-02", pax: 2, vehicles: [] });
     const otherCash = (await referenceOf(other.id)).wallet("Cash");
     await expect(createBalanceCheck(db, projectId, otherCash, { date: "2026-10-20", actualBalance: 1 })).rejects.toBeInstanceOf(NotFoundError);
     const otherCheck = await createBalanceCheck(db, other.id, otherCash, { date: "2026-11-01", actualBalance: 1 });

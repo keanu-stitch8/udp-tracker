@@ -3,7 +3,7 @@ import type { Division } from "@/modules/divisions/types/division";
 import type { Project } from "../types/project";
 import { groupProjectsByDivision } from "./group-by-division";
 
-const division = (id: string, name: string): Division => ({ id, name, projectCount: 0 });
+const division = (id: string, name: string): Division => ({ id, name, projectCount: 0, canCreateProject: true, pms: [] });
 const project = (id: string, divisionId: string): Project => ({ id, divisionId, name: id, location: "", startDate: "2026-10-01", endDate: "2026-10-02", pax: 1, status: "active", sheetUrl: null });
 
 describe("groupProjectsByDivision", () => {

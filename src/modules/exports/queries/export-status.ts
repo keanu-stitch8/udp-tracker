@@ -11,8 +11,9 @@ export interface ExportStatus {
   folderUrl: string | null;
 }
 
-export async function getExportStatus(db: Db, projectId: string): Promise<ExportStatus> {
-  const [project, google] = await Promise.all([selectProjectExport(db, projectId), googleAccount(db)]);
+/** `google` = koneksi milik user yang membuka halaman (per user). */
+export async function getExportStatus(db: Db, projectId: string, userId: string): Promise<ExportStatus> {
+  const [project, google] = await Promise.all([selectProjectExport(db, projectId), googleAccount(db, userId)]);
   return {
     projectId,
     google,

@@ -15,7 +15,7 @@ import { useActivateProject, useProjects } from "../hooks/use-projects";
 import { groupProjectsByDivision } from "../lib/group-by-division";
 import type { Project } from "../types/project";
 
-export function ProjectList({ activeProjectId }: { activeProjectId: string | null }) {
+export function ProjectList({ activeProjectId, canCreate }: { activeProjectId: string | null; canCreate: boolean }) {
   const router = useRouter();
   const { data: projects = [] } = useProjects();
   const { data: divisions = [] } = useDivisions();
@@ -29,13 +29,15 @@ export function ProjectList({ activeProjectId }: { activeProjectId: string | nul
             <FolderPlus className="size-8" />
           </EmptyMedia>
           <EmptyTitle>Belum ada proyek</EmptyTitle>
-          <EmptyDescription>Buat proyek untuk mulai mencatat UDP produksi.</EmptyDescription>
+          <EmptyDescription>{canCreate ? "Buat proyek untuk mulai mencatat UDP produksi." : "Minta PM menambahkan kamu ke proyek."}</EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Link href="/proyek/baru" className={buttonVariants()}>
-            Buat proyek
-          </Link>
-        </EmptyContent>
+        {canCreate && (
+          <EmptyContent>
+            <Link href="/proyek/baru" className={buttonVariants()}>
+              Buat proyek
+            </Link>
+          </EmptyContent>
+        )}
       </Empty>
     );
   }
@@ -82,6 +84,13 @@ export function ProjectList({ activeProjectId }: { activeProjectId: string | nul
 
   return (
     <div className="flex flex-col gap-5">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Link href="/proyek/baru" className={buttonVariants({ size: "sm" })}>
+            + Proyek baru
+          </Link>
+        </div>
+      )}
       {groupProjectsByDivision(projects, divisions).map(({ division, projects: divisionProjects }) => (
         <section key={division.id} className="flex flex-col gap-3">
           <h2 className={LABEL}>{division.name}</h2>

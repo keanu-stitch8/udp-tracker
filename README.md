@@ -10,12 +10,21 @@ Spec: `docs/superpowers/specs/2026-10-21-udp-tracker-design.md` · Alur data: `d
 npm install
 npm i -g neon@latest && neon login
 neon env pull                  # tulis DATABASE_URL, DATABASE_URL_UNPOOLED, NEON_BRANCH ke .env.local
-npm run hash-password          # tambahkan APP_PASSWORD_HASH + SESSION_SECRET ke .env.local
+# tambahkan ke .env.local: SESSION_SECRET (`openssl rand -base64 48`), ROOT_EMAILS (email Google kamu),
+# GOOGLE_OAUTH_CLIENT_ID/SECRET (lihat .env.example)
 npm run db:migrate
 npm run dev
 ```
 
-Buka http://localhost:3051. Untuk mencoba di HP pada WiFi yang sama, buka `http://<IP-laptop>:3051`. `next.config.ts` otomatis mengizinkan IP LAN laptop (`allowedDevOrigins`). Tanpa itu, Next 16 menolak origin selain localhost dan halaman tidak hydrate (tombol tidak bereaksi).
+Buka http://localhost:3051. Untuk mencoba di HP pada WiFi yang sama, buka `http://<IP-laptop>:3051`. `next.config.ts` otomatis mengizinkan IP LAN laptop (`allowedDevOrigins`). Tanpa itu, Next 16 menolak origin selain localhost dan halaman tidak hydrate (tombol tidak bereaksi). Catatan: Google menolak redirect ke IP LAN, jadi login Google hanya bisa dari `localhost` atau domain https (uji HP lewat production).
+
+## Akun dan hak akses
+
+- Login hanya dengan Google. Redirect URI OAuth client (login + ekspor sama): `<origin>/api/auth/google/callback`, untuk `http://localhost:3051` dan domain production.
+- Email di `ROOT_EMAILS` otomatis jadi **Root** saat login (juga jalur pemulihan bila Root terkunci). Akun lain berstatus **Menunggu** sampai Root menyetujuinya di Lainnya → **Pengguna** sebagai Anggota, PM (per divisi), atau Root.
+- **PM** mengelola semua proyek di divisinya: pengaturan, anggota, ekspor, hapus proyek. **Anggota** hanya melihat proyek tempat ia ditambahkan, mencatat transaksi, dan cek saldo. Pagu tidak terlihat oleh anggota.
+- PM menambah anggota lewat Lainnya → **Anggota proyek** dengan email Google. Email yang belum pernah login disimpan sebagai undangan dan jadi anggota saat login pertama.
+- Koneksi Google untuk ekspor per user: file masuk ke Drive orang yang mengekspor.
 
 ## Perintah
 
@@ -54,5 +63,5 @@ Untuk belanja yang dibayar dulu pakai uang pribadi anggota tim, lalu diganti dar
 ## Deploy (Vercel + Neon)
 
 1. Push ke GitHub, lalu import ke Vercel.
-2. Tambahkan `DATABASE_URL`, `DATABASE_URL_UNPOOLED` (dari `neon env pull`), `APP_PASSWORD_HASH`, dan `SESSION_SECRET` di Environment Variables. Set Function Region ke Singapura (`sin1`), sama dengan region Neon.
+2. Tambahkan `DATABASE_URL`, `DATABASE_URL_UNPOOLED` (dari `neon env pull`), `SESSION_SECRET`, `ROOT_EMAILS`, dan variabel Google/Blob/Gemini dari `.env.example` di Environment Variables. Set Function Region ke Singapura (`sin1`), sama dengan region Neon.
 3. Deploy. Script `vercel-build` menjalankan migrasi sebelum `next build`.

@@ -4,9 +4,10 @@ import Link from "next/link";
 import { AppSelect } from "@/components/app/app-select";
 import { useDivisions } from "../hooks/use-divisions";
 
-/** Pilihan divisi untuk form proyek. Daftar divisi di-prefetch oleh section pemanggil. */
+/** Pilihan divisi untuk form proyek: hanya divisi tempat user boleh membuat proyek. Di-prefetch oleh section pemanggil. */
 export function DivisionSelect({ id, value, onChange }: { id: string; value: string; onChange: (divisionId: string) => void }) {
-  const { data: divisions = [] } = useDivisions();
+  const { data = [] } = useDivisions();
+  const divisions = data.filter((d) => d.canCreateProject);
   if (!divisions.length) {
     return (
       <p className="text-sm">

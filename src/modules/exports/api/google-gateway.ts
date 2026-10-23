@@ -29,8 +29,8 @@ function cellData(cell: ReportCell | undefined): sheets_v4.Schema$CellData {
 
 const columnsOf = (tab: ReportTab) => Math.max(1, ...tab.rows.map((r) => r.length));
 
-export async function googleGateway(db: Db): Promise<ReportGateway> {
-  const auth = await authorizedClient(db);
+export async function googleGateway(db: Db, userId: string): Promise<ReportGateway> {
+  const auth = await authorizedClient(db, userId);
   const drive = google.drive({ version: "v3", auth });
   const sheets = google.sheets({ version: "v4", auth });
 

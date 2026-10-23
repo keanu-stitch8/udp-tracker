@@ -15,14 +15,12 @@
     "db:migrate": "tsx scripts/migrate.mts",
     "ui:sync": "tsx scripts/ui-sync.mts",
     "ui:check": "tsx scripts/ui-sync.mts --check",
-    "hash-password": "tsx scripts/hash-password.mts",
     "blob:cleanup": "tsx scripts/cleanup-blobs.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@neon/config": "^1.9.3",
     "@neon/env": "^1.6.4",
-    "@node-rs/argon2": "^2.2.2",
     "@tanstack/react-query": "^5.104.5",
     "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.2",

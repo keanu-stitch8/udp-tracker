@@ -1,8 +1,7 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
-import { getActiveProject } from "@/modules/projects/queries/projects";
+import { requireActiveProject } from "@/modules/projects/queries/projects";
 import { todayWib } from "@/modules/shared/lib/date";
 import { ledgerKeys } from "@/modules/transactions/hooks/keys";
 import { CalendarMonth } from "../components/calendar-month";
@@ -12,8 +11,7 @@ import { getCalendarMonth } from "../queries/calendar";
 export async function CalendarSection() {
   await connection();
   const db = getDb();
-  const project = await getActiveProject(db);
-  if (!project) redirect("/proyek/baru");
+  const project = await requireActiveProject(db);
   const today = todayWib();
   const month = defaultCalendarMonth(today, project.startDate, project.endDate);
   const queryClient = new QueryClient();

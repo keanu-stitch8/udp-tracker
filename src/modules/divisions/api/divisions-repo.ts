@@ -1,5 +1,5 @@
 import "server-only";
-import { count, eq } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 import { divisions, projects } from "@/db/schema";
 import type { Db } from "@/db/types";
 
@@ -32,4 +32,11 @@ export async function deleteDivisionRow(db: Db, id: string): Promise<void> {
 export async function countProjectsByDivision(db: Db): Promise<Map<string, number>> {
   const rows = await db.select({ divisionId: projects.divisionId, n: count() }).from(projects).groupBy(projects.divisionId);
   return new Map(rows.map((r) => [r.divisionId, r.n]));
+}
+
+/** Divisi dari sekumpulan proyek (tanpa duplikat). */
+export async function selectProjectDivisionIds(db: Db, projectIds: string[]): Promise<string[]> {
+  if (!projectIds.length) return [];
+  const rows = await db.selectDistinct({ divisionId: projects.divisionId }).from(projects).where(inArray(projects.id, projectIds));
+  return rows.map((r) => r.divisionId);
 }

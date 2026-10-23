@@ -2,16 +2,20 @@ import "server-only";
 import { z } from "zod";
 import { ServiceUnavailableError } from "./errors";
 
-const schema = z.object({
-  DATABASE_URL: z.string().min(1, "wajib diisi"),
-  // Base64 karena hash argon2 berisi `$` yang diekspansi dotenv (.env.local).
-  APP_PASSWORD_HASH: z
-    .string()
-    .min(1, "wajib diisi")
-    .transform((b64) => Buffer.from(b64, "base64").toString("utf8"))
-    .refine((hash) => hash.startsWith("$argon2"), "harus hasil `npm run hash-password`"),
-  SESSION_SECRET: z.string().min(32, "SESSION_SECRET minimal 32 karakter"),
-});
+const schema = z
+  .object({
+    DATABASE_URL: z.string().min(1, "wajib diisi"),
+    SESSION_SECRET: z.string().min(32, "SESSION_SECRET minimal 32 karakter"),
+    // Email yang selalu jadi Root saat login (juga jalur pemulihan bila Root terkunci).
+    ROOT_EMAILS: z.string().optional(),
+  })
+  .transform(({ ROOT_EMAILS, ...rest }) => ({
+    ...rest,
+    rootEmails: (ROOT_EMAILS ?? "")
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  }));
 
 export type Env = z.output<typeof schema>;
 

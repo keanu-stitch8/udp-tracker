@@ -44,5 +44,5 @@ export function useDeleteVehicle(projectId: string) {
 }
 
 export function useDeleteProject(projectId: string) {
-  return useMutation({ mutationFn: (password: string) => apiFetch<void>(base(projectId), { method: "DELETE", json: { password } }) });
+  return useMutation({ mutationFn: (name: string) => apiFetch<void>(base(projectId), { method: "DELETE", json: { name } }) });
 }
