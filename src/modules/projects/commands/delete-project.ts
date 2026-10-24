@@ -20,7 +20,7 @@ export async function deleteProject(db: Db, id: string, input: unknown): Promise
   const project = await findProjectOrThrow(db, id);
   const { name } = parseOrThrow(confirmSchema, input);
   if (name !== project.name.trim()) throw new ValidationError({ name: ["Nama proyek tidak cocok."] }, "Nama proyek tidak cocok.");
-  const pathnames = (await selectProjectAttachments(db, id)).map((a) => a.blobPathname);
+  const pathnames = [...new Set((await selectProjectAttachments(db, id)).map((a) => a.blobPathname))];
   await db.transaction(async (tx) => {
     await deleteProjectTransactions(tx, id);
     await deleteProjectRow(tx, id);

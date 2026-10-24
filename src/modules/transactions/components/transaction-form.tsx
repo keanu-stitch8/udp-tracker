@@ -23,7 +23,7 @@ import { useNowTimeWib } from "@/lib/use-now-time-wib";
 import { useServerDefault } from "@/lib/use-server-default";
 import { CategorySections } from "@/modules/budgets/components/category-sections";
 import { ReceiptPicker, type ReceiptItem } from "@/modules/receipts/components/receipt-picker";
-import type { ScanResult } from "@/modules/receipts/types/receipt";
+import type { ScanResult, TollTap } from "@/modules/receipts/types/receipt";
 import { formatDateLong } from "@/modules/shared/lib/date";
 import type { TransactionType } from "@/modules/shared/types/enums";
 import { useWalletScope } from "@/modules/wallets/components/wallet-scope-provider";
@@ -33,6 +33,7 @@ import { restoreTransactionRequest, useDeleteTransaction, useSaveTransaction } f
 import { auditLine } from "../lib/audit";
 import type { TransactionReference } from "../queries/views";
 import type { TransactionView } from "../types/transaction";
+import { TollHistoryPanel } from "./toll-history-panel";
 
 const TYPE_LABELS: Record<TransactionType, string> = { expense: "Pengeluaran", income: "Pemasukan", transfer: "Transfer" };
 const ADMIN_FEE_PRESETS = [0, 2_000, 2_500, 6_500];
@@ -100,6 +101,8 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
   const [note, setNote] = useState(initial?.note ?? "");
   const [receipts, setReceipts] = useState<ReceiptItem[]>(() => (initial?.attachments ?? []).map((a) => ({ ...a, ocr: null, previewUrl: a.url })));
   const [ocrFields, setOcrFields] = useState<ReadonlySet<OcrField>>(new Set());
+  // Screenshot riwayat e-toll di form baru → panel Riwayat tol menggantikan isian (spec riwayat tol).
+  const [tolls, setTolls] = useState<TollTap[] | null>(null);
   const touched = (field: OcrField) => setOcrFields((current) => (current.has(field) ? new Set([...current].filter((f) => f !== field)) : current));
 
   // Biaya Admin diisi lewat kolom biaya admin; kategorinya hanya muncul untuk transaksi lama yang memakainya.
@@ -125,6 +128,11 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
       return;
     }
     const { scan } = result;
+    if (scan.kind === "toll_history") {
+      if (initial) toast("Ini riwayat e-toll. Untuk mencatat semua tap, scan dari Catat transaksi baru.");
+      else setTolls(scan.tolls);
+      return;
+    }
     const filled = new Set<OcrField>();
     if (scan.amount !== null && amount === null) {
       setAmount(scan.amount);
@@ -171,6 +179,14 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
     if (id && flazz && category?.name.toLowerCase() === "tol") setWalletId(flazz.id);
   }
 
+  const attachmentInputs = () => receipts.map(({ pathname, blobUrl, mimeType, sizeBytes, ocr }) => ({ pathname, blobUrl, mimeType, sizeBytes, ocr }));
+
+  function finish() {
+    onSaved?.();
+    router.push(returnTo);
+    router.refresh();
+  }
+
   function submit() {
     save.mutate(
       {
@@ -185,14 +201,12 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
         vehicleId: showVehicle ? vehicleId : null,
         merchant,
         note,
-        attachments: receipts.map(({ pathname, blobUrl, mimeType, sizeBytes, ocr }) => ({ pathname, blobUrl, mimeType, sizeBytes, ocr })),
+        attachments: attachmentInputs(),
       },
       {
         onSuccess: () => {
           toast.success(initial ? "Perubahan disimpan." : "Transaksi tersimpan.");
-          onSaved?.();
-          router.push(returnTo);
-          router.refresh();
+          finish();
         },
       },
     );
@@ -221,6 +235,23 @@ function TransactionFormFields({ reference, defaultDate, defaultTime, returnTo, 
       onError: (error) => toast.error(error.message),
     });
   }
+
+  if (tolls)
+    return (
+      <div className="flex flex-col gap-5">
+        <ReceiptPicker projectId={projectId} items={receipts} onChange={setReceipts} onScanned={applyScan} disabled={locked} />
+        <TollHistoryPanel
+          reference={reference}
+          sourceWallets={sourceWallets}
+          taps={tolls}
+          attachments={attachmentInputs()}
+          initialWalletId={walletId}
+          initialVehicleId={vehicleId}
+          onCancel={() => setTolls(null)}
+          onSaved={finish}
+        />
+      </div>
+    );
 
   return (
     <form

@@ -34,6 +34,13 @@ export async function insertAttachments(db: Db, values: NewAttachmentRow[]): Pro
   if (values.length) await db.insert(attachments).values(values);
 }
 
+/** Pathname yang masih dipakai baris lampiran mana pun (satu file bisa untuk banyak transaksi). */
+export async function selectPathnamesInUse(db: Db, pathnames: string[]): Promise<Set<string>> {
+  if (!pathnames.length) return new Set();
+  const rows = await db.selectDistinct({ pathname: attachments.blobPathname }).from(attachments).where(inArray(attachments.blobPathname, pathnames));
+  return new Set(rows.map((r) => r.pathname));
+}
+
 export async function deleteAttachmentRows(db: Db, ids: string[]): Promise<void> {
   if (ids.length) await db.delete(attachments).where(inArray(attachments.id, ids));
 }

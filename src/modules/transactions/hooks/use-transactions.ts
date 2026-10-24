@@ -26,6 +26,15 @@ export function useSaveTransaction(projectId: string, transactionId?: string) {
   });
 }
 
+/** Impor riwayat tol: banyak transaksi dalam satu request. */
+export function useCreateTransactions(projectId: string) {
+  const invalidate = useInvalidateLedger(projectId);
+  return useMutation({
+    mutationFn: (transactions: TransactionInput[]) => apiFetch<Transaction[]>(`${base(projectId)}/batch`, { method: "POST", json: { transactions } }),
+    onSuccess: invalidate,
+  });
+}
+
 export function useDeleteTransaction(projectId: string) {
   const invalidate = useInvalidateLedger(projectId);
   return useMutation({

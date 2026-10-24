@@ -1,6 +1,6 @@
 // Trust boundary: JSON Gemini → ReceiptScan. Field yang tidak masuk akal menjadi null, bukan error (spec §6.1).
 import { isIsoDate, isTime, normalizeTime } from "@/modules/shared/lib/date";
-import { MAX_RECEIPT_AMOUNT, type ReceiptScan } from "../types/receipt";
+import { MAX_RECEIPT_AMOUNT, type ReceiptScan, type TollTap } from "../types/receipt";
 
 function toAmount(value: unknown, max = MAX_RECEIPT_AMOUNT): number | null {
   let amount: number | null = null;
@@ -31,11 +31,26 @@ function toText(value: unknown, max: number): string | null {
   return typeof value === "string" ? value.trim().slice(0, max) || null : null;
 }
 
+/** Tap tol dari riwayat e-toll: baris yang tanggal/jam/nominalnya tidak valid dibuang. */
+function toTolls(value: unknown, projectYear: number): TollTap[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item): TollTap[] => {
+    const r = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+    const date = toDate(r.date, projectYear);
+    const time = toTime(r.time);
+    const amount = toAmount(r.amount);
+    return date && time && amount ? [{ date, time, amount }] : [];
+  });
+}
+
 export function toReceiptScan(raw: unknown, refs: { projectYear: number; categoryNames: string[] }): ReceiptScan {
   const r = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
   const amount = toAmount(r.amount);
   const hint = typeof r.categoryHint === "string" ? r.categoryHint.trim().toLowerCase() : null;
+  const tolls = r.kind === "toll_history" ? toTolls(r.tolls, refs.projectYear) : [];
   return {
+    kind: tolls.length ? "toll_history" : "receipt",
+    tolls,
     date: toDate(r.date, refs.projectYear),
     time: toTime(r.time),
     amount,

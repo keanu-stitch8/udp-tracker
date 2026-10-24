@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/db/types";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { getCalendarMonth, getDayDetail } from "@/modules/calendar/queries/calendar";
 import { getDashboardSummary } from "@/modules/dashboard/queries/summary";
 import { createProject } from "@/modules/projects/commands/create-project";
@@ -8,7 +8,7 @@ import { updateProject } from "@/modules/projects/commands/update-project";
 import { createBudget, updateBudget } from "@/modules/budgets/commands/save-budget";
 import { createTestDb, createTestUser, testDivisionId, testRoot } from "@tests/helpers/test-db";
 import { insertTransaction } from "./api/transactions-repo";
-import { createTransaction, deleteTransaction, restoreTransaction, updateTransaction } from "./commands/save-transaction";
+import { createTransaction, createTransactions, deleteTransaction, restoreTransaction, updateTransaction } from "./commands/save-transaction";
 import { getLedger } from "./queries/ledger";
 import { getTransactionReference, getTransactionView, listTransactionViews } from "./queries/views";
 
@@ -192,5 +192,44 @@ describe("jejak penginput", () => {
   it("data lama tanpa jejak → nama kosong", async () => {
     const legacy = await insertTransaction(db, { projectId, type: "expense", date: "2026-10-20", time: "09:00", amount: 1_000, walletId: ref.wallet("Cash"), categoryId: ref.category("Tol") });
     expect(await getTransactionView(db, projectId, legacy.id)).toMatchObject({ createdBy: null, createdByName: null, updatedByName: null });
+  });
+});
+
+describe("simpan sekaligus (riwayat tol)", () => {
+  const tap = (time: string, amount: number) => ({
+    type: "expense",
+    date: "2026-10-16",
+    time,
+    amount,
+    walletId: ref.wallet("Flazz Mobil 1"),
+    categoryId: ref.category("Tol"),
+    vehicleId: ref.vehicle("Mobil 1"),
+    merchant: "Tol",
+  });
+
+  it("semua tersimpan dengan penginput", async () => {
+    const user = await createTestUser(db, { email: "riski@example.com" });
+    const saved = await createTransactions(db, projectId, { transactions: [tap("09:55", 19_000), tap("17:33", 467_500)] }, as(user));
+    expect(saved.map((t) => [t.time, t.amount, t.createdBy])).toEqual([
+      ["09:55", 19_000, user.id],
+      ["17:33", 467_500, user.id],
+    ]);
+    expect((await listTransactionViews(db, projectId)).length).toBe(2);
+  });
+
+  it("satu baris salah → tidak ada yang tersimpan; error menyebut barisnya", async () => {
+    const error = await createTransactions(db, projectId, { transactions: [tap("09:55", 19_000), tap("25:00", 6_000)] }, null).catch((e) => e);
+    expect(error).toBeInstanceOf(ValidationError);
+    expect(Object.keys((error as ValidationError).fieldErrors)).toEqual(["transactions.1.time"]);
+    expect(await listTransactionViews(db, projectId)).toEqual([]);
+    await expect(createTransactions(db, projectId, { transactions: [] }, null)).rejects.toBeInstanceOf(ValidationError);
+    await expect(createTransactions(db, projectId, { transactions: Array.from({ length: 51 }, () => tap("09:55", 1_000)) }, null)).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("dompet di luar cakupan → ditolak, tidak ada yang tersimpan", async () => {
+    const user = await createTestUser(db, { email: "arpan@example.com" });
+    const actor = { userId: user.id, scope: [ref.wallet("Cash")] };
+    await expect(createTransactions(db, projectId, { transactions: [tap("09:55", 19_000)] }, actor)).rejects.toBeInstanceOf(ForbiddenError);
+    expect(await listTransactionViews(db, projectId)).toEqual([]);
   });
 });

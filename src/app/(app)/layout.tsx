@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app/app-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNavSection } from "@/modules/menu";
 import { ProjectHeaderSection } from "@/modules/projects";
-import { AccountGateSection, ViewAsBannerSection } from "@/modules/users";
+import { AccountGateSection, HeaderAvatarSection, ViewAsBannerSection } from "@/modules/users";
 import { WalletScopeSection } from "@/modules/wallets";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <AppShell
       header={
         <Suspense fallback={<Skeleton className="h-10 w-2/3" />}>
-          <AppHeader projectHeader={<ProjectHeaderSection />} />
+          <AppHeader projectHeader={<ProjectHeaderSection />} avatar={<HeaderAvatarSection />} />
         </Suspense>
       }
       nav={<BottomNavSection />}

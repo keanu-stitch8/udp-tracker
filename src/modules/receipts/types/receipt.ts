@@ -5,8 +5,19 @@ export const RECEIPT_EXTENSIONS: Record<ReceiptMime, string> = { "image/jpeg": "
 export const MAX_RECEIPT_BYTES = 4 * 1024 * 1024;
 export const MAX_RECEIPT_AMOUNT = 100_000_000;
 
+/** Satu tap pembayaran tol dari riwayat kartu e-toll (spec riwayat tol). */
+export interface TollTap {
+  date: string;
+  /** "HH:mm" 24 jam. */
+  time: string;
+  amount: number;
+}
+
 /** Hasil scan kanonik (spec §6.1); field yang tidak yakin = null. */
 export interface ReceiptScan {
+  /** "toll_history" = screenshot riwayat e-toll dengan minimal satu tap valid di `tolls`. */
+  kind: "receipt" | "toll_history";
+  tolls: TollTap[];
   date: string | null;
   /** "HH:mm" 24 jam. */
   time: string | null;

@@ -20,5 +20,7 @@ describe("receiptPrompt", () => {
     const schema = receiptResponseSchema(["Tol", "Parkir"]);
     expect(schema.properties.categoryHint).toEqual({ type: "STRING", enum: ["Tol", "Parkir"], nullable: true });
     expect(schema.required).toEqual(["confident"]);
+    expect(schema.properties.kind).toEqual({ type: "STRING", enum: ["receipt", "toll_history"] });
+    expect(schema.properties.tolls.items.required).toEqual(["date", "time", "amount"]);
   });
 });

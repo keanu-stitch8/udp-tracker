@@ -16,6 +16,10 @@ export function receiptPrompt(categoryNames: string[], projectYear: number): str
     "- Kwitansi tulisan tangan boleh dibaca, tetapi isi null bila ragu.",
     "- Isi null untuk field yang tidak terbaca jelas. Jangan menebak.",
     "- confident: true hanya bila total dan tanggal terbaca jelas; false bila foto buram, terpotong, atau bukan bon.",
+    "- kind: \"toll_history\" bila gambar adalah riwayat/info transaksi kartu e-toll/e-money (Flazz, e-Toll/e-money Mandiri, Brizzi, TapCash) berisi daftar banyak transaksi; selain itu \"receipt\".",
+    "- tolls: hanya untuk toll_history, satu item per baris PEMBAYARAN (\"Tol\", \"Transaksi Sale\", debit), urut seperti di gambar. Abaikan Top Up / isi saldo / kredit.",
+    "  date YYYY-MM-DD (\"16/10/26\" = 2026-10-16, \"09 Okt 2026\" = 2026-10-09), time HH:mm 24 jam (detik boleh ditulis), amount bilangan bulat rupiah (\"IDR 19,000.00\" = 19000, \"Rp 23.500\" = 23500).",
+    "  Untuk toll_history, field date/time/amount/merchant di luar tolls diisi null. Untuk receipt, tolls = [].",
   ].join("\n");
 }
 
@@ -30,6 +34,15 @@ export function receiptResponseSchema(categoryNames: string[]) {
       merchant: { type: "STRING", nullable: true },
       categoryHint: { type: "STRING", enum: categoryNames, nullable: true },
       confident: { type: "BOOLEAN" },
+      kind: { type: "STRING", enum: ["receipt", "toll_history"] },
+      tolls: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: { date: { type: "STRING" }, time: { type: "STRING" }, amount: { type: "INTEGER" } },
+          required: ["date", "time", "amount"],
+        },
+      },
     },
     required: ["confident"],
   };

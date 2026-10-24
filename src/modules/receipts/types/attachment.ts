@@ -25,6 +25,9 @@ function isOwnBlobUrl(value: string, pathname: string): boolean {
 }
 
 const scanSchema = z.object({
+  // Hasil scan lama tersimpan tanpa kind/tolls (sebelum riwayat tol).
+  kind: z.enum(["receipt", "toll_history"]).default("receipt"),
+  tolls: z.array(z.object({ date: z.string(), time: z.string(), amount: z.number() })).max(100).default([]),
   date: z.string().nullable(),
   // Hasil scan lama tersimpan tanpa time.
   time: z

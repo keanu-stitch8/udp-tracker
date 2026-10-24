@@ -61,7 +61,29 @@ describe("toReceiptScan", () => {
 
   it("input aneh → semua null", () => {
     for (const raw of [null, "teks", [1, 2], 42]) {
-      expect(toReceiptScan(raw, refs)).toEqual({ date: null, time: null, amount: null, adminFee: null, merchant: null, categoryHint: null, confident: false });
+      expect(toReceiptScan(raw, refs)).toEqual({ kind: "receipt", tolls: [], date: null, time: null, amount: null, adminFee: null, merchant: null, categoryHint: null, confident: false });
     }
+  });
+
+  it("riwayat e-toll: tap valid saja, detik dibuang; tanpa tap valid → bon biasa", () => {
+    const toll = scan({
+      kind: "toll_history",
+      tolls: [
+        { date: "2026-10-09", time: "05:27:33", amount: "IDR 19,000.00" },
+        { date: "2026-10-09", time: "04:21", amount: 446_500 },
+        { date: "2024-10-08", time: "23:27", amount: 27_000 },
+        { date: "2026-10-08", time: "jam 9", amount: 17_000 },
+        { date: "2026-10-08", time: "21:24", amount: 0 },
+        "rusak",
+      ],
+    });
+    expect(toll.kind).toBe("toll_history");
+    expect(toll.tolls).toEqual([
+      { date: "2026-10-09", time: "05:27", amount: 19_000 },
+      { date: "2026-10-09", time: "04:21", amount: 446_500 },
+    ]);
+    expect(scan({ kind: "toll_history", tolls: [{ date: "2024-01-01", time: "01:00", amount: 5 }] })).toMatchObject({ kind: "receipt", tolls: [] });
+    expect(scan({ kind: "toll_history", tolls: "x" })).toMatchObject({ kind: "receipt", tolls: [] });
+    expect(scan({ amount: 5_000 })).toMatchObject({ kind: "receipt", tolls: [] });
   });
 });

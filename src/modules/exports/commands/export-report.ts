@@ -41,9 +41,17 @@ export async function exportReport(db: Db, projectId: string, { gateway, readFil
   const categoryName = new Map(ledger.categories.map((c) => [c.id, c.name]));
   const rows = (await selectProjectAttachments(db, projectId)).filter((a) => transactionOf.has(a.transactionId));
   const driveUrls = new Map(rows.map((a) => [a.id, a.driveUrl]));
+  // Satu file Blob bisa dipakai banyak transaksi (riwayat tol): diunggah sekali, link dipakai bersama.
+  const drivedByPath = new Map(rows.flatMap((a) => (a.driveFileId ? [[a.blobPathname, { driveFileId: a.driveFileId, driveUrl: a.driveUrl }] as const] : [])));
   let uploaded = 0;
   for (const a of rows) {
     if (a.driveFileId) continue;
+    const shared = drivedByPath.get(a.blobPathname);
+    if (shared) {
+      await updateAttachmentDrive(db, a.id, shared);
+      driveUrls.set(a.id, shared.driveUrl);
+      continue;
+    }
     const body = await readFile(a.blobPathname);
     if (!body) continue; // file Blob hilang: laporan tetap jadi, sel bon tanpa link
     const t = transactionOf.get(a.transactionId)!;
@@ -52,6 +60,7 @@ export async function exportReport(db: Db, projectId: string, { gateway, readFil
     const file = await gateway.uploadFile({ name, mimeType, body, parentId: bonFolderId });
     await updateAttachmentDrive(db, a.id, { driveFileId: file.id, driveUrl: file.url });
     driveUrls.set(a.id, file.url);
+    drivedByPath.set(a.blobPathname, { driveFileId: file.id, driveUrl: file.url });
     uploaded++;
   }
 

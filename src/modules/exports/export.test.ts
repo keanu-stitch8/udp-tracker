@@ -84,6 +84,24 @@ describe("exportReport", () => {
     expect(attachment.driveFileId).toBeTruthy();
   });
 
+  it("satu screenshot untuk banyak transaksi (riwayat tol) diunggah sekali, semua memakai link yang sama", async () => {
+    const [first] = await db.select().from(attachments);
+    const ref = await getTransactionReference(db, projectId);
+    await createTransaction(db, projectId, {
+      type: "expense",
+      date: "2026-10-21",
+      time: "13:00",
+      amount: 6_000,
+      walletId: ref.wallets[0].id,
+      categoryId: ref.categories.find((c) => c.name === "Tol")!.id,
+      attachments: [{ pathname: first.blobPathname, blobUrl: first.blobUrl, mimeType: "image/jpeg", sizeBytes: 10, ocr: null }],
+    }, null);
+    const gateway = new FakeGateway();
+    const result = await exportReport(db, projectId, { gateway, readFile, now });
+    expect(result.uploaded).toBe(1);
+    expect(new Set((await db.select().from(attachments)).map((a) => a.driveUrl)).size).toBe(1);
+  });
+
   it("ekspor ulang: foto tidak diunggah lagi, folder dipakai ulang, sheet lama di-rename (lama …)", async () => {
     const gateway = new FakeGateway();
     await exportReport(db, projectId, { gateway, readFile, now });

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Db } from "@/db/types";
 import { ValidationError } from "@/lib/errors";
 import { createProject } from "@/modules/projects/commands/create-project";
-import { createTransaction, updateTransaction } from "@/modules/transactions/commands/save-transaction";
+import { createTransaction, createTransactions, updateTransaction } from "@/modules/transactions/commands/save-transaction";
 import { getTransactionReference, getTransactionView, listTransactionViews } from "@/modules/transactions/queries/views";
 import { createTestDb, testDivisionId, testRoot } from "@tests/helpers/test-db";
 import { deleteReceipts } from "./api/blob";
@@ -52,6 +52,16 @@ describe("lampiran transaksi", () => {
     await updateTransaction(db, projectId, saved.id, { ...base, attachments: [] }, null);
     expect((await getTransactionView(db, projectId, saved.id)).attachments).toEqual([]);
     expect(deleteReceipts).toHaveBeenLastCalledWith([b.pathname]);
+  });
+
+  it("satu file untuk banyak transaksi (riwayat tol): file Blob baru dihapus setelah tidak dipakai transaksi mana pun", async () => {
+    const shot = draft();
+    const [first, second] = await createTransactions(db, projectId, { transactions: [{ ...base, attachments: [shot] }, { ...base, time: "10:00", attachments: [shot] }] }, null);
+    await updateTransaction(db, projectId, first.id, { ...base, attachments: [] }, null);
+    expect(deleteReceipts).not.toHaveBeenCalled();
+    expect((await getTransactionView(db, projectId, second.id)).attachments.map((x) => x.pathname)).toEqual([shot.pathname]);
+    await updateTransaction(db, projectId, second.id, { ...base, time: "10:00", attachments: [] }, null);
+    expect(deleteReceipts).toHaveBeenCalledWith([shot.pathname]);
   });
 
   it("menolak lampiran milik proyek lain, host bukan Blob private, dan lebih dari 5", async () => {
