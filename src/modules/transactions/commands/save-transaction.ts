@@ -9,7 +9,9 @@ import { selectVehicles } from "@/modules/projects/api/vehicles-repo";
 import { toVehicle } from "@/modules/projects/mappers/project";
 import { assertProjectEditable, findProjectOrThrow } from "@/modules/projects/services/projects";
 import { deleteReceipts } from "@/modules/receipts/api/blob";
-import { selectPathnamesInUse } from "@/modules/receipts/api/attachments-repo";
+import { snapshotOf } from "@/modules/notifications/lib/activity";
+import { recordActivities } from "@/modules/notifications/services/activities";
+import { selectPathnamesInUse, selectTransactionAttachments } from "@/modules/receipts/api/attachments-repo";
 import { planAttachments, syncAttachments } from "@/modules/receipts/services/attachments";
 import { selectWallets } from "@/modules/wallets/api/wallets-repo";
 import { toWallet } from "@/modules/wallets/mappers/wallet";
@@ -29,17 +31,22 @@ async function editableProject(db: Db, projectId: string) {
   assertProjectEditable(await findProjectOrThrow(db, projectId));
 }
 
+const receiptCount = async (db: Db, transactionId: string) => (await selectTransactionAttachments(db, transactionId)).length;
+
 // `actor` = jejak penginput (spec akses §7) + cakupan dompet (spec pemegang dompet); null hanya untuk tes.
 
 export async function createTransaction(db: Db, projectId: string, input: unknown, actor: LedgerActor | null): Promise<Transaction> {
   await editableProject(db, projectId);
-  const values = planTransaction(input, await loadRefs(db, projectId));
+  const refs = await loadRefs(db, projectId);
+  const values = planTransaction(input, refs);
   assertWalletInScope(actor, values.walletId);
   const attachments = planAttachments(input, projectId);
   return db.transaction(async (tx) => {
     const row = await insertTransaction(tx, { ...values, projectId, createdBy: actor?.userId ?? null, updatedBy: actor?.userId ?? null });
     if (attachments) await syncAttachments(tx, row.id, attachments);
-    return toTransaction(row);
+    const saved = toTransaction(row);
+    await recordActivities(tx, projectId, actor?.userId ?? null, [{ kind: "transaction_created", transactionId: saved.id, before: null, after: snapshotOf(saved, refs, attachments?.length ?? 0) }]);
+    return saved;
   });
 }
 
@@ -77,6 +84,12 @@ export async function createTransactions(db: Db, projectId: string, input: unkno
       if (attachments) await syncAttachments(tx, row.id, attachments);
       saved.push(toTransaction(row));
     }
+    await recordActivities(
+      tx,
+      projectId,
+      actor?.userId ?? null,
+      saved.map((t, index) => ({ kind: "transaction_created" as const, transactionId: t.id, before: null, after: snapshotOf(t, refs, planned[index].attachments?.length ?? 0) })),
+    );
     return saved;
   });
 }
@@ -84,13 +97,18 @@ export async function createTransactions(db: Db, projectId: string, input: unkno
 export async function updateTransaction(db: Db, projectId: string, id: string, input: unknown, actor: LedgerActor | null): Promise<Transaction> {
   await editableProject(db, projectId);
   const existing = await findTransactionOrThrow(db, projectId, id);
-  const values = planTransaction(input, await loadRefs(db, projectId), existing);
+  const refs = await loadRefs(db, projectId);
+  const values = planTransaction(input, refs, existing);
   assertWalletInScope(actor, existing.walletId, values.walletId);
   const attachments = planAttachments(input, projectId);
-  const { row, removed } = await db.transaction(async (tx) => ({
-    row: await updateTransactionRow(tx, id, { ...values, updatedBy: actor?.userId ?? null }),
-    removed: attachments ? await syncAttachments(tx, id, attachments) : [],
-  }));
+  const receiptsBefore = await receiptCount(db, id);
+  const { row, removed } = await db.transaction(async (tx) => {
+    const row = await updateTransactionRow(tx, id, { ...values, updatedBy: actor?.userId ?? null });
+    const removed = attachments ? await syncAttachments(tx, id, attachments) : [];
+    const after = snapshotOf(toTransaction(row), refs, attachments?.length ?? receiptsBefore);
+    await recordActivities(tx, projectId, actor?.userId ?? null, [{ kind: "transaction_updated", transactionId: id, before: snapshotOf(existing, refs, receiptsBefore), after }]);
+    return { row, removed };
+  });
   // Setelah commit: file Blob dihapus bila tidak ada lagi baris lampiran yang memakainya (riwayat tol: satu file, banyak transaksi).
   const inUse = await selectPathnamesInUse(db, removed);
   const orphaned = removed.filter((pathname) => !inUse.has(pathname));
@@ -101,12 +119,23 @@ export async function updateTransaction(db: Db, projectId: string, id: string, i
 /** Hapus = soft delete (spec §3.4); bisa diurungkan. */
 export async function deleteTransaction(db: Db, projectId: string, id: string, actor: LedgerActor | null): Promise<void> {
   await editableProject(db, projectId);
-  assertWalletInScope(actor, (await findTransactionOrThrow(db, projectId, id)).walletId);
-  await updateTransactionRow(db, id, { deletedAt: new Date(), updatedBy: actor?.userId ?? null });
+  const existing = await findTransactionOrThrow(db, projectId, id);
+  assertWalletInScope(actor, existing.walletId);
+  const before = snapshotOf(existing, await loadRefs(db, projectId), await receiptCount(db, id));
+  await db.transaction(async (tx) => {
+    await updateTransactionRow(tx, id, { deletedAt: new Date(), updatedBy: actor?.userId ?? null });
+    await recordActivities(tx, projectId, actor?.userId ?? null, [{ kind: "transaction_deleted", transactionId: id, before, after: null }]);
+  });
 }
 
 export async function restoreTransaction(db: Db, projectId: string, id: string, actor: LedgerActor | null): Promise<Transaction> {
   await editableProject(db, projectId);
-  assertWalletInScope(actor, (await findTransactionOrThrow(db, projectId, id, { includeDeleted: true })).walletId);
-  return toTransaction(await updateTransactionRow(db, id, { deletedAt: null, updatedBy: actor?.userId ?? null }));
+  const existing = await findTransactionOrThrow(db, projectId, id, { includeDeleted: true });
+  assertWalletInScope(actor, existing.walletId);
+  const after = snapshotOf(existing, await loadRefs(db, projectId), await receiptCount(db, id));
+  return db.transaction(async (tx) => {
+    const row = await updateTransactionRow(tx, id, { deletedAt: null, updatedBy: actor?.userId ?? null });
+    await recordActivities(tx, projectId, actor?.userId ?? null, [{ kind: "transaction_restored", transactionId: id, before: null, after }]);
+    return toTransaction(row);
+  });
 }

@@ -10,7 +10,7 @@ import { formatRupiah } from "@/modules/shared/lib/money";
 import { TransactionRow } from "@/modules/transactions/components/transaction-row";
 import { reimburseStatus } from "@/modules/wallets/lib/reimburse";
 import { useDashboardSummary } from "../hooks/use-summary";
-import { AttentionCard } from "./attention-card";
+import { BudgetTotalTile } from "./budget-total";
 import { GroupBreakdown } from "./group-breakdown";
 import { StatTile } from "./stat-tile";
 
@@ -19,12 +19,12 @@ export function DashboardSummaryView({ projectId }: { projectId: string }) {
   if (!data) return null;
   const { totals } = data;
 
-  // Urutan pilihan pengguna: tindak lanjut, pemakaian UDP per grup, sisa, UDP & pengeluaran, dompet, transaksi terakhir.
+  // Urutan pilihan pengguna: pemakaian UDP per grup, total pagu (Root/PM), sisa, UDP & pengeluaran, dompet, transaksi terakhir.
   return (
     <div className="flex flex-col gap-4">
-      <AttentionCard items={data.attention} />
-
       <GroupBreakdown data={data.udp} />
+
+      {data.budget && <BudgetTotalTile {...data.budget} />}
 
       <Card className="bg-primary">
         <CardContent className="py-3">

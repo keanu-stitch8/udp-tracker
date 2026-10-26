@@ -31,6 +31,7 @@ export function subPageOf(pathname: string, from: string | null): SubPage | null
     const [userId, projectId] = pathname.slice("/lainnya/profil/".length).split("/");
     return projectId ? { title: "Riwayat proyek", back: `/lainnya/profil/${userId}` } : { title: "Riwayat", back: backTo("/lainnya") };
   }
+  if (pathname === "/notifikasi") return { title: "Notifikasi", back: "/" };
   if (pathname === "/proyek") return { title: "Proyek", back: "/" };
   if (pathname === "/proyek/baru") return { title: "Proyek baru", back: "/proyek" };
   return null;

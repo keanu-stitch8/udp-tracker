@@ -2,7 +2,7 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, time, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 // Import relatif (bukan "@/"): drizzle-kit memuat file ini di luar resolver tsconfig paths.
-import { BUDGET_BASES, CATEGORY_KINDS, HOLDER_REVOKE_REASONS, PROJECT_STATUSES, TRANSACTION_TYPES, USER_STATUSES, WALLET_KINDS } from "../modules/shared/types/enums";
+import { BUDGET_BASES, CATEGORY_KINDS, HOLDER_REVOKE_REASONS, PROJECT_STATUSES, TRANSACTION_TYPES, USER_STATUSES, WALLET_KINDS, type ActivityKind, type NotificationGroupKey } from "../modules/shared/types/enums";
 
 export const projectStatus = pgEnum("project_status", PROJECT_STATUSES);
 export const walletKind = pgEnum("wallet_kind", WALLET_KINDS);
@@ -314,3 +314,37 @@ export const googleCredentials = pgTable("google_credentials", {
   account: text(),
   ...timestamps,
 });
+
+// Log aktivitas proyek (spec notifikasi). Ditulis dalam transaksi DB yang sama dengan perubahannya; `before`/`after` = snapshot saat kejadian.
+export const activities = pgTable(
+  "activities",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    actorId: uuid().references((): AnyPgColumn => users.id, { onDelete: "set null" }),
+    kind: text().$type<ActivityKind>().notNull(),
+    transactionId: uuid().references(() => transactions.id, { onDelete: "cascade" }),
+    before: jsonb(),
+    after: jsonb(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("activities_project_created_idx").on(t.projectId, t.createdAt)],
+);
+
+// Terakhir kali user membuka satu grup notifikasi di satu proyek: dasar hitungan unread per orang.
+export const notificationReads = pgTable(
+  "notification_reads",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    group: text().$type<NotificationGroupKey>().notNull(),
+    seenAt: timestamp({ withTimezone: true }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.projectId, t.group] })],
+);

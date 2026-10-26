@@ -20,3 +20,11 @@ export type UserStatus = (typeof USER_STATUSES)[number];
 /** Alasan pegangan dompet berakhir (spec pemegang dompet): dicabut PM, dikeluarkan dari proyek, akun ditolak. */
 export const HOLDER_REVOKE_REASONS = ["revoked", "removed", "rejected"] as const;
 export type HolderRevokeReason = (typeof HOLDER_REVOKE_REASONS)[number];
+
+/** Jenis aktivitas (spec notifikasi). Kolom DB teks agar jenis baru tidak butuh migrasi enum. */
+export const ACTIVITY_KINDS = ["transaction_created", "transaction_updated", "transaction_deleted", "transaction_restored"] as const;
+export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
+
+/** Grup notifikasi, urutan tampil di popover dan halaman. */
+export const NOTIFICATION_GROUPS = ["followup", "activity", "access"] as const;
+export type NotificationGroupKey = (typeof NOTIFICATION_GROUPS)[number];

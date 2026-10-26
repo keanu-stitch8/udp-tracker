@@ -18,6 +18,19 @@ export interface LatestCheck {
 
 const walletHref = (id: string) => `/lainnya/dompet/${id}`;
 
+/** `rows` = cek saldo proyek terbaru dulu → satu cek terbaru per dompet; `adjusted` bila ada transaksi penyesuaiannya. */
+export function latestChecks(rows: { id: string; walletId: string; actualBalance: number; computedBalance: number }[], transactions: { balanceCheckId: string | null }[]): LatestCheck[] {
+  const adjusted = new Set(transactions.flatMap((t) => (t.balanceCheckId ? [t.balanceCheckId] : [])));
+  const seen = new Set<string>();
+  const checks: LatestCheck[] = [];
+  for (const row of rows) {
+    if (seen.has(row.walletId)) continue;
+    seen.add(row.walletId);
+    checks.push({ walletId: row.walletId, difference: row.actualBalance - row.computedBalance, adjusted: adjusted.has(row.id) });
+  }
+  return checks;
+}
+
 /** `wallets` = dompet aktif saja. Urutan: bon, selisih cek saldo, dompet minus, reimburse. */
 export function attentionItems(input: { missingReceipts: number; wallets: WalletBalance[]; latestChecks: LatestCheck[] }): AttentionItem[] {
   const byId = new Map(input.wallets.map((w) => [w.id, w]));

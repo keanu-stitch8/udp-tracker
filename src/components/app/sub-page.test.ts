@@ -26,6 +26,7 @@ describe("subPageOf", () => {
     expect(subPageOf("/lainnya/proyek", null)).toEqual({ title: "Pengaturan proyek", back: "/lainnya" });
     expect(subPageOf("/proyek", null)).toEqual({ title: "Proyek", back: "/" });
     expect(subPageOf("/proyek/baru", null)).toEqual({ title: "Proyek baru", back: "/proyek" });
+    expect(subPageOf("/notifikasi", null)).toEqual({ title: "Notifikasi", back: "/" });
   });
 
   it("profil riwayat", () => {
